@@ -10,8 +10,8 @@ var globalDogfightJetsState = {
 
 for (var dbi = 0; dbi < 7; dbi++) {
   var dbGen = dbi + 1;
-  globalDogfightJetsState.bluePool.push(createJet(320, getYFromAltitude(RESPAWN_CEILINGS[dbGen] || 52000, 900), 0, dbGen, dbi, "blue"));
-  globalDogfightJetsState.redPool.push(createJet(1280, getYFromAltitude(RESPAWN_CEILINGS[dbGen] || 52000, 900), Math.PI, dbGen, dbi, "red"));
+  globalDogfightJetsState.bluePool.push(createJet(800, getYFromAltitude(RESPAWN_CEILINGS[dbGen] || 52000, 1200), 0, dbGen, dbi, "blue"));
+  globalDogfightJetsState.redPool.push(createJet(2800, getYFromAltitude(RESPAWN_CEILINGS[dbGen] || 52000, 1200), Math.PI, dbGen, dbi, "red"));
 }
 for (var dai = 0; dai < 7; dai++) globalDogfightJetsState.allJets.push(globalDogfightJetsState.bluePool[dai]);
 for (var dri = 0; dri < 7; dri++) globalDogfightJetsState.allJets.push(globalDogfightJetsState.redPool[dri]);
@@ -26,17 +26,20 @@ if (typeof window !== "undefined") {
 function syncFleetToActiveGenerations(blueMask, redMask, canvasW, canvasH) {
   var bMask, rMask, w, h;
 
+  var defaultW = (typeof DF !== "undefined" && DF.worldWidth) ? DF.worldWidth : 3600;
+  var defaultH = (typeof DF !== "undefined" && DF.worldHeight) ? DF.worldHeight : 1200;
+
   // Handle call signatures: (blueMask, redMask, w, h) vs (mask, w, h)
   if (typeof redMask === "object" && redMask !== null) {
     bMask = blueMask || (typeof activeGensBlue !== "undefined" ? activeGensBlue : {});
     rMask = redMask || (typeof activeGensRed !== "undefined" ? activeGensRed : {});
-    w = (typeof canvasW === "number" && canvasW > 0) ? canvasW : (DF.width || 1600);
-    h = (typeof canvasH === "number" && canvasH > 0) ? canvasH : (DF.height || 900);
+    w = (typeof canvasW === "number" && canvasW > 0) ? canvasW : defaultW;
+    h = (typeof canvasH === "number" && canvasH > 0) ? canvasH : defaultH;
   } else {
     bMask = blueMask || (typeof activeGensBlue !== "undefined" ? activeGensBlue : {});
     rMask = blueMask || (typeof activeGensRed !== "undefined" ? activeGensRed : {});
-    w = (typeof redMask === "number" && redMask > 0) ? redMask : (DF.width || 1600);
-    h = (typeof canvasW === "number" && canvasW > 0) ? canvasW : (DF.height || 900);
+    w = (typeof redMask === "number" && redMask > 0) ? redMask : defaultW;
+    h = (typeof canvasW === "number" && canvasW > 0) ? canvasW : defaultH;
   }
 
   // Update global masks if defined

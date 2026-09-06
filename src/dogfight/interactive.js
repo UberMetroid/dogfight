@@ -111,21 +111,24 @@
 
       var self = this;
 
-      // Click to Select / Track Aircraft
+      // Click to Select / Track Aircraft (Screen to World Space)
       canvas.addEventListener("pointerdown", function (e) {
         var rect = canvas.getBoundingClientRect();
         var clickX = (e.clientX - rect.left) * (canvas.width / rect.width);
         var clickY = (e.clientY - rect.top) * (canvas.height / rect.height);
+        var worldPt = (DF && DF.camera && typeof DF.camera.screenToWorld === "function")
+          ? DF.camera.screenToWorld(clickX, clickY)
+          : { x: clickX, y: clickY };
 
-        // Find closest active jet within 40px
+        var camScale = (DF && DF.camera && DF.camera.scale) ? DF.camera.scale : 1.0;
         var closestJet = null;
-        var minDist = 45;
+        var minDist = 45 / camScale;
 
         if (DF && DF.allJets) {
           for (var i = 0; i < DF.allJets.length; i++) {
             var j = DF.allJets[i];
             if (!j.active || j.isDying) continue;
-            var dist = Math.hypot(j.x - clickX, j.y - clickY);
+            var dist = Math.hypot(j.x - worldPt.x, j.y - worldPt.y);
             if (dist < minDist) {
               minDist = dist;
               closestJet = j;
@@ -138,6 +141,14 @@
           if (global.TacticalAudio) global.TacticalAudio.playRadarLockTone();
         }
       });
+
+      // Mouse Wheel Zoom Override
+      canvas.addEventListener("wheel", function (e) {
+        if (DF && DF.camera && typeof DF.camera.onWheel === "function") {
+          e.preventDefault();
+          DF.camera.onWheel(e.deltaY);
+        }
+      }, { passive: false });
     },
 
     selectJet: function (jet) {
@@ -179,10 +190,13 @@
       var bSpec = (typeof AIRCRAFT_SPECS !== "undefined" && AIRCRAFT_SPECS[blueGen]) ? AIRCRAFT_SPECS[blueGen] : { baseSpeed: 4.8 };
       var rSpec = (typeof AIRCRAFT_SPECS !== "undefined" && AIRCRAFT_SPECS[redGen]) ? AIRCRAFT_SPECS[redGen] : { baseSpeed: 4.8 };
 
+      var worldW = (typeof DF !== "undefined" && DF.worldWidth) ? DF.worldWidth : 3600;
+      var worldH = (typeof DF !== "undefined" && DF.worldHeight) ? DF.worldHeight : 1200;
+
       var bAltFt = (blueGen === 1) ? 22000 : (blueGen <= 3 ? 35000 : (blueGen <= 5 ? 48000 : 65000));
       var rAltFt = (redGen === 1) ? 22000 : (redGen <= 3 ? 35000 : (redGen <= 5 ? 48000 : 65000));
-      var bStartY = (typeof getYFromAltitude === "function") ? getYFromAltitude(bAltFt, DF.height) : (DF.height * 0.4);
-      var rStartY = (typeof getYFromAltitude === "function") ? getYFromAltitude(rAltFt, DF.height) : (DF.height * 0.42);
+      var bStartY = (typeof getYFromAltitude === "function") ? getYFromAltitude(bAltFt, worldH) : (worldH * 0.4);
+      var rStartY = (typeof getYFromAltitude === "function") ? getYFromAltitude(rAltFt, worldH) : (worldH * 0.42);
 
       // Blue Jet
       var bJet = DF.bluePool[0];
@@ -198,7 +212,7 @@
       bJet.lastDamagedBy = "";
       bJet.damageSmokeTimer = 0;
       bJet.damageSparksTimer = 0;
-      bJet.x = DF.width * 0.22;
+      bJet.x = worldW * 0.22;
       bJet.y = bStartY;
       bJet.angle = 0.0; // Facing East
       bJet.targetAngle = 0.0;
@@ -244,7 +258,7 @@
       rJet.lastDamagedBy = "";
       rJet.damageSmokeTimer = 0;
       rJet.damageSparksTimer = 0;
-      rJet.x = DF.width * 0.78;
+      rJet.x = worldW * 0.78;
       rJet.y = rStartY;
       rJet.angle = Math.PI; // Facing West
       rJet.targetAngle = Math.PI;
@@ -330,7 +344,7 @@
       if (targetBtn) targetBtn.classList.add("active");
     },
 
-    // Draw reticle on tracked jet in canvas
+    // Draw reticle on tracked jet in canvas (adapts to camera scale)
     drawTrackedReticle: function (ctx) {
       if (!this.trackedJet || !this.trackedJet.active || this.trackedJet.isDying) {
         return;
@@ -338,17 +352,18 @@
       var j = this.trackedJet;
       var isBlue = (j.team === "blue");
       var color = isBlue ? "#38bdf8" : "#ef4444";
+      var camScale = (DF && DF.camera && DF.camera.scale) ? DF.camera.scale : 1.0;
 
       ctx.save();
       ctx.translate(Math.floor(j.x), Math.floor(j.y));
 
-      // Rotating Target Reticle Box
+      // Rotating Target Reticle Box (Normalized to screen appearance)
       ctx.strokeStyle = color;
-      ctx.lineWidth = 1.2;
-      var size = 20;
+      ctx.lineWidth = 1.2 / camScale;
+      var size = 20 / camScale;
+      var len = 6 / camScale;
 
       // 4 Corner Brackets
-      var len = 6;
       ctx.beginPath();
       // Top-Left
       ctx.moveTo(-size, -size + len); ctx.lineTo(-size, -size); ctx.lineTo(-size + len, -size);
@@ -362,8 +377,8 @@
 
       // Callsign Tag above box
       ctx.fillStyle = color;
-      ctx.font = "8px ui-monospace, monospace";
-      ctx.fillText(j.callsign || "TARGET", -size, -size - 5);
+      ctx.font = Math.max(7, Math.round(9 / camScale)) + "px ui-monospace, monospace";
+      ctx.fillText(j.callsign || "TARGET", -size, -size - (4 / camScale));
 
       ctx.restore();
     },
@@ -406,7 +421,8 @@
       if (spdEl) spdEl.textContent = kias + " KIAS (M " + mach + ")";
 
       // Altitude
-      var altFt = Math.round(typeof getAltitudeFeet === "function" ? getAltitudeFeet(j.y, DF.height) : 35000);
+      var worldH = (typeof DF !== "undefined" && DF.worldHeight) ? DF.worldHeight : 1200;
+      var altFt = Math.round(typeof getAltitudeFeet === "function" ? getAltitudeFeet(j.y, worldH) : 35000);
       var altEl = document.getElementById("mfd-alt");
       if (altEl) altEl.textContent = altFt.toLocaleString() + " FT MSL";
 

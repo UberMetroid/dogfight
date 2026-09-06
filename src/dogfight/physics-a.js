@@ -3,7 +3,10 @@
 // Logline: Energy, GPWS, stall, thrust.
 //
 function updateJetPhysics(jet, targetEnemy, incomingThreat, opposingPool, missilesPoolRef) {
-  var altFt = getAltitudeFeet(jet.y, DF.height);
+  var worldW = (typeof DF !== "undefined" && DF.worldWidth) ? DF.worldWidth : 3600;
+  var worldH = (typeof DF !== "undefined" && DF.worldHeight) ? DF.worldHeight : 1200;
+
+  var altFt = getAltitudeFeet(jet.y, worldH);
   var rho = getBarometricDensity(altFt);
   var rho0 = 0.002377;
   var densityRatio = Math.max(0.001, rho / rho0);
@@ -47,17 +50,17 @@ function updateJetPhysics(jet, targetEnemy, incomingThreat, opposingPool, missil
 
   var gpwsTrigger = isDescending && altFt > 0 && (altFt <= (hRec + hMargin) || altFt < 5000.0 || sinkRateFpm > 2500.0);
 
-  // Boundary Detection & High-G Turnback Reaction (x < 100 or x > DF.width - 100)
+  // Boundary Detection & High-G Turnback Reaction (x < 160 or x > worldW - 160)
   var isHeadingWest = (Math.cos(jet.angle) < 0.1);
   var isHeadingEast = (Math.cos(jet.angle) > -0.1);
-  var hitLeftBoundary = (jet.x < 100 && isHeadingWest);
-  var hitRightBoundary = (jet.x > DF.width - 100 && isHeadingEast);
+  var hitLeftBoundary = (jet.x < 160 && isHeadingWest);
+  var hitRightBoundary = (jet.x > worldW - 160 && isHeadingEast);
 
   if ((hitLeftBoundary || hitRightBoundary) && jet.mode !== "GPWS_PULLUP") {
     jet.mode = "BOUNDARY_SLICE";
-    jet.modeTimer = 24;
-    var targetArenaX = DF.width * 0.5;
-    var targetArenaY = Math.min(Math.max(jet.y, 120), DF.height - 120);
+    jet.modeTimer = 36;
+    var targetArenaX = worldW * 0.5;
+    var targetArenaY = Math.min(Math.max(jet.y, 140), worldH - 180);
     jet.targetAngle = Math.atan2(targetArenaY - jet.y, targetArenaX - jet.x);
     jet.throttleSetting = 1.5;
     jet.afterburner = true;
@@ -90,7 +93,7 @@ function updateJetPhysics(jet, targetEnemy, incomingThreat, opposingPool, missil
     jet.oodaPhase = "OBSERVE";
     var mPool = missilesPoolRef || DF.missilesPool;
     var oPool = opposingPool || (jet.team === "blue" ? DF.redPool : DF.bluePool);
-    var obs = oodaObserveThreats(jet, oPool, mPool, DF.width, DF.height);
+    var obs = oodaObserveThreats(jet, oPool, mPool, worldW, worldH);
 
     jet.oodaPhase = "ORIENT";
     var ori = oodaOrientTactics(jet, obs, altFt, sCeiling);

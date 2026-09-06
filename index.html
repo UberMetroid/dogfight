@@ -46,6 +46,8 @@
   <script defer src="src/dogfight/loop-proj.js"></script>
   <script defer src="src/dogfight/landscape.js"></script>
   <script defer src="src/dogfight/audio.js"></script>
+  <script defer src="src/dogfight/camera.js"></script>
+  <script defer src="src/dogfight/combat-meter.js"></script>
   <script defer src="src/dogfight/interactive.js"></script>
   <script defer src="src/dogfight/loop.js"></script>
   <script defer src="src/dogfight/init.js"></script>
@@ -60,140 +62,240 @@
   <div class="hud-overlay">
     <!-- Top Command Bar -->
     <header class="hud-header hud-interactive">
+      <!-- Left: Brand / Identity -->
       <div class="hud-brand">
         <span class="hud-sigil">&gt;&gt;</span>
-        <span class="hud-title">BOYD OODA // MULTI-DOMAIN BATTLESPACE</span>
-        <span class="hud-formula" title="Col. John Boyd's Specific Excess Power: Ps = ((Thrust - Drag) / Weight) * Velocity">Ps = ((T - D) / W) * V</span>
+        <div class="brand-text-col">
+          <span class="hud-title">BOYD OODA COMBAT ARENA</span>
+          <span class="hud-formula" title="Col. John Boyd's Specific Excess Power: Ps = ((Thrust - Drag) / Weight) * Velocity">Ps = ((T - D) / W) * V</span>
+        </div>
       </div>
 
-      <div class="hud-controls-group">
-        <!-- Independent Split Force Controls (Blue vs Red) -->
-        <div class="hud-forces-split">
-          <!-- Blue Allied Force -->
-          <div class="team-flight-bar team-blue" aria-label="Blue Allied Force Generations">
-            <div class="team-header-pill">
-              <span class="team-beacon beacon-blue"></span>
-              <span class="team-tag">BLUE FORCE</span>
-            </div>
-            <div class="gen-bar gen-bar-blue" id="gen-bar-blue">
-              <button type="button" class="gen-btn gen-btn-blue" data-team="blue" data-gen="1" title="Blue Gen 1 (F-86 Sabre)">1</button>
-              <button type="button" class="gen-btn gen-btn-blue" data-team="blue" data-gen="2" title="Blue Gen 2 (F-4 Phantom)">2</button>
-              <button type="button" class="gen-btn gen-btn-blue" data-team="blue" data-gen="3" title="Blue Gen 3 (F-14 Tomcat)">3</button>
-              <button type="button" class="gen-btn gen-btn-blue active" data-team="blue" data-gen="4" title="Blue Gen 4 (F-16 Viper)">4</button>
-              <button type="button" class="gen-btn gen-btn-blue" data-team="blue" data-gen="5" title="Blue Gen 5 (F-22 Raptor)">5</button>
-              <button type="button" class="gen-btn gen-btn-blue" data-team="blue" data-gen="6" title="Blue Gen 6 (NGAD + CCA)">6</button>
-              <button type="button" class="gen-btn gen-btn-blue" data-team="blue" data-gen="7" title="Blue Gen 7 (Quantum Swarm)">7</button>
-            </div>
-            <button class="hud-btn hud-btn-blue hud-btn-compact" onclick="scrambleWave('blue')" title="Scramble Blue Allied Flight">[ + SCRAMBLE ]</button>
+      <!-- TOP CENTER: RAD COMBAT ADVANTAGE GAUGE & MOMENTUM LINE CHART -->
+      <div class="hud-top-center combat-dominance-module" id="combat-dominance-module">
+        <div class="dom-header">
+          <span class="dom-stat dom-stat-blue" id="dom-blue-pct">BLUE 50%</span>
+          <div class="dom-badge-container">
+            <span class="dom-status-badge badge-dom-parity" id="dom-status-badge">⚡ PARITY // CONTESTED AIRSPACE</span>
           </div>
-
-          <!-- Tactical Versus Indicator -->
-          <div class="teams-versus-pill" title="Adversarial Air Engagement">
-            <span class="vs-text">VS</span>
-          </div>
-
-          <!-- Red Opposing Force -->
-          <div class="team-flight-bar team-red" aria-label="Red Opposing Force Generations">
-            <div class="team-header-pill">
-              <span class="team-beacon beacon-red"></span>
-              <span class="team-tag">RED FORCE</span>
-            </div>
-            <div class="gen-bar gen-bar-red" id="gen-bar-red">
-              <button type="button" class="gen-btn gen-btn-red" data-team="red" data-gen="1" title="Red Gen 1 (MiG-15 Fagot)">1</button>
-              <button type="button" class="gen-btn gen-btn-red" data-team="red" data-gen="2" title="Red Gen 2 (MiG-21 Fishbed)">2</button>
-              <button type="button" class="gen-btn gen-btn-red" data-team="red" data-gen="3" title="Red Gen 3 (MiG-23 / Su-27)">3</button>
-              <button type="button" class="gen-btn gen-btn-red active" data-team="red" data-gen="4" title="Red Gen 4 (Su-27 Flanker)">4</button>
-              <button type="button" class="gen-btn gen-btn-red" data-team="red" data-gen="5" title="Red Gen 5 (Su-57 Felon)">5</button>
-              <button type="button" class="gen-btn gen-btn-red" data-team="red" data-gen="6" title="Red Gen 6 (Hostile CCA)">6</button>
-              <button type="button" class="gen-btn gen-btn-red" data-team="red" data-gen="7" title="Red Gen 7 (Hostile Swarm)">7</button>
-            </div>
-            <button class="hud-btn hud-btn-red hud-btn-compact" onclick="scrambleWave('red')" title="Scramble Red Hostile Flight">[ + SCRAMBLE ]</button>
-          </div>
+          <span class="dom-stat dom-stat-red" id="dom-red-pct">50% RED</span>
         </div>
 
-        <!-- Time Warp Controls -->
+        <!-- Tug-of-war Balance of Power Scale Bar -->
+        <div class="dom-scale-track" title="Real-time Combat Superiority Tug-of-War">
+          <div class="dom-scale-blue" id="dom-scale-blue" style="width: 50%;"></div>
+          <div class="dom-scale-needle" id="dom-scale-needle" style="left: 50%;"></div>
+          <div class="dom-scale-red" id="dom-scale-red" style="width: 50%;"></div>
+        </div>
+
+        <!-- Rad Live Combat Momentum Line Chart -->
+        <div class="dom-chart-wrap" title="Historical Combat Momentum (Blue advantage above, Red below)">
+          <canvas id="momentum-chart-canvas" width="340" height="46"></canvas>
+          <div class="dom-chart-legend">
+            <span>▲ +BLUE ADVANTAGE</span>
+            <span id="dom-momentum-val">+0.0 INDEX</span>
+            <span>▼ -RED ADVANTAGE</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Utilities (Time Warp, Sound, Warfare Dossier) -->
+      <div class="hud-utilities">
         <div class="speed-group" aria-label="Simulation speed">
           <button type="button" class="speed-btn" id="speed-05" onclick="InteractiveController.setSimSpeed(0.5)" title="0.5x Slow-Motion">0.5x</button>
           <button type="button" class="speed-btn active" id="speed-10" onclick="InteractiveController.setSimSpeed(1.0)" title="1.0x Realtime">1x</button>
           <button type="button" class="speed-btn" id="speed-20" onclick="InteractiveController.setSimSpeed(2.0)" title="2.0x Hyper-Speed">2x</button>
           <button type="button" class="speed-btn" id="speed-pause" onclick="InteractiveController.setSimSpeed(0)" title="Pause / Step">||</button>
         </div>
-
-        <!-- Audio Switch -->
         <button type="button" class="sound-btn" id="sound-btn" onclick="toggleTacticalSound(this)" title="Toggle Procedural Web Audio Sound FX">[ 🔊 SOUND: OFF ]</button>
-
-        <!-- Warfare Generations Dossier Modal Button -->
-        <button type="button" class="hud-btn hud-btn-dossier" onclick="openDossier(4)" title="Open Warfare Generations Dossier">[ ⚔ WARFARE DOSSIER ]</button>
+        <button type="button" class="hud-btn hud-btn-dossier" onclick="openDossier(4)" title="Open Warfare Generations Dossier">[ ⚔ DOSSIER ]</button>
       </div>
     </header>
 
-    <!-- Mid-Screen Left: Floating Cockpit Telemetry MFD -->
-    <div class="mfd-panel hud-interactive" id="mfd-panel">
-      <div class="mfd-panel-header">
-        <span class="mfd-title"><span class="mfd-dot"></span> COCKPIT TELEMETRY MFD</span>
-        <button class="mfd-close-btn" onclick="InteractiveController.clearTrackedJet()" title="Release tracking">✕</button>
+    <!-- Flanks Layer: Left (Blue Options & Stats) vs Right (Red Options & Stats) -->
+    <div class="hud-flanks-layer">
+      <!-- Left Flank: Blue Allied Force -->
+      <div class="flank-col flank-col-left">
+        <aside class="flank-panel flank-blue hud-interactive" id="flank-blue" aria-label="Blue Allied Force Panel">
+          <div class="flank-header">
+            <span class="team-beacon beacon-blue"></span>
+            <div class="flank-title-group">
+              <span class="flank-title">BLUE ALLIED FORCE</span>
+              <span class="flank-callsign-tag">ALLIED AIR WING // FRIENDLY</span>
+            </div>
+          </div>
+
+          <!-- Blue Generation Options -->
+          <div class="flank-section">
+            <div class="flank-section-title">ACTIVE GENERATION DOCTRINE</div>
+            <div class="gen-bar gen-bar-blue gen-grid" id="gen-bar-blue">
+              <button type="button" class="gen-btn gen-btn-blue" data-team="blue" data-gen="1" title="Blue Gen 1 (F-86 Sabre)"><span class="g-num">1</span><span class="g-name">SABRE</span></button>
+              <button type="button" class="gen-btn gen-btn-blue" data-team="blue" data-gen="2" title="Blue Gen 2 (F-4 Phantom)"><span class="g-num">2</span><span class="g-name">PHANTOM</span></button>
+              <button type="button" class="gen-btn gen-btn-blue" data-team="blue" data-gen="3" title="Blue Gen 3 (F-14 Tomcat)"><span class="g-num">3</span><span class="g-name">TOMCAT</span></button>
+              <button type="button" class="gen-btn gen-btn-blue active" data-team="blue" data-gen="4" title="Blue Gen 4 (F-16 Viper)"><span class="g-num">4</span><span class="g-name">VIPER</span></button>
+              <button type="button" class="gen-btn gen-btn-blue" data-team="blue" data-gen="5" title="Blue Gen 5 (F-22 Raptor)"><span class="g-num">5</span><span class="g-name">RAPTOR</span></button>
+              <button type="button" class="gen-btn gen-btn-blue" data-team="blue" data-gen="6" title="Blue Gen 6 (NGAD + CCA)"><span class="g-num">6</span><span class="g-name">NGAD</span></button>
+              <button type="button" class="gen-btn gen-btn-blue" data-team="blue" data-gen="7" title="Blue Gen 7 (Quantum Swarm)"><span class="g-num">7</span><span class="g-name">SWARM</span></button>
+            </div>
+            <button class="hud-btn hud-btn-blue flank-scramble-btn" onclick="scrambleWave('blue')" title="Scramble Blue Allied Flight">[ + SCRAMBLE BLUE ]</button>
+          </div>
+
+          <!-- Blue Live Combat Stats -->
+          <div class="flank-section flank-stats-box">
+            <div class="flank-section-title">ALLIED TELEMETRY & STATS</div>
+            <div class="flank-stat-row">
+              <span class="stat-lbl">AIRBORNE SORTIES:</span>
+              <span class="stat-val stat-val-cyan" id="stat-blue-sorties">1 ACTIVE</span>
+            </div>
+            <div class="flank-stat-row">
+              <span class="stat-lbl">AIR COMBAT KILLS:</span>
+              <span class="stat-val stat-val-cyan" id="stat-blue-kills">0 SPLASHES</span>
+            </div>
+            <div class="flank-stat-row">
+              <span class="stat-lbl">MISSILES IN FLIGHT:</span>
+              <span class="stat-val" id="stat-blue-missiles">0 IN FLIGHT</span>
+            </div>
+            <div class="flank-stat-row">
+              <span class="stat-lbl">FLEET AVG POWER (Ps):</span>
+              <span class="stat-val stat-val-amber" id="stat-blue-ps">+140 FT/S</span>
+            </div>
+            <div class="flank-stat-row">
+              <span class="stat-lbl">LEAD AIRFRAME:</span>
+              <span class="stat-val" id="stat-blue-lead">F-16 VIPER</span>
+            </div>
+            <div class="flank-stat-row">
+              <span class="stat-lbl">AIRSPACE STANCE:</span>
+              <span class="stat-badge badge-blue-stance" id="stat-blue-stance">OFFENSIVE CAP</span>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Mid-Screen Left: Floating Cockpit Telemetry MFD (Docked cleanly below Blue Panel) -->
+        <div class="mfd-panel hud-interactive" id="mfd-panel">
+          <div class="mfd-panel-header">
+            <span class="mfd-title"><span class="mfd-dot"></span> COCKPIT TELEMETRY MFD</span>
+            <button class="mfd-close-btn" onclick="InteractiveController.clearTrackedJet()" title="Release tracking">✕</button>
+          </div>
+
+          <div class="mfd-airframe-row">
+            <span class="mfd-callsign" id="mfd-callsign">TOMCAT 1</span>
+            <span class="mfd-badge badge-blue" id="mfd-team">BLUE FORCE [ALLIED]</span>
+          </div>
+          <div class="mfd-gen-label" id="mfd-gen">GEN 4 // F-14 TOMCAT</div>
+
+          <!-- Flight Gauges Grid -->
+          <div class="mfd-grid">
+            <div class="mfd-cell">
+              <span class="mfd-label">AIRSPEED</span>
+              <span class="mfd-val" id="mfd-speed">580 KIAS (M 1.7)</span>
+            </div>
+            <div class="mfd-cell">
+              <span class="mfd-label">ALTITUDE</span>
+              <span class="mfd-val" id="mfd-alt">48,200 FT MSL</span>
+            </div>
+            <div class="mfd-cell">
+              <span class="mfd-label">G-LOAD</span>
+              <span class="mfd-val" id="mfd-gforce">+4.2 G</span>
+            </div>
+          </div>
+
+          <!-- Col. John Boyd Specific Excess Power (Ps) Meter -->
+          <div class="ps-meter-box">
+            <div class="ps-header">
+              <span class="ps-title">BOYD SPECIFIC EXCESS POWER (Ps)</span>
+              <span class="ps-value" id="mfd-ps">+140 FT/S</span>
+            </div>
+            <div class="ps-bar-track">
+              <div class="ps-bar-fill ps-positive" id="mfd-ps-bar"></div>
+            </div>
+          </div>
+
+          <!-- Dynamic OODA Loop Indicator -->
+          <div class="ooda-cycle-box">
+            <div class="ooda-header">
+              <span>OODA DECISION CYCLE</span>
+              <span id="ooda-latency-note">BOYD LOOP</span>
+            </div>
+            <div class="ooda-steps">
+              <div class="ooda-step" id="ooda-observe">OBSERVE</div>
+              <div class="ooda-step" id="ooda-orient">ORIENT</div>
+              <div class="ooda-step active" id="ooda-decide">DECIDE</div>
+              <div class="ooda-step" id="ooda-act">ACT</div>
+            </div>
+          </div>
+
+          <!-- Tactical Radar Target & Weapons State -->
+          <div class="mfd-status-row">
+            <div class="mfd-status-line">
+              <span class="mfd-label">RADAR LOCK:</span>
+              <span class="mfd-target-val" id="mfd-target">FLANKER 1 (8.4 NM)</span>
+            </div>
+            <div class="mfd-status-line">
+              <span class="mfd-label">WEAPONRY:</span>
+              <span class="mfd-val" id="mfd-weapons">FOX-3 ARMED // AMRAAM</span>
+            </div>
+          </div>
+
+          <div class="mfd-hint">CLICK ANY AIRCRAFT IN AIRSPACE TO TRACK</div>
+        </div>
       </div>
 
-      <div class="mfd-airframe-row">
-        <span class="mfd-callsign" id="mfd-callsign">TOMCAT 1</span>
-        <span class="mfd-badge badge-blue" id="mfd-team">BLUE FORCE [ALLIED]</span>
-      </div>
-      <div class="mfd-gen-label" id="mfd-gen">GEN 4 // F-14 TOMCAT</div>
+      <!-- Right Flank: Red Opposing Force -->
+      <div class="flank-col flank-col-right">
+        <aside class="flank-panel flank-red hud-interactive" id="flank-red" aria-label="Red Opposing Force Panel">
+          <div class="flank-header">
+            <span class="team-beacon beacon-red"></span>
+            <div class="flank-title-group">
+              <span class="flank-title">RED OPPOSING FORCE</span>
+              <span class="flank-callsign-tag">HOSTILE AIR GROUP // BANDIT</span>
+            </div>
+          </div>
 
-      <!-- Flight Gauges Grid -->
-      <div class="mfd-grid">
-        <div class="mfd-cell">
-          <span class="mfd-label">AIRSPEED</span>
-          <span class="mfd-val" id="mfd-speed">580 KIAS (M 1.7)</span>
-        </div>
-        <div class="mfd-cell">
-          <span class="mfd-label">ALTITUDE</span>
-          <span class="mfd-val" id="mfd-alt">48,200 FT MSL</span>
-        </div>
-        <div class="mfd-cell">
-          <span class="mfd-label">G-LOAD</span>
-          <span class="mfd-val" id="mfd-gforce">+4.2 G</span>
-        </div>
-      </div>
+          <!-- Red Generation Options -->
+          <div class="flank-section">
+            <div class="flank-section-title">ACTIVE GENERATION DOCTRINE</div>
+            <div class="gen-bar gen-bar-red gen-grid" id="gen-bar-red">
+              <button type="button" class="gen-btn gen-btn-red" data-team="red" data-gen="1" title="Red Gen 1 (MiG-15 Fagot)"><span class="g-num">1</span><span class="g-name">MiG-15</span></button>
+              <button type="button" class="gen-btn gen-btn-red" data-team="red" data-gen="2" title="Red Gen 2 (MiG-21 Fishbed)"><span class="g-num">2</span><span class="g-name">MiG-21</span></button>
+              <button type="button" class="gen-btn gen-btn-red" data-team="red" data-gen="3" title="Red Gen 3 (MiG-23 / Su-27)"><span class="g-num">3</span><span class="g-name">MiG-23</span></button>
+              <button type="button" class="gen-btn gen-btn-red active" data-team="red" data-gen="4" title="Red Gen 4 (Su-27 Flanker)"><span class="g-num">4</span><span class="g-name">FLANKER</span></button>
+              <button type="button" class="gen-btn gen-btn-red" data-team="red" data-gen="5" title="Red Gen 5 (Su-57 Felon)"><span class="g-num">5</span><span class="g-name">FELON</span></button>
+              <button type="button" class="gen-btn gen-btn-red" data-team="red" data-gen="6" title="Red Gen 6 (Hostile CCA)"><span class="g-num">6</span><span class="g-name">CCA RED</span></button>
+              <button type="button" class="gen-btn gen-btn-red" data-team="red" data-gen="7" title="Red Gen 7 (Hostile Swarm)"><span class="g-num">7</span><span class="g-name">SWARM</span></button>
+            </div>
+            <button class="hud-btn hud-btn-red flank-scramble-btn" onclick="scrambleWave('red')" title="Scramble Red Hostile Flight">[ + SCRAMBLE RED ]</button>
+          </div>
 
-      <!-- Col. John Boyd Specific Excess Power (Ps) Meter -->
-      <div class="ps-meter-box">
-        <div class="ps-header">
-          <span class="ps-title">BOYD SPECIFIC EXCESS POWER (Ps)</span>
-          <span class="ps-value" id="mfd-ps">+140 FT/S</span>
-        </div>
-        <div class="ps-bar-track">
-          <div class="ps-bar-fill ps-positive" id="mfd-ps-bar"></div>
-        </div>
+          <!-- Red Live Combat Stats -->
+          <div class="flank-section flank-stats-box">
+            <div class="flank-section-title">HOSTILE TELEMETRY & STATS</div>
+            <div class="flank-stat-row">
+              <span class="stat-lbl">BANDITS AIRBORNE:</span>
+              <span class="stat-val stat-val-red" id="stat-red-sorties">1 ACTIVE</span>
+            </div>
+            <div class="flank-stat-row">
+              <span class="stat-lbl">AIR COMBAT KILLS:</span>
+              <span class="stat-val stat-val-red" id="stat-red-kills">0 SPLASHES</span>
+            </div>
+            <div class="flank-stat-row">
+              <span class="stat-lbl">MISSILES IN FLIGHT:</span>
+              <span class="stat-val" id="stat-red-missiles">0 IN FLIGHT</span>
+            </div>
+            <div class="flank-stat-row">
+              <span class="stat-lbl">FLEET AVG POWER (Ps):</span>
+              <span class="stat-val stat-val-amber" id="stat-red-ps">+130 FT/S</span>
+            </div>
+            <div class="flank-stat-row">
+              <span class="stat-lbl">LEAD BANDIT:</span>
+              <span class="stat-val" id="stat-red-lead">Su-27 FLANKER</span>
+            </div>
+            <div class="flank-stat-row">
+              <span class="stat-lbl">THREAT LEVEL:</span>
+              <span class="stat-badge badge-red-stance" id="stat-red-stance">HIGH THREAT</span>
+            </div>
+          </div>
+        </aside>
       </div>
-
-      <!-- Dynamic OODA Loop Indicator -->
-      <div class="ooda-cycle-box">
-        <div class="ooda-header">
-          <span>OODA DECISION CYCLE</span>
-          <span id="ooda-latency-note">BOYD LOOP</span>
-        </div>
-        <div class="ooda-steps">
-          <div class="ooda-step" id="ooda-observe">OBSERVE</div>
-          <div class="ooda-step" id="ooda-orient">ORIENT</div>
-          <div class="ooda-step active" id="ooda-decide">DECIDE</div>
-          <div class="ooda-step" id="ooda-act">ACT</div>
-        </div>
-      </div>
-
-      <!-- Tactical Radar Target & Weapons State -->
-      <div class="mfd-status-row">
-        <div class="mfd-status-line">
-          <span class="mfd-label">RADAR LOCK:</span>
-          <span class="mfd-target-val" id="mfd-target">FLANKER 1 (8.4 NM)</span>
-        </div>
-        <div class="mfd-status-line">
-          <span class="mfd-label">WEAPONRY:</span>
-          <span class="mfd-val" id="mfd-weapons">FOX-3 ARMED // AMRAAM</span>
-        </div>
-      </div>
-
-      <div class="mfd-hint">CLICK ANY AIRCRAFT IN AIRSPACE TO TRACK</div>
     </div>
 
     <!-- Bottom Footer (Radio Chatter & Multi-Domain Status) -->

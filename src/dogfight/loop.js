@@ -3,12 +3,14 @@
 // Logline: Clear, grid, sim, draw, VFX.
 //
 function dfDrawGrid(colors) {
+  var w = DF.worldWidth || DF.width;
+  var h = DF.worldHeight || DF.height;
   DF.ctx.save();
   DF.ctx.strokeStyle = getAlphaColor("border", 0.18);
   DF.ctx.lineWidth = 1;
   DF.ctx.beginPath();
-  for (var gx = 0; gx < DF.width; gx += 120) {
-    DF.ctx.moveTo(gx, 0); DF.ctx.lineTo(gx, DF.height);
+  for (var gx = 0; gx < w; gx += 160) {
+    DF.ctx.moveTo(gx, 0); DF.ctx.lineTo(gx, h);
   }
   DF.ctx.stroke();
 
@@ -19,30 +21,19 @@ function dfDrawGrid(colors) {
   var altGridLines = [0, 20000, 40000, 60000, 80000, 100000];
   for (var agi = 0; agi < altGridLines.length; agi++) {
     var altVal = altGridLines[agi];
-    var gridY = getYFromAltitude(altVal, DF.height);
+    var gridY = getYFromAltitude(altVal, h);
     DF.ctx.setLineDash(DASH_4_4);
     DF.ctx.beginPath();
-    DF.ctx.moveTo(0, gridY); DF.ctx.lineTo(DF.width, gridY);
+    DF.ctx.moveTo(0, gridY); DF.ctx.lineTo(w, gridY);
     DF.ctx.stroke();
 
     var altLabel = (altVal === 100000) ? "100k FT (NEAR-SPACE)" : (altVal === 0 ? "0 FT (TERRAIN)" : (altVal / 1000) + "k FT");
     DF.ctx.fillText(altLabel, 10, gridY > 12 ? gridY - 4 : 12);
   }
   DF.ctx.setLineDash([]);
-
-  // Subtle 0 ft Terrain Footer Gradient
-  if (DF.ctx.createLinearGradient) {
-    var terrainGrad = DF.ctx.createLinearGradient(0, DF.height - 32, 0, DF.height);
-    terrainGrad.addColorStop(0, getAlphaColor("panel", 0.0));
-    terrainGrad.addColorStop(1, getAlphaColor("panel", 0.45));
-    DF.ctx.fillStyle = terrainGrad;
-  } else {
-    DF.ctx.fillStyle = getAlphaColor("panel", 0.25);
-  }
-  DF.ctx.fillRect(0, DF.height - 32, DF.width, 32);
   DF.ctx.restore();
-
 }
+
 function updateDogfight(now) {
   if (!dogfightAnimId) return;
   dogfightAnimId = requestAnimationFrame(updateDogfight);
@@ -54,44 +45,75 @@ function updateDogfight(now) {
     if (!hasAnyActiveGen()) return;
     var colors = getThemeColors();
 
-    // 1. Draw Multi-Domain Landscape (Air, Space, Land, Sea, Sub-Surface)
-    if (typeof dfDrawLandscape === "function") {
-      dfDrawLandscape(DF.ctx, DF.width, DF.height, now, colors);
-    } else {
-      dfDrawGrid(colors);
+    var worldW = DF.worldWidth || 3600;
+    var worldH = DF.worldHeight || 1200;
+
+    // 1. Update Dynamic Tactical Camera (auto-zooms and frames weapon systems in flight)
+    if (DF.camera && typeof DF.camera.update === "function") {
+      DF.camera.update(DF.width, DF.height);
     }
 
-    // 2. Step Simulation with Time Warp / Pause
+    // 2. Step Simulation with Time Warp / Pause (runs in world coordinates)
     var isPaused = (typeof InteractiveController !== "undefined" && InteractiveController.isPaused);
     var speedMult = (typeof InteractiveController !== "undefined" && InteractiveController.simSpeed) ? InteractiveController.simSpeed : 1.0;
 
     if (!isPaused) {
       if (speedMult >= 2.0) {
         dfStepSim();
-        dfStepProjectiles(colors);
         dfStepSim();
-        dfStepProjectiles(colors);
       } else {
         dfStepSim();
-        dfStepProjectiles(colors);
       }
     }
 
-    // 3. Draw Aircraft & Contrails
+    // 3. Begin World Space Transform (Camera pan & zoom)
+    DF.ctx.save();
+    if (DF.camera) {
+      DF.ctx.translate(DF.width * 0.5, DF.height * 0.5);
+      DF.ctx.scale(DF.camera.scale, DF.camera.scale);
+      DF.ctx.translate(-DF.camera.x, -DF.camera.y);
+    }
+
+    // 4. Draw Multi-Domain Landscape (World space: 3600 x 1200)
+    if (typeof dfDrawLandscape === "function") {
+      dfDrawLandscape(DF.ctx, worldW, worldH, now, colors);
+    } else {
+      dfDrawGrid(colors);
+    }
+
+    // 5. Step & Draw Projectiles in World Space (Missiles, Tracers, Flares, Chaff, Explosions)
+    if (!isPaused) {
+      dfStepProjectiles(colors);
+    }
+
+    // 6. Draw Aircraft, Formations, Contrails (World space)
     dfDrawAircraft(now, colors);
 
-    // 4. Draw Interactive Reticle on Tracked Aircraft
+    // 7. Draw Interactive Reticle on Tracked Aircraft (World space)
     if (typeof InteractiveController !== "undefined" && InteractiveController.drawTrackedReticle) {
       InteractiveController.drawTrackedReticle(DF.ctx);
     }
 
-    // 5. Update and Draw VFX & Wreckage
-    updateAndDrawWreckage(DF.ctx, 1.0, DF.height);
-    updateAndDrawVfxParticles(DF.ctx, 1.0, DF.height, colors);
+    // 8. Update and Draw VFX & Wreckage (World space)
+    updateAndDrawWreckage(DF.ctx, 1.0, worldH);
+    updateAndDrawVfxParticles(DF.ctx, 1.0, worldH, colors);
 
-    // 6. Update MFD Telemetry Panel
+    // End World Space Transform
+    DF.ctx.restore();
+
+    // 9. Draw Screen-Space Tactical Camera HUD (Scale Ruler in NM, Zoom Indicator)
+    if (DF.camera && typeof DF.camera.drawTacticalHud === "function") {
+      DF.camera.drawTacticalHud(DF.ctx, DF.width, DF.height);
+    }
+
+    // 10. Update MFD Telemetry Panel
     if (typeof InteractiveController !== "undefined" && InteractiveController.updateMfdDisplay) {
       InteractiveController.updateMfdDisplay();
+    }
+
+    // 11. Update Combat Momentum Meter & Line Chart
+    if (typeof CombatMeter !== "undefined" && typeof CombatMeter.update === "function") {
+      CombatMeter.update(now);
     }
 
     globalHudFrameCount = (globalHudFrameCount + 1) | 0;

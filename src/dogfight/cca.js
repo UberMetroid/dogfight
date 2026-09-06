@@ -198,17 +198,13 @@ function updateAndDrawCcaDrones(jet, isLead, colors) {
     cca.x += Math.cos(cca.angle) * cca.speed;
     cca.y += Math.sin(cca.angle) * cca.speed;
 
-    // Screen edge boundary clamping [60, DF.width-60] x [32, DF.height-32]
-    if (cca.x < 60) {
-      cca.x = 60;
-      if (Math.cos(cca.angle) < 0) cca.angle = (Math.sin(cca.angle) >= 0) ? 0.20 : -0.20;
-    }
-    if (cca.x > DF.width - 60) {
-      cca.x = DF.width - 60;
-      if (Math.cos(cca.angle) > 0) cca.angle = (Math.sin(cca.angle) >= 0) ? (Math.PI - 0.20) : (-Math.PI + 0.20);
-    }
+    // World boundary clamping [70, worldW-70] x [32, worldH-32]
+    var worldW = (typeof DF !== "undefined" && DF.worldWidth) ? DF.worldWidth : 3600;
+    var worldH = (typeof DF !== "undefined" && DF.worldHeight) ? DF.worldHeight : 1200;
+    if (cca.x < 70) cca.x = 70;
+    if (cca.x > worldW - 70) cca.x = worldW - 70;
     if (cca.y < 32) cca.y = 32;
-    if (cca.y > DF.height - 32) cca.y = DF.height - 32;
+    if (cca.y > worldH - 32) cca.y = worldH - 32;
 
     // Hard clamp bounds [42px, 440px]
     var endDx = cca.x - jet.x;

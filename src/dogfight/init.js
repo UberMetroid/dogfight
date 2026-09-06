@@ -17,6 +17,8 @@ function scrambleWave(team, gen) {
     if (typeof updateGenSelectorUI === "function") updateGenSelectorUI();
     activeList = [fallbackGen];
   }
+  var worldW = DF.worldWidth || 3600;
+  var worldH = DF.worldHeight || 1200;
   for (var idx = 0; idx < activeList.length; idx++) {
     var gg = activeList[idx];
     var specG = (typeof AIRCRAFT_SPECS !== "undefined" && AIRCRAFT_SPECS[gg]) ? AIRCRAFT_SPECS[gg] : { baseSpeed: 4.8 };
@@ -33,9 +35,9 @@ function scrambleWave(team, gen) {
       jet.lastDamagedBy = "";
       jet.damageSmokeTimer = 0;
       jet.damageSparksTimer = 0;
-      jet.x = isBlue ? (-60 - idx * 45) : (DF.width + 60 + idx * 45);
-      var baseY = getYFromAltitude(RESPAWN_CEILINGS[gg] || 52000, DF.height);
-      jet.y = isBlue ? Math.max(32.0, baseY - (idx === 0 ? 50 : 25)) : Math.min(DF.height - 40.0, baseY + (idx === 0 ? 50 : 75));
+      jet.x = isBlue ? (-100 - idx * 50) : (worldW + 100 + idx * 50);
+      var baseY = getYFromAltitude(RESPAWN_CEILINGS[gg] || 52000, worldH);
+      jet.y = isBlue ? Math.max(40.0, baseY - (idx === 0 ? 50 : 25)) : Math.min(worldH - 60.0, baseY + (idx === 0 ? 50 : 75));
       jet.angle = isBlue ? 0.0 : Math.PI;
       jet.targetAngle = jet.angle;
       jet.speed = (specG.baseSpeed || 4.8) * 1.15;
@@ -69,18 +71,21 @@ function initGlobalDogfight() {
   if (!ctx) return;
   DF.canvas = canvas;
   DF.ctx = ctx;
+  DF.worldWidth = 3600;
+  DF.worldHeight = 1200;
   DF.width = canvas.width = window.innerWidth || 1440;
   DF.height = canvas.height = window.innerHeight || 900;
   function onResize() {
     DF.width = canvas.width = window.innerWidth || 1440;
     DF.height = canvas.height = window.innerHeight || 900;
+    if (DF.camera && typeof DF.camera.update === "function") DF.camera.update(DF.width, DF.height);
   }
   window.removeEventListener("resize", onResize);
   window.addEventListener("resize", onResize);
   DF.bluePool = globalDogfightJetsState.bluePool;
   DF.redPool = globalDogfightJetsState.redPool;
   DF.allJets = globalDogfightJetsState.allJets;
-  syncFleetToActiveGenerations(activeGensBlue, activeGensRed, DF.width, DF.height);
+  syncFleetToActiveGenerations(activeGensBlue, activeGensRed, DF.worldWidth, DF.worldHeight);
   DF.missilesPool = new StaticEntityPoolF32(48, 8);
   DF.missileSmokes = [];
   for (var ms = 0; ms < 48; ms++) DF.missileSmokes.push(new ContrailRingBufferF32(20, 4));

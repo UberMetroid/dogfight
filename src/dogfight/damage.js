@@ -23,6 +23,13 @@ function applyAirframeDamage(targetJet, damageAmount, attacker, weaponName) {
     targetJet.deathTimer = 45;
     targetJet.fadeAlpha = 1.0;
     if (attacker && attacker !== targetJet) attacker.kills = (attacker.kills || 0) + 1;
+    if (typeof DF !== "undefined") {
+      if (targetJet.team === "red") {
+        DF.blueKills = (DF.blueKills || 0) + 1;
+      } else if (targetJet.team === "blue") {
+        DF.redKills = (DF.redKills || 0) + 1;
+      }
+    }
     var tCallsign = targetJet.callsign || ("GEN " + (targetJet.gen || 4));
     triggerTacticalRadio("SPLASH ONE! " + tCallsign + " DOWNED!");
     if (typeof spawnStage1Fireball === "function") {

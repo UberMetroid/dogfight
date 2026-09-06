@@ -10,8 +10,9 @@ function evaluateKineticWeapons(jet, targetEnemy, colors) {
     var da = Math.abs(jet.angle - bearing);
     while (da > Math.PI) da = Math.abs(da - Math.PI * 2);
     var shooterTeamCode = (jet.team === "blue") ? 0 : 1;
-    var hShooter = getAltitudeFeet(jet.y, DF.height);
-    var hTarget = getAltitudeFeet(targetEnemy.y, DF.height);
+    var worldH = (typeof DF !== "undefined" && DF.worldHeight) ? DF.worldHeight : 1200;
+    var hShooter = getAltitudeFeet(jet.y, worldH);
+    var hTarget = getAltitudeFeet(targetEnemy.y, worldH);
     var deltaH = hTarget - hShooter;
     var isKineticReachValid = (Math.abs(deltaH) <= 35000);
 

@@ -9,6 +9,7 @@ var DF = {
   bluePool: null, redPool: null, allJets: null,
   missilesPool: null, missileSmokes: null,
   flaresPool: null, chaffPool: null, bulletsPool: null, explosionsPool: null,
+  blueKills: 0, redKills: 0,
   radioBuffer: null, radioHead: 0, radioCount: 0, MAX_RADIO: 5
 };
 function dfRadio(text) {

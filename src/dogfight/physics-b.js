@@ -3,7 +3,10 @@
 // Logline: Afterburner sparks and gen-7 drones.
 //
 function updateJetPhysicsLate(jet, targetEnemy, incomingThreat, opposingPool, missilesPoolRef) {
-  var altFt = getAltitudeFeet(jet.y, DF.height);
+  var worldW = (typeof DF !== "undefined" && DF.worldWidth) ? DF.worldWidth : 3600;
+  var worldH = (typeof DF !== "undefined" && DF.worldHeight) ? DF.worldHeight : 1200;
+
+  var altFt = getAltitudeFeet(jet.y, worldH);
   var spec = AIRCRAFT_SPECS[jet.gen] || AIRCRAFT_SPECS[4] || {};
 
   // Thermal ionization sparks when afterburner is active
@@ -40,49 +43,42 @@ function updateJetPhysicsLate(jet, targetEnemy, incomingThreat, opposingPool, mi
   jet.x += vx;
   jet.y += vy;
 
-  // Hard Viewport Containment Clamping (Zero Screen-Wrap)
-  // For Gen 7: strict ceiling clamp y >= 65 px (h <= 85,000 ft) and y <= DF.height - 65 px, x in [65, DF.width-65]
+  // Boundary Containment (Zero Bouncing: smooth aerodynamic turnback without angle snapping)
   var isGen7 = (jet.gen === 7);
-  var minArenaX = isGen7 ? 65.0 : 60.0;
-  var maxArenaX = isGen7 ? (DF.width - 65.0) : (DF.width - 60.0);
+  var minArenaX = isGen7 ? 85.0 : 75.0;
+  var maxArenaX = isGen7 ? (worldW - 85.0) : (worldW - 75.0);
   if (jet.x < minArenaX) {
     jet.x = minArenaX;
-    if (Math.cos(jet.angle) < 0) {
-      jet.angle = (Math.sin(jet.angle) >= 0) ? 0.20 : -0.20;
-      jet.targetAngle = (Math.sin(jet.targetAngle) >= 0) ? 0.20 : -0.20;
-    }
+    jet.targetAngle = 0.0; // Smoothly steer East towards combat zone
+    jet.mode = "BOUNDARY_SLICE";
+    jet.afterburner = true;
   } else if (jet.x > maxArenaX) {
     jet.x = maxArenaX;
-    if (Math.cos(jet.angle) > 0) {
-      jet.angle = (Math.sin(jet.angle) >= 0) ? (Math.PI - 0.20) : (-Math.PI + 0.20);
-      jet.targetAngle = (Math.sin(jet.targetAngle) >= 0) ? (Math.PI - 0.20) : (-Math.PI + 0.20);
-    }
+    jet.targetAngle = Math.PI; // Smoothly steer West towards combat zone
+    jet.mode = "BOUNDARY_SLICE";
+    jet.afterburner = true;
   }
 
-  // Near-space ceiling (100k ft) header clamp (min visible ceiling y >= 32.0 px, Gen 7 strictly clamped to y >= 65.0 px)
+  // Near-space ceiling (100k ft) header clamp (min visible ceiling y >= 32.0 px)
   var minCeilingY = isGen7 ? 65.0 : 32.0;
   if (jet.y < minCeilingY) {
     jet.y = minCeilingY;
     if (Math.sin(jet.angle) < 0) {
-      var isFacingRight = Math.cos(jet.angle) >= 0;
-      jet.angle = isFacingRight ? 0.05 : (jet.angle < 0 ? -Math.PI - 0.05 : Math.PI + 0.05);
-      jet.targetAngle = jet.angle;
+      jet.targetAngle = (Math.cos(jet.angle) >= 0) ? 0.05 : (Math.PI - 0.05);
     }
   }
 
-  // Gen 7 floor clamp: y <= DF.height - 65.0 px
-  if (isGen7 && jet.y > DF.height - 65.0) {
-    jet.y = DF.height - 65.0;
+  // Gen 7 floor clamp: y <= worldH - 65.0 px
+  if (isGen7 && jet.y > worldH - 65.0) {
+    jet.y = worldH - 65.0;
     if (Math.sin(jet.angle) > 0) {
-      var isFacingRightG7 = Math.cos(jet.angle) >= 0;
-      jet.angle = isFacingRightG7 ? -0.05 : (jet.angle < 0 ? -Math.PI + 0.05 : Math.PI - 0.05);
-      jet.targetAngle = jet.angle;
+      jet.targetAngle = (Math.cos(jet.angle) >= 0) ? -0.05 : (Math.PI + 0.05);
     }
   }
 
   // Minimum Altitude Floor Invariant (h >= 800 ft clearance above MSL)
-  var mslY = (typeof getSeaLevelY === "function") ? getSeaLevelY(DF.height) : (DF.height - 120);
-  var minFloorY = Math.min(getYFromAltitude(800, DF.height), mslY - 15.0);
+  var mslY = (typeof getSeaLevelY === "function") ? getSeaLevelY(worldH) : (worldH - 150);
+  var minFloorY = Math.min(getYFromAltitude(800, worldH), mslY - 15.0);
   if (!jet.isDying && (altFt <= 800 || jet.y >= minFloorY)) {
     jet.y = Math.min(jet.y, minFloorY);
     if (Math.sin(jet.angle) > 0) {
@@ -96,7 +92,8 @@ function updateJetPhysicsLate(jet, targetEnemy, incomingThreat, opposingPool, mi
   if (jet.y >= mslY && jet.active && !jet.isDying) {
     applyAirframeDamage(jet, 100.0, null, "TERRAIN_IMPACT");
     jet.y = mslY;
-    var isOcean = jet.x >= (DF.width * 0.38);
+    var coastRatio = (typeof MultiDomainSystem !== "undefined" && MultiDomainSystem.coastRatio) ? MultiDomainSystem.coastRatio : 0.38;
+    var isOcean = jet.x >= (worldW * coastRatio);
     if (isOcean && global.TacticalAudio) global.TacticalAudio.playSplash();
     else if (!isOcean && global.TacticalAudio) global.TacticalAudio.playExplosion();
     dfRadio("CFIT ALERT: " + (jet.callsign || spec.callsign) + (isOcean ? " DITCHED IN OCEAN AT SEA LEVEL!" : " IMPACTED COASTAL TERRAIN AT 0 FT!"));
