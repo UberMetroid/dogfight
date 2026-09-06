@@ -67,21 +67,49 @@
       </div>
 
       <div class="hud-controls-group">
-        <!-- Generation Toggle Bar -->
-        <div class="gen-bar" id="gen-bar" aria-label="Toggle active aircraft generations">
-          <span class="gen-title">GEN:</span>
-          <button type="button" class="gen-btn" data-gen="1" title="Gen 1 (F-86 Sabre / MiG-15)">1</button>
-          <button type="button" class="gen-btn" data-gen="2" title="Gen 2 (F-4 Phantom / MiG-21)">2</button>
-          <button type="button" class="gen-btn" data-gen="3" title="Gen 3 (F-14 Tomcat / Su-27)">3</button>
-          <button type="button" class="gen-btn active" data-gen="4" title="Gen 4 (F-16 Viper / Su-27)">4</button>
-          <button type="button" class="gen-btn" data-gen="5" title="Gen 5 (F-22 Raptor / Su-57)">5</button>
-          <button type="button" class="gen-btn" data-gen="6" title="Gen 6 (NGAD + Loyal Wingman CCA)">6</button>
-          <button type="button" class="gen-btn" data-gen="7" title="Gen 7 (Autonomous Swarm Mesh)">7</button>
-        </div>
+        <!-- Independent Split Force Controls (Blue vs Red) -->
+        <div class="hud-forces-split">
+          <!-- Blue Allied Force -->
+          <div class="team-flight-bar team-blue" aria-label="Blue Allied Force Generations">
+            <div class="team-header-pill">
+              <span class="team-beacon beacon-blue"></span>
+              <span class="team-tag">BLUE FORCE</span>
+            </div>
+            <div class="gen-bar gen-bar-blue" id="gen-bar-blue">
+              <button type="button" class="gen-btn gen-btn-blue" data-team="blue" data-gen="1" title="Blue Gen 1 (F-86 Sabre)">1</button>
+              <button type="button" class="gen-btn gen-btn-blue" data-team="blue" data-gen="2" title="Blue Gen 2 (F-4 Phantom)">2</button>
+              <button type="button" class="gen-btn gen-btn-blue" data-team="blue" data-gen="3" title="Blue Gen 3 (F-14 Tomcat)">3</button>
+              <button type="button" class="gen-btn gen-btn-blue active" data-team="blue" data-gen="4" title="Blue Gen 4 (F-16 Viper)">4</button>
+              <button type="button" class="gen-btn gen-btn-blue" data-team="blue" data-gen="5" title="Blue Gen 5 (F-22 Raptor)">5</button>
+              <button type="button" class="gen-btn gen-btn-blue" data-team="blue" data-gen="6" title="Blue Gen 6 (NGAD + CCA)">6</button>
+              <button type="button" class="gen-btn gen-btn-blue" data-team="blue" data-gen="7" title="Blue Gen 7 (Quantum Swarm)">7</button>
+            </div>
+            <button class="hud-btn hud-btn-blue hud-btn-compact" onclick="scrambleWave('blue')" title="Scramble Blue Allied Flight">[ + SCRAMBLE ]</button>
+          </div>
 
-        <!-- Scramble Buttons -->
-        <button class="hud-btn hud-btn-blue" onclick="scrambleWave('blue', 4)" title="Scramble Blue Allied Flight">[ + BLUE SCRAMBLE ]</button>
-        <button class="hud-btn hud-btn-red" onclick="scrambleWave('red', 4)" title="Scramble Red Hostile Flight">[ + RED SCRAMBLE ]</button>
+          <!-- Tactical Versus Indicator -->
+          <div class="teams-versus-pill" title="Adversarial Air Engagement">
+            <span class="vs-text">VS</span>
+          </div>
+
+          <!-- Red Opposing Force -->
+          <div class="team-flight-bar team-red" aria-label="Red Opposing Force Generations">
+            <div class="team-header-pill">
+              <span class="team-beacon beacon-red"></span>
+              <span class="team-tag">RED FORCE</span>
+            </div>
+            <div class="gen-bar gen-bar-red" id="gen-bar-red">
+              <button type="button" class="gen-btn gen-btn-red" data-team="red" data-gen="1" title="Red Gen 1 (MiG-15 Fagot)">1</button>
+              <button type="button" class="gen-btn gen-btn-red" data-team="red" data-gen="2" title="Red Gen 2 (MiG-21 Fishbed)">2</button>
+              <button type="button" class="gen-btn gen-btn-red" data-team="red" data-gen="3" title="Red Gen 3 (MiG-23 / Su-27)">3</button>
+              <button type="button" class="gen-btn gen-btn-red active" data-team="red" data-gen="4" title="Red Gen 4 (Su-27 Flanker)">4</button>
+              <button type="button" class="gen-btn gen-btn-red" data-team="red" data-gen="5" title="Red Gen 5 (Su-57 Felon)">5</button>
+              <button type="button" class="gen-btn gen-btn-red" data-team="red" data-gen="6" title="Red Gen 6 (Hostile CCA)">6</button>
+              <button type="button" class="gen-btn gen-btn-red" data-team="red" data-gen="7" title="Red Gen 7 (Hostile Swarm)">7</button>
+            </div>
+            <button class="hud-btn hud-btn-red hud-btn-compact" onclick="scrambleWave('red')" title="Scramble Red Hostile Flight">[ + SCRAMBLE ]</button>
+          </div>
+        </div>
 
         <!-- Time Warp Controls -->
         <div class="speed-group" aria-label="Simulation speed">
@@ -204,10 +232,13 @@
 
         <!-- Quick Battle Scenarios -->
         <div class="scenario-bar">
-          <button class="scenario-btn" onclick="launchScenario('mig-alley')" title="Korea 1950: F-86 vs MiG-15">[ MIG ALLEY (GEN 1) ]</button>
+          <span class="scenario-title">SCENARIOS:</span>
+          <button class="scenario-btn" onclick="launchScenario('mig-alley')" title="Korea 1950: F-86 Sabre vs MiG-15">[ MIG ALLEY (GEN 1) ]</button>
           <button class="scenario-btn" onclick="launchScenario('fleet-defense')" title="Fleet Defense: F-14 Tomcat BVR">[ FLEET DEFENSE (GEN 3) ]</button>
           <button class="scenario-btn" onclick="launchScenario('stealth-clash')" title="Near-Peer Stealth: F-22 vs Su-57">[ STEALTH CLASH (GEN 5) ]</button>
-          <button class="scenario-btn" onclick="launchScenario('future-swarm')" title="Autonomous AI Swarm Mesh">[ AI SWARM (GEN 7) ]</button>
+          <button class="scenario-btn btn-asym" onclick="launchScenario('raptor-vs-mig15')" title="Asymmetric: Gen 5 F-22 Raptor vs Gen 1 MiG-15">[ ⚡ RAPTOR vs MIG-15 (G5 vs G1) ]</button>
+          <button class="scenario-btn btn-asym" onclick="launchScenario('ngad-vs-felon')" title="Asymmetric: Gen 6 NGAD vs Gen 5 Su-57 Felon">[ ⚡ NGAD vs FELON (G6 vs G5) ]</button>
+          <button class="scenario-btn btn-asym" onclick="launchScenario('swarm-vs-tomcat')" title="Asymmetric: Gen 7 AI Swarm vs Gen 3 F-14 Tomcat">[ ⚡ SWARM vs TOMCAT (G7 vs G3) ]</button>
           <button class="scenario-btn" onclick="launchScenario('all-out')" title="All 7 Generations Mixed">[ ALL-OUT AIR WAR ]</button>
         </div>
       </div>
@@ -356,7 +387,50 @@
           <button class="dossier-duel-btn" onclick="InteractiveController.spawnHistoricalDuel(${gen}); closeDossier();">[ ⚔ SPAWN 1v1 HISTORICAL DUEL ]</button>
           <button class="dossier-scramble-btn" onclick="scrambleWave('blue', ${gen}); scrambleWave('red', ${gen}); closeDossier();">[ ✈ SCRAMBLE 4-SHIP FLIGHT ]</button>
         </div>
+
+        <div class="dossier-asym-builder">
+          <div class="asym-builder-title">⚡ ASYMMETRIC WARFARE MATCHUP CREATOR</div>
+          <p class="asym-builder-desc">Pit any Allied generation against any Opposing generation to test technological asymmetry and Boyd OODA tempo advantages.</p>
+          <div class="asym-builder-controls">
+            <div class="asym-select-group">
+              <label class="asym-label blue-label">BLUE FORCE AIRFRAME:</label>
+              <select id="asym-blue-gen" class="asym-dropdown">
+                <option value="1">GEN 1 // F-86 Sabre</option>
+                <option value="2">GEN 2 // F-4 Phantom II</option>
+                <option value="3">GEN 3 // F-14 Tomcat</option>
+                <option value="4">GEN 4 // F-16 Viper</option>
+                <option value="5" selected>GEN 5 // F-22 Raptor</option>
+                <option value="6">GEN 6 // NGAD + CCA</option>
+                <option value="7">GEN 7 // Quantum Swarm</option>
+              </select>
+            </div>
+            <div class="asym-vs-badge">VS</div>
+            <div class="asym-select-group">
+              <label class="asym-label red-label">RED FORCE AIRFRAME:</label>
+              <select id="asym-red-gen" class="asym-dropdown">
+                <option value="1" selected>GEN 1 // MiG-15 Fagot</option>
+                <option value="2">GEN 2 // MiG-21 Fishbed</option>
+                <option value="3">GEN 3 // MiG-23 Flogger</option>
+                <option value="4">GEN 4 // Su-27 Flanker</option>
+                <option value="5">GEN 5 // Su-57 Felon</option>
+                <option value="6">GEN 6 // Hostile CCA</option>
+                <option value="7">GEN 7 // Hostile Swarm</option>
+              </select>
+            </div>
+          </div>
+          <button class="dossier-asym-btn" onclick="launchCustomAsymmetricMatchup(); closeDossier();">[ ⚔ ENGAGE ASYMMETRIC DUEL ]</button>
+        </div>
       `;
+    }
+
+    // Launch Custom Asymmetric Matchup from Dossier
+    function launchCustomAsymmetricMatchup() {
+      if (window.TacticalAudio) TacticalAudio.playClick();
+      var bSelect = document.getElementById('asym-blue-gen');
+      var rSelect = document.getElementById('asym-red-gen');
+      var bGen = bSelect ? parseInt(bSelect.value, 10) : 5;
+      var rGen = rSelect ? parseInt(rSelect.value, 10) : 1;
+      InteractiveController.spawnAsymmetricDuel(bGen, rGen);
     }
 
     // Quick Scenario Launcher
@@ -368,12 +442,21 @@
         InteractiveController.spawnHistoricalDuel(3);
       } else if (type === 'stealth-clash') {
         InteractiveController.spawnHistoricalDuel(5);
-      } else if (type === 'future-swarm') {
-        InteractiveController.spawnHistoricalDuel(7);
+      } else if (type === 'raptor-vs-mig15') {
+        InteractiveController.spawnAsymmetricDuel(5, 1);
+      } else if (type === 'ngad-vs-felon') {
+        InteractiveController.spawnAsymmetricDuel(6, 5);
+      } else if (type === 'swarm-vs-tomcat') {
+        InteractiveController.spawnAsymmetricDuel(7, 3);
       } else if (type === 'all-out') {
-        for (var g = 1; g <= 7; g++) activeGens[g] = true;
+        for (var g = 1; g <= 7; g++) {
+          activeGensBlue[g] = true;
+          activeGensRed[g] = true;
+        }
+        syncMergedActiveGens();
+        saveActiveGens();
         setupGenSelector();
-        syncFleetToActiveGenerations(activeGens, DF.width, DF.height);
+        syncFleetToActiveGenerations(activeGensBlue, activeGensRed, DF.width, DF.height);
         scrambleWave('blue', 4);
         scrambleWave('red', 4);
         dfRadio('ALL-OUT AIR WAR INITIATED: ALL 7 WARFARE GENERATIONS ENGAGED IN MULTI-DOMAIN AIRSPACE!');

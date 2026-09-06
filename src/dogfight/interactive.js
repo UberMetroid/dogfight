@@ -152,66 +152,166 @@
       if (mfd) mfd.classList.remove("active");
     },
 
-    // Launch a 1v1 Historical Duel for a specific generation
-    spawnHistoricalDuel: function (gen) {
-      gen = parseInt(gen, 10) || 4;
-      if (gen < 1) gen = 1;
-      if (gen > 7) gen = 7;
+    // Launch a 1v1 Asymmetric Matchup with independent Blue and Red generations
+    spawnAsymmetricDuel: function (blueGen, redGen) {
+      blueGen = parseInt(blueGen, 10) || 4;
+      redGen = parseInt(redGen, 10) || 4;
+      if (blueGen < 1) blueGen = 1;
+      if (blueGen > 7) blueGen = 7;
+      if (redGen < 1) redGen = 1;
+      if (redGen > 7) redGen = 7;
 
-      // Reset all jets
+      // Reset all jets in pools
       for (var i = 0; i < DF.allJets.length; i++) {
         DF.allJets[i].active = false;
         DF.allJets[i].isDying = false;
       }
 
-      // Activate Gen in activeGens mask
-      for (var g = 1; g <= 7; g++) activeGens[g] = (g === gen);
+      // Activate Gen in respective team masks
+      for (var g = 1; g <= 7; g++) {
+        activeGensBlue[g] = (g === blueGen);
+        activeGensRed[g] = (g === redGen);
+      }
+      if (typeof syncMergedActiveGens === "function") syncMergedActiveGens();
+      if (typeof saveActiveGens === "function") saveActiveGens();
+      if (typeof updateGenSelectorUI === "function") updateGenSelectorUI();
 
-      var spec = AIRCRAFT_SPECS[gen] || AIRCRAFT_SPECS[4];
-      var mslY = (typeof getSeaLevelY === "function") ? getSeaLevelY(DF.height) : (DF.height - 120);
-      var combatAltFt = (gen === 1) ? 22000 : (gen <= 3 ? 35000 : (gen <= 5 ? 48000 : 65000));
-      var startY = (typeof getYFromAltitude === "function") ? getYFromAltitude(combatAltFt, DF.height) : (mslY - 180);
+      var bSpec = (typeof AIRCRAFT_SPECS !== "undefined" && AIRCRAFT_SPECS[blueGen]) ? AIRCRAFT_SPECS[blueGen] : { baseSpeed: 4.8 };
+      var rSpec = (typeof AIRCRAFT_SPECS !== "undefined" && AIRCRAFT_SPECS[redGen]) ? AIRCRAFT_SPECS[redGen] : { baseSpeed: 4.8 };
+
+      var bAltFt = (blueGen === 1) ? 22000 : (blueGen <= 3 ? 35000 : (blueGen <= 5 ? 48000 : 65000));
+      var rAltFt = (redGen === 1) ? 22000 : (redGen <= 3 ? 35000 : (redGen <= 5 ? 48000 : 65000));
+      var bStartY = (typeof getYFromAltitude === "function") ? getYFromAltitude(bAltFt, DF.height) : (DF.height * 0.4);
+      var rStartY = (typeof getYFromAltitude === "function") ? getYFromAltitude(rAltFt, DF.height) : (DF.height * 0.42);
 
       // Blue Jet
       var bJet = DF.bluePool[0];
-      bJet.gen = gen;
+      bJet.gen = blueGen;
       bJet.team = "blue";
       bJet.active = true;
       bJet.isDying = false;
+      bJet.deathTimer = 0;
+      bJet.fadeAlpha = 1.0;
       bJet.hp = 100.0;
+      bJet.maxHp = 100.0;
+      bJet.damageState = "NOMINAL";
+      bJet.lastDamagedBy = "";
+      bJet.damageSmokeTimer = 0;
+      bJet.damageSparksTimer = 0;
       bJet.x = DF.width * 0.22;
-      bJet.y = startY;
+      bJet.y = bStartY;
       bJet.angle = 0.0; // Facing East
       bJet.targetAngle = 0.0;
-      bJet.speed = spec.baseSpeed;
-      setupJetCallsignAndVariant(bJet, gen, "blue", 0);
+      bJet.speed = bSpec.baseSpeed || 4.8;
+      bJet.baseSpeed = bSpec.baseSpeed || 4.8;
+      bJet.prevSpeed = bJet.speed;
+      bJet.ps = 0;
+      bJet.turnRate = 0;
+      bJet.gForce = 1.0;
+      bJet.isStalled = false;
+      bJet.mode = "ENGAGED";
+      bJet.modeTimer = 60;
+      bJet.afterburner = true;
+      bJet.isLead = true;
+      bJet.isHero = true;
+      bJet.rcs = bSpec.rcsClean || bSpec.rcs || 1.0;
+      bJet.bayDoorTimer = 0;
+      bJet.flareCooldown = 0;
+      bJet.chaffCooldown = 0;
+      bJet.gunCooldown = 0;
+      bJet.missileCooldown = blueGen === 1 ? 999999 : 12;
+      bJet.laserCooldown = 0;
+      bJet.triLaserCooldown = 0;
+      bJet.superLaserCooldown = blueGen === 7 ? 60 : 0;
+      bJet.superLaserPulse = 0;
+      bJet.shieldPulse = 0;
+      bJet.ccaDeployed = false;
+      setupJetCallsignAndVariant(bJet, blueGen, "blue", 0);
+      if (bJet.contrail) bJet.contrail.clear();
+      if (bJet.wingVapor) bJet.wingVapor.clear();
 
       // Red Jet
       var rJet = DF.redPool[0];
-      rJet.gen = gen;
+      rJet.gen = redGen;
       rJet.team = "red";
       rJet.active = true;
       rJet.isDying = false;
+      rJet.deathTimer = 0;
+      rJet.fadeAlpha = 1.0;
       rJet.hp = 100.0;
+      rJet.maxHp = 100.0;
+      rJet.damageState = "NOMINAL";
+      rJet.lastDamagedBy = "";
+      rJet.damageSmokeTimer = 0;
+      rJet.damageSparksTimer = 0;
       rJet.x = DF.width * 0.78;
-      rJet.y = startY + 15;
+      rJet.y = rStartY;
       rJet.angle = Math.PI; // Facing West
       rJet.targetAngle = Math.PI;
-      rJet.speed = spec.baseSpeed;
-      setupJetCallsignAndVariant(rJet, gen, "red", 0);
+      rJet.speed = rSpec.baseSpeed || 4.8;
+      rJet.baseSpeed = rSpec.baseSpeed || 4.8;
+      rJet.prevSpeed = rJet.speed;
+      rJet.ps = 0;
+      rJet.turnRate = 0;
+      rJet.gForce = 1.0;
+      rJet.isStalled = false;
+      rJet.mode = "ENGAGED";
+      rJet.modeTimer = 60;
+      rJet.afterburner = true;
+      rJet.isLead = true;
+      rJet.isHero = false;
+      rJet.rcs = rSpec.rcsClean || rSpec.rcs || 1.0;
+      rJet.bayDoorTimer = 0;
+      rJet.flareCooldown = 0;
+      rJet.chaffCooldown = 0;
+      rJet.gunCooldown = 0;
+      rJet.missileCooldown = redGen === 1 ? 999999 : 12;
+      rJet.laserCooldown = 0;
+      rJet.triLaserCooldown = 0;
+      rJet.superLaserCooldown = redGen === 7 ? 60 : 0;
+      rJet.superLaserPulse = 0;
+      rJet.shieldPulse = 0;
+      rJet.ccaDeployed = false;
+      setupJetCallsignAndVariant(rJet, redGen, "red", 0);
+      if (rJet.contrail) rJet.contrail.clear();
+      if (rJet.wingVapor) rJet.wingVapor.clear();
 
-      // Pair them up as targets
+      // Deactivate unused slots
+      for (var rem = 1; rem < 7; rem++) {
+        DF.bluePool[rem].active = false;
+        DF.bluePool[rem].targetJet = null;
+        DF.bluePool[rem].wingmanJet = null;
+        DF.redPool[rem].active = false;
+        DF.redPool[rem].targetJet = null;
+        DF.redPool[rem].wingmanJet = null;
+      }
+
+      // Pair them up as mutual targets
       bJet.targetJet = rJet;
       rJet.targetJet = bJet;
+      bJet.wingmanJet = bJet;
+      rJet.wingmanJet = rJet;
 
       this.selectJet(bJet);
 
+      var bName = (bSpec.hudName) || ("GEN " + blueGen);
+      var rName = (rSpec.hudName) || ("GEN " + redGen);
+
       if (typeof dfRadio === "function") {
-        var eraInfo = this.ERA_DATA[gen];
-        dfRadio("TACTICAL DUEL ENGAGED: " + eraInfo.bluePlane + " vs " + eraInfo.redPlane + " [" + eraInfo.name + "]!");
+        if (blueGen === redGen) {
+          var eraInfo = this.ERA_DATA[blueGen] || {};
+          dfRadio("HISTORICAL DUEL ENGAGED: " + (eraInfo.bluePlane || bName) + " vs " + (eraInfo.redPlane || rName) + " [" + (eraInfo.name || ("GEN " + blueGen)) + "]!");
+        } else {
+          dfRadio("⚡ ASYMMETRIC WARFARE ENGAGED: BLUE " + bName + " (GEN " + blueGen + ") vs RED " + rName + " (GEN " + redGen + ")!");
+        }
       }
 
       if (global.TacticalAudio) global.TacticalAudio.playRadarLockTone();
+    },
+
+    // Launch a 1v1 Historical Duel for a specific generation
+    spawnHistoricalDuel: function (gen) {
+      this.spawnAsymmetricDuel(gen, gen);
     },
 
     // Set simulation speed multiplier

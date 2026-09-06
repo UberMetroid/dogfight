@@ -23,25 +23,48 @@ if (typeof window !== "undefined") {
   window.globalDogfightJets = globalDogfightJetsState;
 }
 
-function syncFleetToActiveGenerations(activeGensMask, canvasW, canvasH) {
-  var w = (typeof canvasW === "number" && canvasW > 0) ? canvasW : 1600;
-  var h = (typeof canvasH === "number" && canvasH > 0) ? canvasH : 900;
+function syncFleetToActiveGenerations(blueMask, redMask, canvasW, canvasH) {
+  var bMask, rMask, w, h;
+
+  // Handle call signatures: (blueMask, redMask, w, h) vs (mask, w, h)
+  if (typeof redMask === "object" && redMask !== null) {
+    bMask = blueMask || (typeof activeGensBlue !== "undefined" ? activeGensBlue : {});
+    rMask = redMask || (typeof activeGensRed !== "undefined" ? activeGensRed : {});
+    w = (typeof canvasW === "number" && canvasW > 0) ? canvasW : (DF.width || 1600);
+    h = (typeof canvasH === "number" && canvasH > 0) ? canvasH : (DF.height || 900);
+  } else {
+    bMask = blueMask || (typeof activeGensBlue !== "undefined" ? activeGensBlue : {});
+    rMask = blueMask || (typeof activeGensRed !== "undefined" ? activeGensRed : {});
+    w = (typeof redMask === "number" && redMask > 0) ? redMask : (DF.width || 1600);
+    h = (typeof canvasW === "number" && canvasW > 0) ? canvasW : (DF.height || 900);
+  }
+
+  // Update global masks if defined
+  if (typeof activeGensBlue !== "undefined" && typeof activeGensRed !== "undefined") {
+    for (var ag = 1; ag <= 7; ag++) {
+      if (typeof bMask[ag] !== "undefined") activeGensBlue[ag] = Boolean(bMask[ag]);
+      if (typeof rMask[ag] !== "undefined") activeGensRed[ag] = Boolean(rMask[ag]);
+    }
+    if (typeof syncMergedActiveGens === "function") syncMergedActiveGens();
+    if (typeof saveActiveGens === "function") saveActiveGens();
+    if (typeof updateGenSelectorUI === "function") updateGenSelectorUI();
+  }
+
   var bPool = globalDogfightJetsState.bluePool;
   var rPool = globalDogfightJetsState.redPool;
   var aJets = globalDogfightJetsState.allJets;
 
-  var mask = (typeof activeGensMask === "object" && activeGensMask !== null) ? activeGensMask : {};
-  for (var ag = 1; ag <= 7; ag++) {
-    activeGens[ag] = Boolean(mask[ag]);
-  }
-
-  var activeList = [];
+  var blueActiveList = [];
+  var redActiveList = [];
   for (var g = 1; g <= 7; g++) {
-    if (mask[g]) activeList.push(g);
+    if (bMask[g]) blueActiveList.push(g);
+    if (rMask[g]) redActiveList.push(g);
   }
-  var nActive = activeList.length;
 
-  if (nActive === 0) {
+  var nBlue = blueActiveList.length;
+  var nRed = redActiveList.length;
+
+  if (nBlue === 0 && nRed === 0) {
     for (var i = 0; i < aJets.length; i++) {
       aJets[i].active = false;
       aJets[i].targetJet = null;
@@ -50,14 +73,15 @@ function syncFleetToActiveGenerations(activeGensMask, canvasW, canvasH) {
     return;
   }
 
-  // 1 Blue + 1 Red per active generation
-  for (var idx = 0; idx < nActive; idx++) {
-    var g = activeList[idx];
-    var specG = (typeof AIRCRAFT_SPECS !== "undefined" && AIRCRAFT_SPECS[g]) ? AIRCRAFT_SPECS[g] : { baseSpeed: 4.8 };
-    var gAltY = getYFromAltitude(RESPAWN_CEILINGS[g] || 52000, h);
+  // Sync Blue Pool
+  for (var bIdx = 0; bIdx < nBlue; bIdx++) {
+    var bg = blueActiveList[bIdx];
+    var specB = (typeof AIRCRAFT_SPECS !== "undefined" && AIRCRAFT_SPECS[bg]) ? AIRCRAFT_SPECS[bg] : { baseSpeed: 4.8 };
+    var bAltY = getYFromAltitude(RESPAWN_CEILINGS[bg] || 52000, h);
 
-    var bJet = bPool[idx];
-    bJet.gen = g;
+    var bJet = bPool[bIdx];
+    bJet.gen = bg;
+    bJet.team = "blue";
     bJet.active = true;
     bJet.isDying = false;
     bJet.deathTimer = 0;
@@ -68,12 +92,12 @@ function syncFleetToActiveGenerations(activeGensMask, canvasW, canvasH) {
     bJet.lastDamagedBy = "";
     bJet.damageSmokeTimer = 0;
     bJet.damageSparksTimer = 0;
-    bJet.x = w * 0.20 + (idx % 2 === 1 ? -40 : 0);
-    bJet.y = Math.max(32.0, gAltY - (idx === 0 ? 50 : 25));
+    bJet.x = w * 0.20 + (bIdx % 2 === 1 ? -40 : 0);
+    bJet.y = Math.max(32.0, bAltY - (bIdx === 0 ? 50 : 25));
     bJet.angle = 0.0;
     bJet.targetAngle = 0.0;
-    bJet.speed = specG.baseSpeed || 4.8;
-    bJet.baseSpeed = specG.baseSpeed || 4.8;
+    bJet.speed = specB.baseSpeed || 4.8;
+    bJet.baseSpeed = specB.baseSpeed || 4.8;
     bJet.prevSpeed = bJet.speed;
     bJet.ps = 0;
     bJet.turnRate = 0;
@@ -83,26 +107,39 @@ function syncFleetToActiveGenerations(activeGensMask, canvasW, canvasH) {
     bJet.modeTimer = 30;
     bJet.afterburner = true;
     bJet.targetJet = null;
-    bJet.isLead = (idx === 0);
-    bJet.isHero = (idx === 0);
-    bJet.rcs = specG.rcsClean || specG.rcs || 1.0;
+    bJet.isLead = (bIdx === 0);
+    bJet.isHero = (bIdx === 0);
+    bJet.rcs = specB.rcsClean || specB.rcs || 1.0;
     bJet.bayDoorTimer = 0;
     bJet.flareCooldown = 0;
     bJet.chaffCooldown = 0;
     bJet.gunCooldown = 0;
-    bJet.missileCooldown = g === 1 ? 999999 : (10 + Math.floor(Math.random() * 11));
+    bJet.missileCooldown = bg === 1 ? 999999 : (10 + Math.floor(Math.random() * 11));
     bJet.laserCooldown = 0;
     bJet.triLaserCooldown = 0;
-    bJet.superLaserCooldown = g === 7 ? (60 + Math.floor(Math.random() * 60)) : 0;
+    bJet.superLaserCooldown = bg === 7 ? (60 + Math.floor(Math.random() * 60)) : 0;
     bJet.superLaserPulse = 0;
     bJet.shieldPulse = 0;
     bJet.ccaDeployed = false;
-    setupJetCallsignAndVariant(bJet, g, "blue", idx);
+    setupJetCallsignAndVariant(bJet, bg, "blue", bIdx);
     if (bJet.contrail) bJet.contrail.clear();
     if (bJet.wingVapor) bJet.wingVapor.clear();
+  }
+  for (var bRem = nBlue; bRem < 7; bRem++) {
+    bPool[bRem].active = false;
+    bPool[bRem].targetJet = null;
+    bPool[bRem].wingmanJet = null;
+  }
 
-    var rJet = rPool[idx];
-    rJet.gen = g;
+  // Sync Red Pool
+  for (var rIdx = 0; rIdx < nRed; rIdx++) {
+    var rg = redActiveList[rIdx];
+    var specR = (typeof AIRCRAFT_SPECS !== "undefined" && AIRCRAFT_SPECS[rg]) ? AIRCRAFT_SPECS[rg] : { baseSpeed: 4.8 };
+    var rAltY = getYFromAltitude(RESPAWN_CEILINGS[rg] || 52000, h);
+
+    var rJet = rPool[rIdx];
+    rJet.gen = rg;
+    rJet.team = "red";
     rJet.active = true;
     rJet.isDying = false;
     rJet.deathTimer = 0;
@@ -113,12 +150,12 @@ function syncFleetToActiveGenerations(activeGensMask, canvasW, canvasH) {
     rJet.lastDamagedBy = "";
     rJet.damageSmokeTimer = 0;
     rJet.damageSparksTimer = 0;
-    rJet.x = w * 0.80 + (idx % 2 === 1 ? 40 : 0);
-    rJet.y = Math.min(h - 40.0, gAltY + (idx === 0 ? 50 : 75));
+    rJet.x = w * 0.80 + (rIdx % 2 === 1 ? 40 : 0);
+    rJet.y = Math.min(h - 40.0, rAltY + (rIdx === 0 ? 50 : 75));
     rJet.angle = Math.PI;
     rJet.targetAngle = Math.PI;
-    rJet.speed = specG.baseSpeed || 4.8;
-    rJet.baseSpeed = specG.baseSpeed || 4.8;
+    rJet.speed = specR.baseSpeed || 4.8;
+    rJet.baseSpeed = specR.baseSpeed || 4.8;
     rJet.prevSpeed = rJet.speed;
     rJet.ps = 0;
     rJet.turnRate = 0;
@@ -128,39 +165,47 @@ function syncFleetToActiveGenerations(activeGensMask, canvasW, canvasH) {
     rJet.modeTimer = 30;
     rJet.afterburner = true;
     rJet.targetJet = null;
-    rJet.isLead = (idx === 0);
+    rJet.isLead = (rIdx === 0);
     rJet.isHero = false;
-    rJet.rcs = specG.rcsClean || specG.rcs || 1.0;
+    rJet.rcs = specR.rcsClean || specR.rcs || 1.0;
     rJet.bayDoorTimer = 0;
     rJet.flareCooldown = 0;
     rJet.chaffCooldown = 0;
     rJet.gunCooldown = 0;
-    rJet.missileCooldown = g === 1 ? 999999 : (10 + Math.floor(Math.random() * 11));
+    rJet.missileCooldown = rg === 1 ? 999999 : (10 + Math.floor(Math.random() * 11));
     rJet.laserCooldown = 0;
     rJet.triLaserCooldown = 0;
-    rJet.superLaserCooldown = g === 7 ? (60 + Math.floor(Math.random() * 60)) : 0;
+    rJet.superLaserCooldown = rg === 7 ? (60 + Math.floor(Math.random() * 60)) : 0;
     rJet.superLaserPulse = 0;
     rJet.shieldPulse = 0;
     rJet.ccaDeployed = false;
-    setupJetCallsignAndVariant(rJet, g, "red", idx);
+    setupJetCallsignAndVariant(rJet, rg, "red", rIdx);
     if (rJet.contrail) rJet.contrail.clear();
     if (rJet.wingVapor) rJet.wingVapor.clear();
   }
-
-  // Assign mutual wingman links (or self when single)
-  for (var wi = 0; wi < nActive; wi++) {
-    var partnerIdx = (nActive > 1) ? ((wi % 2 === 0) ? (wi + 1 < nActive ? wi + 1 : wi) : wi - 1) : wi;
-    bPool[wi].wingmanJet = bPool[partnerIdx];
-    rPool[wi].wingmanJet = rPool[partnerIdx];
+  for (var rRem = nRed; rRem < 7; rRem++) {
+    rPool[rRem].active = false;
+    rPool[rRem].targetJet = null;
+    rPool[rRem].wingmanJet = null;
   }
 
-  // Deactivate unused slots
-  for (var rem = nActive; rem < 7; rem++) {
-    bPool[rem].active = false;
-    bPool[rem].targetJet = null;
-    bPool[rem].wingmanJet = null;
-    rPool[rem].active = false;
-    rPool[rem].targetJet = null;
-    rPool[rem].wingmanJet = null;
+  // Cross-team target pairing
+  if (nBlue > 0 && nRed > 0) {
+    for (var bi = 0; bi < nBlue; bi++) {
+      bPool[bi].targetJet = rPool[bi % nRed];
+    }
+    for (var ri = 0; ri < nRed; ri++) {
+      rPool[ri].targetJet = bPool[ri % nBlue];
+    }
+  }
+
+  // Assign wingman links
+  for (var bwi = 0; bwi < nBlue; bwi++) {
+    var bPartner = (nBlue > 1) ? ((bwi % 2 === 0) ? (bwi + 1 < nBlue ? bwi + 1 : bwi) : bwi - 1) : bwi;
+    bPool[bwi].wingmanJet = bPool[bPartner];
+  }
+  for (var rwi = 0; rwi < nRed; rwi++) {
+    var rPartner = (nRed > 1) ? ((rwi % 2 === 0) ? (rwi + 1 < nRed ? rwi + 1 : rwi) : rwi - 1) : rwi;
+    rPool[rwi].wingmanJet = rPool[rPartner];
   }
 }

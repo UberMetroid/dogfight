@@ -42,12 +42,13 @@ function setupJetCallsignAndVariant(jet, chosenGen, team, slotIdx) {
 }
 
 function createJet(x, y, angle, gen, slotIdx, team) {
-  var chosenGen = (gen && activeGens[gen]) ? gen : (activeGens[4] ? 4 : getRandomActiveGen());
-  if (!chosenGen) chosenGen = 0;
+  var actualTeam = (team === "red") ? "red" : "blue";
+  var mask = (actualTeam === "red") ? (typeof activeGensRed !== "undefined" ? activeGensRed : activeGens) : (typeof activeGensBlue !== "undefined" ? activeGensBlue : activeGens);
+  var chosenGen = (gen && mask[gen]) ? gen : (typeof getRandomActiveGen === "function" ? getRandomActiveGen(actualTeam, gen) : (mask[4] ? 4 : 1));
+  if (!chosenGen) chosenGen = 4;
   var spec = (typeof AIRCRAFT_SPECS !== "undefined" && AIRCRAFT_SPECS[chosenGen]) ? AIRCRAFT_SPECS[chosenGen] : (typeof AIRCRAFT_SPECS !== "undefined" && AIRCRAFT_SPECS ? AIRCRAFT_SPECS[4] : { baseSpeed: 4.8 });
   var baseSpeed = spec ? (spec.baseSpeed || 4.8) : 4.8;
 
-  var actualTeam = (team === "red") ? "red" : "blue";
   var numSlot = typeof slotIdx === "number" ? slotIdx : 0;
   var isLead = (numSlot === 0);
   var isHero = (actualTeam === "blue" && isLead);
