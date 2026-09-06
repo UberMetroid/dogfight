@@ -80,8 +80,9 @@ function updateJetPhysicsLate(jet, targetEnemy, incomingThreat, opposingPool, mi
     }
   }
 
-  // Minimum Altitude Floor Invariant (h >= 800 ft clearance)
-  var minFloorY = Math.min(getYFromAltitude(800, DF.height), DF.height - 32.0);
+  // Minimum Altitude Floor Invariant (h >= 800 ft clearance above MSL)
+  var mslY = (typeof getSeaLevelY === "function") ? getSeaLevelY(DF.height) : (DF.height - 120);
+  var minFloorY = Math.min(getYFromAltitude(800, DF.height), mslY - 15.0);
   if (!jet.isDying && (altFt <= 800 || jet.y >= minFloorY)) {
     jet.y = Math.min(jet.y, minFloorY);
     if (Math.sin(jet.angle) > 0) {
@@ -91,11 +92,14 @@ function updateJetPhysicsLate(jet, targetEnemy, incomingThreat, opposingPool, mi
     }
   }
 
-  // Ground Floor Impact Collision (0 ft terrain footer)
-  if (jet.y >= DF.height && jet.active && !jet.isDying) {
+  // Ground / Ocean Floor Impact Collision (0 ft MSL)
+  if (jet.y >= mslY && jet.active && !jet.isDying) {
     applyAirframeDamage(jet, 100.0, null, "TERRAIN_IMPACT");
-    jet.y = DF.height;
-    dfRadio("CFIT ALERT: " + (jet.callsign || spec.callsign) + " IMPACTED TERRAIN AT 0 FT!");
+    jet.y = mslY;
+    var isOcean = jet.x >= (DF.width * 0.38);
+    if (isOcean && global.TacticalAudio) global.TacticalAudio.playSplash();
+    else if (!isOcean && global.TacticalAudio) global.TacticalAudio.playExplosion();
+    dfRadio("CFIT ALERT: " + (jet.callsign || spec.callsign) + (isOcean ? " DITCHED IN OCEAN AT SEA LEVEL!" : " IMPACTED COASTAL TERRAIN AT 0 FT!"));
   }
 
   // Visual Damage Particle Emissions (<70%, <45%, <20% HP)

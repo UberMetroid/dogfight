@@ -41,11 +41,11 @@ function initGlobalDogfight() {
   if (!ctx) return;
   DF.canvas = canvas;
   DF.ctx = ctx;
-  DF.width = canvas.width = Math.min(window.innerWidth, 1440);
-  DF.height = canvas.height = Math.min(window.innerHeight, 900);
+  DF.width = canvas.width = window.innerWidth || 1440;
+  DF.height = canvas.height = window.innerHeight || 900;
   function onResize() {
-    DF.width = canvas.width = Math.min(window.innerWidth, 1440);
-    DF.height = canvas.height = Math.min(window.innerHeight, 900);
+    DF.width = canvas.width = window.innerWidth || 1440;
+    DF.height = canvas.height = window.innerHeight || 900;
   }
   window.removeEventListener("resize", onResize);
   window.addEventListener("resize", onResize);

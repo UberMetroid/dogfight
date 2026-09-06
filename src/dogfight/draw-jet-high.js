@@ -76,6 +76,7 @@ DRAW_JET[6] = function (ctx, jet, fPrimary, fAccent, isLead, colors, alpha, time
 
 };
 DRAW_JET[7] = function (ctx, jet, fPrimary, fAccent, isLead, colors, alpha, time) {
+  var faction = (typeof FACTION_COLORS !== "undefined" && jet && (jet.team === "red" || jet.isRed)) ? FACTION_COLORS.red : ((typeof FACTION_COLORS !== "undefined") ? FACTION_COLORS.blue : { glow: fAccent || "rgba(56, 189, 248, 0.35)" });
   var d1 = (jet && jet.drone1) || { x: 16, y: 0 };
   var d2 = (jet && jet.drone2) || { x: -6, y: -14 };
   var d3 = (jet && jet.drone3) || { x: -6, y: 14 };

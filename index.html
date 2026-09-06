@@ -3,9 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fighter Jet Dogfight Simulation // John Boyd OODA</title>
+  <title>Air, Sea & Sub-Surface Battlespace // Boyd OODA Simulation</title>
+  <meta name="description" content="Multi-domain warfighting simulation across 7 generations of combat aircraft, naval surface strike groups, and sub-surface bathymetry based on Col. John Boyd's Energy-Maneuverability Theory and OODA Loop.">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles/main.css">
+
+  <!-- Core Theme & Simulation Engine Scripts -->
   <script defer src="src/theme/boot.js"></script>
   <script defer src="src/theme/colors.js"></script>
   <script defer src="src/life.js"></script>
@@ -41,81 +44,341 @@
   <script defer src="src/dogfight/loop-missiles.js"></script>
   <script defer src="src/dogfight/loop-fx.js"></script>
   <script defer src="src/dogfight/loop-proj.js"></script>
+  <script defer src="src/dogfight/landscape.js"></script>
+  <script defer src="src/dogfight/audio.js"></script>
+  <script defer src="src/dogfight/interactive.js"></script>
   <script defer src="src/dogfight/loop.js"></script>
   <script defer src="src/dogfight/init.js"></script>
   <script defer src="src/sky/starfield.js"></script>
   <script defer src="src/theme/cycle.js"></script>
 </head>
 <body>
+  <!-- Simulation Canvas -->
   <canvas id="dogfight-canvas"></canvas>
 
+  <!-- Tactical HUD Overlay -->
   <div class="hud-overlay">
+    <!-- Top Command Bar -->
     <header class="hud-header hud-interactive">
-      <div class="hud-title-group">
+      <div class="hud-brand">
         <span class="hud-sigil">&gt;&gt;</span>
-        <span class="hud-title">BOYD OODA // FIGHTER JET DOGFIGHT SIMULATOR</span>
-        <span class="hud-formula">E-M = ((T - D) / W) * V</span>
+        <span class="hud-title">BOYD OODA // MULTI-DOMAIN BATTLESPACE</span>
+        <span class="hud-formula" title="Col. John Boyd's Specific Excess Power: Ps = ((Thrust - Drag) / Weight) * Velocity">Ps = ((T - D) / W) * V</span>
       </div>
 
-      <!-- Generation Selector -->
-      <div class="gen-bar" id="gen-bar" aria-label="Toggle fighter generations">
-        <span class="gen-title">GEN:</span>
-        <button type="button" class="gen-btn" data-gen="1" title="Gen 1 (F-86 Sabre)">1</button>
-        <button type="button" class="gen-btn" data-gen="2" title="Gen 2 (F-4 Phantom)">2</button>
-        <button type="button" class="gen-btn" data-gen="3" title="Gen 3 (F-15 Eagle)">3</button>
-        <button type="button" class="gen-btn active" data-gen="4" title="Gen 4 (F-16 Falcon)">4</button>
-        <button type="button" class="gen-btn" data-gen="5" title="Gen 5 (F-22 Raptor)">5</button>
-        <button type="button" class="gen-btn" data-gen="6" title="Gen 6 (NGAD)">6</button>
-        <button type="button" class="gen-btn" data-gen="7" title="Gen 7 (AI Swarm)">7</button>
-      </div>
+      <div class="hud-controls-group">
+        <!-- Generation Toggle Bar -->
+        <div class="gen-bar" id="gen-bar" aria-label="Toggle active aircraft generations">
+          <span class="gen-title">GEN:</span>
+          <button type="button" class="gen-btn" data-gen="1" title="Gen 1 (F-86 Sabre / MiG-15)">1</button>
+          <button type="button" class="gen-btn" data-gen="2" title="Gen 2 (F-4 Phantom / MiG-21)">2</button>
+          <button type="button" class="gen-btn" data-gen="3" title="Gen 3 (F-14 Tomcat / Su-27)">3</button>
+          <button type="button" class="gen-btn active" data-gen="4" title="Gen 4 (F-16 Viper / Su-27)">4</button>
+          <button type="button" class="gen-btn" data-gen="5" title="Gen 5 (F-22 Raptor / Su-57)">5</button>
+          <button type="button" class="gen-btn" data-gen="6" title="Gen 6 (NGAD + Loyal Wingman CCA)">6</button>
+          <button type="button" class="gen-btn" data-gen="7" title="Gen 7 (Autonomous Swarm Mesh)">7</button>
+        </div>
 
-      <div class="hud-actions">
-        <button class="hud-btn hud-btn-blue" onclick="scrambleWave('blue', 4)">[ SCRAMBLE BLUE ]</button>
-        <button class="hud-btn hud-btn-red" onclick="scrambleWave('red', 4)">[ SCRAMBLE RED ]</button>
+        <!-- Scramble Buttons -->
+        <button class="hud-btn hud-btn-blue" onclick="scrambleWave('blue', 4)" title="Scramble Blue Allied Flight">[ + BLUE SCRAMBLE ]</button>
+        <button class="hud-btn hud-btn-red" onclick="scrambleWave('red', 4)" title="Scramble Red Hostile Flight">[ + RED SCRAMBLE ]</button>
+
+        <!-- Time Warp Controls -->
+        <div class="speed-group" aria-label="Simulation speed">
+          <button type="button" class="speed-btn" id="speed-05" onclick="InteractiveController.setSimSpeed(0.5)" title="0.5x Slow-Motion">0.5x</button>
+          <button type="button" class="speed-btn active" id="speed-10" onclick="InteractiveController.setSimSpeed(1.0)" title="1.0x Realtime">1x</button>
+          <button type="button" class="speed-btn" id="speed-20" onclick="InteractiveController.setSimSpeed(2.0)" title="2.0x Hyper-Speed">2x</button>
+          <button type="button" class="speed-btn" id="speed-pause" onclick="InteractiveController.setSimSpeed(0)" title="Pause / Step">||</button>
+        </div>
+
+        <!-- Audio Switch -->
+        <button type="button" class="sound-btn" id="sound-btn" onclick="toggleTacticalSound(this)" title="Toggle Procedural Web Audio Sound FX">[ 🔊 SOUND: OFF ]</button>
+
+        <!-- Warfare Generations Dossier Modal Button -->
+        <button type="button" class="hud-btn hud-btn-dossier" onclick="openDossier(4)" title="Open Warfare Generations Dossier">[ ⚔ WARFARE DOSSIER ]</button>
       </div>
     </header>
 
-    <footer class="hud-footer">
-      <div class="hud-radio-box hud-interactive">
-        <div class="radio-header">
-          <span>&gt; TAC-NET RADIO CHATTER</span>
-          <span id="radio-time">LIVE</span>
+    <!-- Mid-Screen Left: Floating Cockpit Telemetry MFD -->
+    <div class="mfd-panel hud-interactive" id="mfd-panel">
+      <div class="mfd-panel-header">
+        <span class="mfd-title"><span class="mfd-dot"></span> COCKPIT TELEMETRY MFD</span>
+        <button class="mfd-close-btn" onclick="InteractiveController.clearTrackedJet()" title="Release tracking">✕</button>
+      </div>
+
+      <div class="mfd-airframe-row">
+        <span class="mfd-callsign" id="mfd-callsign">TOMCAT 1</span>
+        <span class="mfd-badge badge-blue" id="mfd-team">BLUE FORCE [ALLIED]</span>
+      </div>
+      <div class="mfd-gen-label" id="mfd-gen">GEN 4 // F-14 TOMCAT</div>
+
+      <!-- Flight Gauges Grid -->
+      <div class="mfd-grid">
+        <div class="mfd-cell">
+          <span class="mfd-label">AIRSPEED</span>
+          <span class="mfd-val" id="mfd-speed">580 KIAS (M 1.7)</span>
         </div>
-        <div class="radio-stream" id="radio-log">
-          [TAC-NET] Combat Air Patrol established. Airspace active.
+        <div class="mfd-cell">
+          <span class="mfd-label">ALTITUDE</span>
+          <span class="mfd-val" id="mfd-alt">48,200 FT MSL</span>
+        </div>
+        <div class="mfd-cell">
+          <span class="mfd-label">G-LOAD</span>
+          <span class="mfd-val" id="mfd-gforce">+4.2 G</span>
         </div>
       </div>
 
-      <div class="hud-specs-box hud-interactive">
-        <div class="spec-item">ENGINE: <strong>HTML5 CANVAS / 60 FPS</strong></div>
-        <div class="spec-item">ALLOCATOR: <strong>ZERO-GC TYPED ARRAYS</strong></div>
-        <div class="spec-item">PHYSICS: <strong>BOYD E-M &amp; PRO-NAV</strong></div>
+      <!-- Col. John Boyd Specific Excess Power (Ps) Meter -->
+      <div class="ps-meter-box">
+        <div class="ps-header">
+          <span class="ps-title">BOYD SPECIFIC EXCESS POWER (Ps)</span>
+          <span class="ps-value" id="mfd-ps">+140 FT/S</span>
+        </div>
+        <div class="ps-bar-track">
+          <div class="ps-bar-fill ps-positive" id="mfd-ps-bar"></div>
+        </div>
+      </div>
+
+      <!-- Dynamic OODA Loop Indicator -->
+      <div class="ooda-cycle-box">
+        <div class="ooda-header">
+          <span>OODA DECISION CYCLE</span>
+          <span id="ooda-latency-note">BOYD LOOP</span>
+        </div>
+        <div class="ooda-steps">
+          <div class="ooda-step" id="ooda-observe">OBSERVE</div>
+          <div class="ooda-step" id="ooda-orient">ORIENT</div>
+          <div class="ooda-step active" id="ooda-decide">DECIDE</div>
+          <div class="ooda-step" id="ooda-act">ACT</div>
+        </div>
+      </div>
+
+      <!-- Tactical Radar Target & Weapons State -->
+      <div class="mfd-status-row">
+        <div class="mfd-status-line">
+          <span class="mfd-label">RADAR LOCK:</span>
+          <span class="mfd-target-val" id="mfd-target">FLANKER 1 (8.4 NM)</span>
+        </div>
+        <div class="mfd-status-line">
+          <span class="mfd-label">WEAPONRY:</span>
+          <span class="mfd-val" id="mfd-weapons">FOX-3 ARMED // AMRAAM</span>
+        </div>
+      </div>
+
+      <div class="mfd-hint">CLICK ANY AIRCRAFT IN AIRSPACE TO TRACK</div>
+    </div>
+
+    <!-- Bottom Footer (Radio Chatter & Multi-Domain Status) -->
+    <footer class="hud-footer">
+      <!-- Tac-Net Radio Stream -->
+      <div class="hud-radio-box hud-interactive">
+        <div class="radio-header">
+          <span>&gt; TAC-NET SECURE COMM LINK // 243.0 MHz</span>
+          <span id="radio-time">LIVE FEED</span>
+        </div>
+        <div class="radio-stream" id="radio-log">
+          [TAC-NET] Multi-Domain Combat Air Patrol established. Airspace hot.
+        </div>
+      </div>
+
+      <!-- Multi-Domain Status & Scenario Selector -->
+      <div class="hud-domain-box hud-interactive">
+        <div class="domain-layers">
+          <div class="domain-line">
+            <span class="domain-tag">AIR / SPACE:</span>
+            <span class="domain-status">0 - 100k FT MSL [HOT BATTLESPACE]</span>
+          </div>
+          <div class="domain-line">
+            <span class="domain-tag">LAND DOMAIN:</span>
+            <span class="domain-status">AIRBASE ALPHA // SAM BTY ACTIVE</span>
+          </div>
+          <div class="domain-line">
+            <span class="domain-tag">OCEAN DOMAIN:</span>
+            <span class="domain-status">CVN-78 CARRIER GROUP // DDG-51</span>
+          </div>
+          <div class="domain-line">
+            <span class="domain-tag">SUB-SURFACE:</span>
+            <span class="domain-status domain-sub">-200m TO -1000m [SONAR ACTIVE - UUV/SSN CORRIDOR]</span>
+          </div>
+        </div>
+
+        <!-- Quick Battle Scenarios -->
+        <div class="scenario-bar">
+          <button class="scenario-btn" onclick="launchScenario('mig-alley')" title="Korea 1950: F-86 vs MiG-15">[ MIG ALLEY (GEN 1) ]</button>
+          <button class="scenario-btn" onclick="launchScenario('fleet-defense')" title="Fleet Defense: F-14 Tomcat BVR">[ FLEET DEFENSE (GEN 3) ]</button>
+          <button class="scenario-btn" onclick="launchScenario('stealth-clash')" title="Near-Peer Stealth: F-22 vs Su-57">[ STEALTH CLASH (GEN 5) ]</button>
+          <button class="scenario-btn" onclick="launchScenario('future-swarm')" title="Autonomous AI Swarm Mesh">[ AI SWARM (GEN 7) ]</button>
+          <button class="scenario-btn" onclick="launchScenario('all-out')" title="All 7 Generations Mixed">[ ALL-OUT AIR WAR ]</button>
+        </div>
       </div>
     </footer>
   </div>
 
+  <!-- Warfare Generations Dossier Slide-Over Modal -->
+  <aside class="dossier-modal hud-interactive" id="dossier-modal" aria-label="Warfare Generations Dossier">
+    <div class="dossier-header">
+      <div class="dossier-title">
+        <span class="hud-sigil">&gt;&gt;</span>
+        <span>WARFARE GENERATIONS DOSSIER</span>
+      </div>
+      <button class="dossier-close" onclick="closeDossier()">[ ✕ CLOSE ]</button>
+    </div>
+
+    <!-- 7 Generation Tabs -->
+    <nav class="dossier-tabs" id="dossier-tabs" aria-label="Select Warfare Generation">
+      <button class="dossier-tab" onclick="switchDossierTab(1)">GEN 1</button>
+      <button class="dossier-tab" onclick="switchDossierTab(2)">GEN 2</button>
+      <button class="dossier-tab" onclick="switchDossierTab(3)">GEN 3</button>
+      <button class="dossier-tab active" onclick="switchDossierTab(4)">GEN 4</button>
+      <button class="dossier-tab" onclick="switchDossierTab(5)">GEN 5</button>
+      <button class="dossier-tab" onclick="switchDossierTab(6)">GEN 6</button>
+      <button class="dossier-tab" onclick="switchDossierTab(7)">GEN 7</button>
+    </nav>
+
+    <!-- Dossier Content Container -->
+    <div class="dossier-body" id="dossier-content">
+      <!-- Injected dynamically by switchDossierTab() -->
+    </div>
+  </aside>
+
+  <!-- Tactical Application Lifecycle Logic -->
   <script defer>
-    window.addEventListener('load', () => {
+    window.addEventListener('load', function () {
       jetsEnabled = true;
       if (!hasAnyActiveGen()) activeGens[4] = true;
       setupGenSelector();
       initGlobalDogfight();
 
+      if (window.InteractiveController) {
+        InteractiveController.init();
+      }
+
       // Hook dfRadio chatter to display in HUD radio box
-      const radioLog = document.getElementById('radio-log');
-      const origDfRadio = window.dfRadio;
-      window.dfRadio = function(msg) {
+      var radioLog = document.getElementById('radio-log');
+      var origDfRadio = window.dfRadio;
+      window.dfRadio = function (msg) {
         if (origDfRadio) origDfRadio(msg);
         if (radioLog) {
-          const line = document.createElement('div');
+          var line = document.createElement('div');
           line.textContent = '> ' + msg;
           radioLog.prepend(line);
-          while (radioLog.children.length > 6) {
+          while (radioLog.children.length > 5) {
             radioLog.removeChild(radioLog.lastChild);
           }
         }
       };
+
+      // Populate initial dossier tab (Gen 4)
+      switchDossierTab(4);
     });
+
+    // Sound Toggle
+    function toggleTacticalSound(btn) {
+      if (window.TacticalAudio) {
+        var on = TacticalAudio.toggle();
+        btn.textContent = on ? '[ 🔊 SOUND: ACTIVE ]' : '[ 🔊 SOUND: OFF ]';
+        if (on) btn.classList.add('active');
+        else btn.classList.remove('active');
+      }
+    }
+
+    // Warfare Dossier Drawer Handlers
+    function openDossier(gen) {
+      var modal = document.getElementById('dossier-modal');
+      if (modal) {
+        modal.classList.add('open');
+        switchDossierTab(gen || 4);
+      }
+      if (window.TacticalAudio) TacticalAudio.playClick();
+    }
+
+    function closeDossier() {
+      var modal = document.getElementById('dossier-modal');
+      if (modal) modal.classList.remove('open');
+      if (window.TacticalAudio) TacticalAudio.playClick();
+    }
+
+    function switchDossierTab(gen) {
+      gen = parseInt(gen, 10) || 4;
+      var tabs = document.querySelectorAll('.dossier-tab');
+      tabs.forEach(function (t, idx) {
+        if (idx + 1 === gen) t.classList.add('active');
+        else t.classList.remove('active');
+      });
+
+      var data = InteractiveController.ERA_DATA[gen];
+      if (!data) return;
+
+      var container = document.getElementById('dossier-content');
+      if (!container) return;
+
+      container.innerHTML = `
+        <div class="era-banner">
+          <div class="era-title">GEN ${gen}: ${data.name}</div>
+          <div class="era-period">HISTORICAL ERA: ${data.period}</div>
+        </div>
+
+        <div class="dossier-combatants">
+          <div class="combatant-card card-blue">
+            <div class="combatant-side side-blue">ALLIED / BLUE FORCE</div>
+            <div class="combatant-name">${data.bluePlane}</div>
+          </div>
+          <div class="combatant-card card-red">
+            <div class="combatant-side side-red">OPPOSING / RED FORCE</div>
+            <div class="combatant-name">${data.redPlane}</div>
+          </div>
+        </div>
+
+        <div class="dossier-section">
+          <div class="dossier-section-title">COMBAT DOCTRINE &amp; TACTICAL PARADIGM</div>
+          <div class="dossier-text">${data.doctrine}</div>
+        </div>
+
+        <div class="boyd-insight">
+          <strong>COL. JOHN BOYD E-M ANALYSIS:</strong><br>
+          ${data.boydNote}
+        </div>
+
+        <div class="dossier-section">
+          <div class="dossier-section-title">AIRCRAFT PERFORMANCE SPECIFICATIONS</div>
+          <table class="dossier-specs-table">
+            <tbody>
+              <tr><td>MAX SPEED</td><td>${data.speedMach}</td></tr>
+              <tr><td>SUSTAINED TURN RATE</td><td>${data.turnRate}</td></tr>
+              <tr><td>PRIMARY ARMAMENT</td><td>${data.weapons}</td></tr>
+              <tr><td>RADAR CROSS SECTION (RCS)</td><td>${data.rcs}</td></tr>
+              <tr><td>OODA DECISION LATENCY</td><td>${data.oodaLatency}</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="dossier-actions">
+          <button class="dossier-duel-btn" onclick="InteractiveController.spawnHistoricalDuel(${gen}); closeDossier();">[ ⚔ SPAWN 1v1 HISTORICAL DUEL ]</button>
+          <button class="dossier-scramble-btn" onclick="scrambleWave('blue', ${gen}); scrambleWave('red', ${gen}); closeDossier();">[ ✈ SCRAMBLE 4-SHIP FLIGHT ]</button>
+        </div>
+      `;
+    }
+
+    // Quick Scenario Launcher
+    function launchScenario(type) {
+      if (window.TacticalAudio) TacticalAudio.playClick();
+      if (type === 'mig-alley') {
+        InteractiveController.spawnHistoricalDuel(1);
+      } else if (type === 'fleet-defense') {
+        InteractiveController.spawnHistoricalDuel(3);
+      } else if (type === 'stealth-clash') {
+        InteractiveController.spawnHistoricalDuel(5);
+      } else if (type === 'future-swarm') {
+        InteractiveController.spawnHistoricalDuel(7);
+      } else if (type === 'all-out') {
+        for (var g = 1; g <= 7; g++) activeGens[g] = true;
+        setupGenSelector();
+        syncFleetToActiveGenerations(activeGens, DF.width, DF.height);
+        scrambleWave('blue', 4);
+        scrambleWave('red', 4);
+        dfRadio('ALL-OUT AIR WAR INITIATED: ALL 7 WARFARE GENERATIONS ENGAGED IN MULTI-DOMAIN AIRSPACE!');
+      }
+    }
   </script>
 </body>
 </html>

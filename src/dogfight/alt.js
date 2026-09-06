@@ -5,7 +5,9 @@
 function getAltitudeFeet(canvasY, canvasH) {
   var hCanvas = (typeof canvasH === "number" && canvasH > 0) ? canvasH : 900;
   if (hCanvas <= 0) return 0;
-  var ratio = 1.0 - (canvasY / hCanvas);
+  var mslY = (typeof getSeaLevelY === "function") ? getSeaLevelY(hCanvas) : (hCanvas - 120);
+  if (canvasY >= mslY) return 0;
+  var ratio = 1.0 - (canvasY / mslY);
   if (ratio < 0) ratio = 0;
   if (ratio > 1) ratio = 1;
   return ratio * 100000.0;
@@ -14,10 +16,11 @@ function getAltitudeFeet(canvasY, canvasH) {
 function getYFromAltitude(altFt, canvasH) {
   var hCanvas = (typeof canvasH === "number" && canvasH > 0) ? canvasH : 900;
   if (hCanvas <= 0) return 0;
+  var mslY = (typeof getSeaLevelY === "function") ? getSeaLevelY(hCanvas) : (hCanvas - 120);
   var ratio = altFt / 100000.0;
   if (ratio < 0) ratio = 0;
   if (ratio > 1) ratio = 1;
-  return (1.0 - ratio) * hCanvas;
+  return (1.0 - ratio) * mslY;
 }
 
 function getBarometricDensity(altFt) {

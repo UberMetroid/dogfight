@@ -25,6 +25,7 @@ function evaluateKineticWeapons(jet, targetEnemy, colors) {
 
     if ((da < 0.785 || daLeadGuns < 0.85) && dist >= 20 && dist <= 220 && jet.gunCooldown <= 0 && isKineticReachValid) {
       jet.gunCooldown = 3;
+      if (typeof window !== "undefined" && window.TacticalAudio) window.TacticalAudio.playCannonBurst();
       var bIdx = DF.bulletsPool.alloc();
       if (bIdx >= 0) {
         var bo = bIdx * 6;
@@ -100,6 +101,7 @@ function evaluateKineticWeapons(jet, targetEnemy, colors) {
       }
 
       if (allowLaunch) {
+        if (typeof window !== "undefined" && window.TacticalAudio) window.TacticalAudio.playMissileLaunch();
         if (jet.gen === 5 || jet.gen === 6) {
           jet.bayDoorTimer = 36; // 1.2s internal weapons bay bloom
           var specSelf = AIRCRAFT_SPECS[jet.gen] || AIRCRAFT_SPECS[5];

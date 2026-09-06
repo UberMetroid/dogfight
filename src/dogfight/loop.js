@@ -53,12 +53,47 @@ function updateDogfight(now) {
     DF.ctx.clearRect(0, 0, DF.width, DF.height);
     if (!hasAnyActiveGen()) return;
     var colors = getThemeColors();
-    dfDrawGrid(colors);
-    dfStepSim();
+
+    // 1. Draw Multi-Domain Landscape (Air, Space, Land, Sea, Sub-Surface)
+    if (typeof dfDrawLandscape === "function") {
+      dfDrawLandscape(DF.ctx, DF.width, DF.height, now, colors);
+    } else {
+      dfDrawGrid(colors);
+    }
+
+    // 2. Step Simulation with Time Warp / Pause
+    var isPaused = (typeof InteractiveController !== "undefined" && InteractiveController.isPaused);
+    var speedMult = (typeof InteractiveController !== "undefined" && InteractiveController.simSpeed) ? InteractiveController.simSpeed : 1.0;
+
+    if (!isPaused) {
+      if (speedMult >= 2.0) {
+        dfStepSim();
+        dfStepProjectiles(colors);
+        dfStepSim();
+        dfStepProjectiles(colors);
+      } else {
+        dfStepSim();
+        dfStepProjectiles(colors);
+      }
+    }
+
+    // 3. Draw Aircraft & Contrails
     dfDrawAircraft(now, colors);
-    dfStepProjectiles(colors);
+
+    // 4. Draw Interactive Reticle on Tracked Aircraft
+    if (typeof InteractiveController !== "undefined" && InteractiveController.drawTrackedReticle) {
+      InteractiveController.drawTrackedReticle(DF.ctx);
+    }
+
+    // 5. Update and Draw VFX & Wreckage
     updateAndDrawWreckage(DF.ctx, 1.0, DF.height);
     updateAndDrawVfxParticles(DF.ctx, 1.0, DF.height, colors);
+
+    // 6. Update MFD Telemetry Panel
+    if (typeof InteractiveController !== "undefined" && InteractiveController.updateMfdDisplay) {
+      InteractiveController.updateMfdDisplay();
+    }
+
     globalHudFrameCount = (globalHudFrameCount + 1) | 0;
   } catch (err) {
     if (typeof console !== "undefined" && console.error) {
