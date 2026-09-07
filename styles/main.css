@@ -613,6 +613,11 @@ html, body {
   color: var(--amber);
 }
 
+.stat-val-gold {
+  color: #fbbf24;
+  text-shadow: 0 0 6px rgba(251, 191, 36, 0.6);
+}
+
 .stat-badge {
   font-size: 0.58rem;
   font-weight: 800;

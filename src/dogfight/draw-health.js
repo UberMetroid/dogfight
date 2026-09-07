@@ -138,3 +138,78 @@ function drawThrustScaledExhaust(ctx, jet, colors, now) {
 
   ctx.restore();
 }
+
+function drawInWorldTacticalStatus(ctx, jet, colors, frameCount) {
+  if (!ctx || !jet || !jet.active || jet.isDying) return;
+
+  var jx = Math.floor(jet.x);
+  var jy = Math.floor(jet.y);
+  var isDamaged = (typeof jet.hp === "number" && jet.hp < 99.9 && jet.hp > 0.0);
+  var baseOffsetY = isDamaged ? -24 : -18;
+
+  // 1. Ace Insignia (★ ACE [kills])
+  if (jet.isAce) {
+    ctx.save();
+    ctx.font = "bold 8px monospace";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "bottom";
+
+    // Subtle gold glow
+    ctx.fillStyle = "#fbbf24";
+    ctx.shadowColor = "#f59e0b";
+    ctx.shadowBlur = 5;
+    var aceText = "★ ACE (" + (jet.kills || 5) + ")";
+    ctx.fillText(aceText, jx, jy + baseOffsetY);
+
+    // Tiny gold star glint near the wingtip
+    var tGlance = (frameCount || 0) * 0.08;
+    if (Math.sin(tGlance) > 0.6) {
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(jx - 12 + Math.cos(jet.angle) * 10, jy + Math.sin(jet.angle) * 10, 2, 2);
+    }
+    ctx.restore();
+  }
+
+  // 2. Missile Ammo Pips & Winchester Alert (for Gen 2-6 with missile capacity)
+  if (typeof jet.missileCapacity === "number" && jet.missileCapacity > 0 && jet.gen >= 2 && jet.gen <= 6) {
+    var cap = jet.missileCapacity;
+    var rem = (typeof jet.missilesRemaining === "number") ? jet.missilesRemaining : cap;
+
+    if (rem === 0 || jet.isWinchester) {
+      // Winchester banner: subtle flashing amber/crimson tag below jet
+      ctx.save();
+      ctx.font = "bold 7px monospace";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      var isWFlash = (Math.floor((frameCount || 0) / 16) % 2 === 0);
+      ctx.fillStyle = isWFlash ? "#f87171" : "#fbbf24";
+      ctx.shadowColor = "rgba(0,0,0,0.8)";
+      ctx.shadowBlur = 3;
+      ctx.fillText("WINCHESTER // GUNS", jx, jy + 14);
+      ctx.restore();
+    } else if (rem < cap) {
+      // Missile pips: small 2x3 ticks beneath the health bar/jet
+      ctx.save();
+      var pipW = 2;
+      var pipH = 3;
+      var pipGap = 2;
+      var totalPipW = cap * pipW + (cap - 1) * pipGap;
+      var startPipX = jx - Math.floor(totalPipW / 2);
+      var pipY = isDamaged ? (jy - 14) : (jy + 14);
+
+      var teamCol = (jet.team === "blue" || jet.isHero) ? "#38bdf8" : "#f43f5e";
+
+      for (var p = 0; p < cap; p++) {
+        var px = startPipX + p * (pipW + pipGap);
+        if (p < rem) {
+          ctx.fillStyle = teamCol;
+          ctx.fillRect(px, pipY, pipW, pipH);
+        } else {
+          ctx.fillStyle = "rgba(100, 116, 139, 0.4)";
+          ctx.fillRect(px, pipY, pipW, pipH);
+        }
+      }
+      ctx.restore();
+    }
+  }
+}

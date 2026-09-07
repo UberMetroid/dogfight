@@ -10,14 +10,16 @@ function dfStepMissiles() {
     var misY = DF.missilesPool.buffer[mo + 1];
     var misVx = DF.missilesPool.buffer[mo + 2];
     var misVy = DF.missilesPool.buffer[mo + 3];
-    var misOwnerTeam = DF.missilesPool.buffer[mo + 4]; // 0 = Blue, 1 = Red
+    var rawOwnerCode = Math.round(DF.missilesPool.buffer[mo + 4]);
+    var misOwnerTeam = rawOwnerCode >= 100 ? (rawOwnerCode >= 200 ? 1 : 0) : rawOwnerCode;
+    var launcherSlot = rawOwnerCode >= 100 ? (rawOwnerCode % 100) : 0;
     var tgtSlot = Math.round(DF.missilesPool.buffer[mo + 5]);
     var misLife = DF.missilesPool.buffer[mo + 6];
     var misType = DF.missilesPool.buffer[mo + 7];
 
     var oppPool = (misOwnerTeam === 0) ? DF.redPool : DF.bluePool;
     var friendlyLauncherPool = (misOwnerTeam === 0) ? DF.bluePool : DF.redPool;
-    var launcherJet = friendlyLauncherPool[0];
+    var launcherJet = (launcherSlot >= 0 && launcherSlot < friendlyLauncherPool.length) ? friendlyLauncherPool[launcherSlot] : friendlyLauncherPool[0];
 
     var tgtJet = (tgtSlot >= 0 && tgtSlot < oppPool.length && oppPool[tgtSlot].active && !oppPool[tgtSlot].isDying) ? oppPool[tgtSlot] : null;
     if (!tgtJet) {

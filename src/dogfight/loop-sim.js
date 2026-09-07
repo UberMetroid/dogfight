@@ -54,6 +54,13 @@ function dfStepSim() {
     if (DF.redIngressTimer >= 90) { // 3.0s tactical ingress delay
       DF.redIngressTimer = 0;
       scrambleWave("red");
+      for (var bsc = 0; bsc < DF.bluePool.length; bsc++) {
+        var bsJet = DF.bluePool[bsc];
+        if (bsJet.active && !bsJet.isDying) {
+          bsJet.missilesRemaining = bsJet.missileCapacity;
+          bsJet.isWinchester = (bsJet.missilesRemaining === 0 && bsJet.gen < 7);
+        }
+      }
     }
   } else if (blueActiveCount === 0 && redActiveCount > 0) {
     // Red Force Wins Round -> Patrol Cruise
@@ -72,6 +79,13 @@ function dfStepSim() {
     if (DF.blueIngressTimer >= 90) {
       DF.blueIngressTimer = 0;
       scrambleWave("blue");
+      for (var rsc = 0; rsc < DF.redPool.length; rsc++) {
+        var rsJet = DF.redPool[rsc];
+        if (rsJet.active && !rsJet.isDying) {
+          rsJet.missilesRemaining = rsJet.missileCapacity;
+          rsJet.isWinchester = (rsJet.missilesRemaining === 0 && rsJet.gen < 7);
+        }
+      }
     }
   } else if (blueActiveCount === 0 && redActiveCount === 0) {
     DF.blueIngressTimer++;

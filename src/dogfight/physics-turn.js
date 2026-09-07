@@ -43,6 +43,9 @@ function updateJetPhysicsTurn(jet, targetEnemy, spec, isF16, mass, densityRatio,
   if (jet.mode === "MERGE_PITCHBACK" || jet.mode === "PITCHBACK_REVERSAL" || jet.mode === "MERGE" || jet.mode === "PURSUIT" || jet.mode === "BREAK" || jet.mode === "BOUNDARY_SLICE") {
     bfmTurnMult = 1.35; // boost instantaneous turn rate during high-G dogfight turns
   }
+  if (jet.isAce) {
+    bfmTurnMult *= (jet.turnAgilityBonus || 1.15);
+  }
   var effectiveMaxTurn = maxTurnRate * bfmTurnMult;
 
   // Second-order critically damped angular filtering with turn commitment lock

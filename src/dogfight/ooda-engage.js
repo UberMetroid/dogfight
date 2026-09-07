@@ -19,8 +19,17 @@ function oodaDecideEngage(jet, obs, ori, targetEnemy, altFt, sCeiling, flaresPoo
     var aotTargetTail = Math.abs(bearingToTarget - targetEnemy.angle);
     while (aotTargetTail > Math.PI) aotTargetTail = Math.abs(aotTargetTail - Math.PI * 2);
 
-    // Instant 180 snap pitchback upon crossing (dist < 250 px & hdgDiff > 1.8 rad or closure turning negative at close range)
-    if ((dist < 250 && hdgDiff > 1.8) || (closureRate < 0 && dist < 350 && hdgDiff > 1.8)) {
+    var isWinchester = (jet.isWinchester || (typeof jet.missilesRemaining === "number" && jet.missilesRemaining <= 0 && jet.gen < 7));
+    if (isWinchester && dist > 260) {
+      jet.mode = "PURSUIT";
+      jet.isTailChasing = false;
+      var closeLead = Math.min(dist / 14.0, 15.0);
+      var clx = targetEnemy.x + Math.cos(targetEnemy.angle) * targetEnemy.speed * closeLead;
+      var cly = targetEnemy.y + Math.sin(targetEnemy.angle) * targetEnemy.speed * closeLead;
+      jet.targetAngle = Math.atan2(cly - jet.y, clx - jet.x);
+      jet.throttleSetting = 1.5;
+      jet.afterburner = true;
+    } else if ((dist < 250 && hdgDiff > 1.8) || (closureRate < 0 && dist < 350 && hdgDiff > 1.8)) {
       jet.mode = "MERGE_PITCHBACK";
       jet.isTailChasing = false;
       jet.modeTimer = 24;

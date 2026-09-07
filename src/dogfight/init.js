@@ -42,6 +42,13 @@ function scrambleWave(team, gen) {
       jet.targetAngle = jet.angle;
       jet.speed = (specG.baseSpeed || 4.8) * 1.15;
       jet.baseSpeed = specG.baseSpeed || 4.8;
+      jet.missileCapacity = (specG && typeof specG.missileCapacity === "number") ? specG.missileCapacity : (gg === 1 || gg === 7 ? 0 : 6);
+      jet.missilesRemaining = jet.missileCapacity;
+      jet.isWinchester = (jet.missilesRemaining === 0 && gg < 7);
+      jet.missileCooldown = gg === 1 ? 999999 : (10 + Math.floor(Math.random() * 11));
+      jet.kills = 0;
+      jet.isAce = false;
+      jet.turnAgilityBonus = 1.0;
       setupJetCallsignAndVariant(jet, gg, team, idx);
       if (gg === 6) {
         jet.ccaDeployed = true;

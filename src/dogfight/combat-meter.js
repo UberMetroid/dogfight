@@ -397,6 +397,15 @@
       var sBlueKills = document.getElementById("stat-blue-kills");
       if (sBlueKills) sBlueKills.textContent = (DF.blueKills || 0) + ((DF.blueKills === 1) ? " SPLASH" : " SPLASHES");
 
+      var blueAces = 0;
+      if (DF && DF.bluePool) {
+        for (var bai = 0; bai < DF.bluePool.length; bai++) {
+          if (DF.bluePool[bai].active && !DF.bluePool[bai].isDying && DF.bluePool[bai].isAce) blueAces++;
+        }
+      }
+      var sBlueAces = document.getElementById("stat-blue-aces");
+      if (sBlueAces) sBlueAces.textContent = blueAces + (blueAces === 1 ? " ACE" : " ACES");
+
       var sBlueMissiles = document.getElementById("stat-blue-missiles");
       if (sBlueMissiles) sBlueMissiles.textContent = this.blueMissiles + (this.blueMissiles === 1 ? " IN FLIGHT" : " IN FLIGHT");
 
@@ -415,6 +424,15 @@
 
       var sRedKills = document.getElementById("stat-red-kills");
       if (sRedKills) sRedKills.textContent = (DF.redKills || 0) + ((DF.redKills === 1) ? " SPLASH" : " SPLASHES");
+
+      var redAces = 0;
+      if (DF && DF.redPool) {
+        for (var rai = 0; rai < DF.redPool.length; rai++) {
+          if (DF.redPool[rai].active && !DF.redPool[rai].isDying && DF.redPool[rai].isAce) redAces++;
+        }
+      }
+      var sRedAces = document.getElementById("stat-red-aces");
+      if (sRedAces) sRedAces.textContent = redAces + (redAces === 1 ? " ACE" : " ACES");
 
       var sRedMissiles = document.getElementById("stat-red-missiles");
       if (sRedMissiles) sRedMissiles.textContent = this.redMissiles + (this.redMissiles === 1 ? " IN FLIGHT" : " IN FLIGHT");

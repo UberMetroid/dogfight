@@ -68,8 +68,11 @@ function dfDrawAircraft(now, colors) {
       updateAndDrawCcaDrones(rJet, rJet.isLead, colors);
     }
 
-    // Clean aircraft silhouette with in-world floating health bar
+    // Clean aircraft silhouette with in-world floating health bar and tactical status
     drawInWorldHealthBar(DF.ctx, rJet, colors, globalHudFrameCount);
+    if (typeof drawInWorldTacticalStatus === "function") {
+      drawInWorldTacticalStatus(DF.ctx, rJet, colors, globalHudFrameCount);
+    }
   }
 
 }

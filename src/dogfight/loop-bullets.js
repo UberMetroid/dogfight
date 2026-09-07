@@ -14,7 +14,9 @@ function dfStepBullets() {
     var bvx = DF.bulletsPool.buffer[bo + 2];
     var bvy = DF.bulletsPool.buffer[bo + 3];
     var blife = DF.bulletsPool.buffer[bo + 4];
-    var bOwnerTeam = DF.bulletsPool.buffer[bo + 5]; // 0 = Blue, 1 = Red
+    var bOwnerTeamRaw = Math.round(DF.bulletsPool.buffer[bo + 5]);
+    var bOwnerTeam = bOwnerTeamRaw >= 100 ? (bOwnerTeamRaw >= 200 ? 1 : 0) : bOwnerTeamRaw;
+    var shooterSlot = bOwnerTeamRaw >= 100 ? (bOwnerTeamRaw % 100) : 0;
 
     if (blife <= 0) {
       DF.bulletsPool.free(b);
@@ -94,7 +96,7 @@ function dfStepBullets() {
         if (tJet.gen === 7) {
           tJet.shieldPulse = 1.0;
         } else {
-          var shooterJet = shooterPool[0];
+          var shooterJet = (shooterSlot >= 0 && shooterSlot < shooterPool.length) ? shooterPool[shooterSlot] : shooterPool[0];
           var gDmg = 15.0 + Math.random() * 5.0;
           var isLethal = applyAirframeDamage(tJet, gDmg, shooterJet, "GUN_20MM");
           if (isLethal) {

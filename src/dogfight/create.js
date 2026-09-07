@@ -92,6 +92,9 @@ function createJet(x, y, angle, gen, slotIdx, team) {
     chaffCooldown: 0,
     gunCooldown: 0,
     missileCooldown: chosenGen === 1 ? 999999 : (10 + Math.floor(Math.random() * 11)),
+    missileCapacity: (spec && typeof spec.missileCapacity === "number") ? spec.missileCapacity : (chosenGen === 1 || chosenGen === 7 ? 0 : 6),
+    missilesRemaining: (spec && typeof spec.missileCapacity === "number") ? spec.missileCapacity : (chosenGen === 1 || chosenGen === 7 ? 0 : 6),
+    isWinchester: (chosenGen === 1),
     laserCooldown: 0,
     triLaserCooldown: 0,
     superLaserCooldown: chosenGen === 7 ? (isHero ? 60 : (60 + Math.floor(Math.random() * 60))) : 0,
@@ -122,6 +125,8 @@ function createJet(x, y, angle, gen, slotIdx, team) {
     contrail: typeof ContrailRingBufferF32 !== "undefined" ? new ContrailRingBufferF32(32, 4) : null,
     wingVapor: typeof ContrailRingBufferF32 !== "undefined" ? new ContrailRingBufferF32(32, 4) : null,
     kills: 0,
+    isAce: false,
+    turnAgilityBonus: 1.0,
     active: true
   };
 

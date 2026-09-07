@@ -24,7 +24,10 @@ function evaluateKineticWeapons(jet, targetEnemy, colors) {
     var daLeadGuns = Math.abs(jet.angle - leadBearingGuns);
     while (daLeadGuns > Math.PI) daLeadGuns = Math.abs(daLeadGuns - Math.PI * 2);
 
-    if ((da < 0.785 || daLeadGuns < 0.85) && dist >= 20 && dist <= 220 && jet.gunCooldown <= 0 && isKineticReachValid) {
+    var gunTolerance = jet.isAce ? 1.05 : 0.85;
+    var maxGunDist = jet.isAce ? 250 : 220;
+
+    if ((da < 0.785 || daLeadGuns < gunTolerance) && dist >= 20 && dist <= maxGunDist && jet.gunCooldown <= 0 && isKineticReachValid) {
       jet.gunCooldown = 3;
       if (typeof window !== "undefined" && window.TacticalAudio) window.TacticalAudio.playCannonBurst();
       var bIdx = DF.bulletsPool.alloc();
@@ -35,10 +38,10 @@ function evaluateKineticWeapons(jet, targetEnemy, colors) {
         DF.bulletsPool.buffer[bo + 2] = Math.cos(jet.angle) * 14;
         DF.bulletsPool.buffer[bo + 3] = Math.sin(jet.angle) * 14;
         DF.bulletsPool.buffer[bo + 4] = 16;
-        DF.bulletsPool.buffer[bo + 5] = shooterTeamCode; // 0 = Blue, 1 = Red
+        DF.bulletsPool.buffer[bo + 5] = (shooterTeamCode === 0 ? 100 : 200) + (jet.slotIdx || 0);
       }
-      if (jet.gen === 1 && Math.random() < 0.20) {
-        dfRadio(jet.callsign + ": GUNS! 20MM BURST ON TARGET");
+      if ((jet.gen === 1 || jet.isWinchester) && Math.random() < 0.20) {
+        dfRadio(jet.callsign + (jet.isAce ? ": [ACE] " : ": ") + "GUNS! 20MM BURST ON TARGET");
       }
     }
 
@@ -67,7 +70,8 @@ function evaluateKineticWeapons(jet, targetEnemy, colors) {
     while (daLeadMis > Math.PI) daLeadMis = Math.abs(daLeadMis - Math.PI * 2);
 
     var maxLaunchDist = (jet.gen === 6 && hasActiveCca) ? 2200 : 1400;
-    if (jet.gen >= 2 && (da < 1.10 || daLeadMis < 1.10) && dist <= maxLaunchDist && dist >= 50 && jet.missileCooldown <= 0 && jet.speed > DF.V_CORNER * 0.6 && canAcquireLock) {
+    var hasMissiles = (typeof jet.missilesRemaining === "number") ? (jet.missilesRemaining > 0) : true;
+    if (jet.gen >= 2 && hasMissiles && (da < 1.10 || daLeadMis < 1.10) && dist <= maxLaunchDist && dist >= 50 && jet.missileCooldown <= 0 && jet.speed > DF.V_CORNER * 0.6 && canAcquireLock) {
       var allowLaunch = true;
       var misSpeed = jet.speed + 3.0;
       var misType = 0;
@@ -108,6 +112,14 @@ function evaluateKineticWeapons(jet, targetEnemy, colors) {
       }
 
       if (allowLaunch) {
+        if (typeof jet.missilesRemaining === "number") {
+          jet.missilesRemaining--;
+          if (jet.missilesRemaining <= 0) {
+            jet.missilesRemaining = 0;
+            jet.isWinchester = true;
+            dfRadio(jet.callsign + ": WINCHESTER! ALL MISSILES EXPENDED! MERGING FOR GUNS!");
+          }
+        }
         if (typeof window !== "undefined" && window.TacticalAudio) window.TacticalAudio.playMissileLaunch();
         if (jet.gen === 5 || jet.gen === 6) {
           jet.bayDoorTimer = 36; // 1.2s internal weapons bay bloom
@@ -122,7 +134,7 @@ function evaluateKineticWeapons(jet, targetEnemy, colors) {
           DF.missilesPool.buffer[mso + 1] = jet.y;
           DF.missilesPool.buffer[mso + 2] = Math.cos(jet.angle) * misSpeed;
           DF.missilesPool.buffer[mso + 3] = Math.sin(jet.angle) * misSpeed;
-          DF.missilesPool.buffer[mso + 4] = shooterTeamCode; // 0 = Blue, 1 = Red
+          DF.missilesPool.buffer[mso + 4] = (shooterTeamCode === 0 ? 100 : 200) + (jet.slotIdx || 0);
           DF.missilesPool.buffer[mso + 5] = targetEnemy.slotIdx;
           DF.missilesPool.buffer[mso + 6] = 240;
           DF.missilesPool.buffer[mso + 7] = misType;

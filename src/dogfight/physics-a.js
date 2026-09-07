@@ -107,7 +107,8 @@ function updateJetPhysics(jet, targetEnemy, incomingThreat, opposingPool, missil
 
     if (jet.oodaLatencyTimer <= 0) {
       oodaDecideAction(jet, obs, ori, targetEnemy, altFt, sCeiling, DF.flaresPool, DF.chaffPool);
-      jet.oodaLatencyTimer = spec.oodaLatencyFrames || 0;
+      var baseLatency = spec.oodaLatencyFrames || 0;
+      jet.oodaLatencyTimer = jet.isAce ? Math.floor(baseLatency * 0.5) : baseLatency;
     }
   }
 

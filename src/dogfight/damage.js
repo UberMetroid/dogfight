@@ -22,7 +22,19 @@ function applyAirframeDamage(targetJet, damageAmount, attacker, weaponName) {
     targetJet.isDying = true;
     targetJet.deathTimer = 45;
     targetJet.fadeAlpha = 1.0;
-    if (attacker && attacker !== targetJet) attacker.kills = (attacker.kills || 0) + 1;
+    if (attacker && attacker !== targetJet) {
+      attacker.kills = (attacker.kills || 0) + 1;
+      if (attacker.kills >= 5 && !attacker.isAce) {
+        attacker.isAce = true;
+        attacker.turnAgilityBonus = 1.15;
+        triggerTacticalRadio("★ ACE PILOT: " + attacker.callsign + " HAS SCORED 5 KILLS! CROWNED ACE OF THE ARENA!");
+      } else if (attacker.isAce) {
+        triggerTacticalRadio("★ ACE " + attacker.callsign + ": SPLASH " + attacker.kills + "! UNRIVALED AIR COMBAT DOMINANCE!");
+      }
+      if (attacker.isAce && weaponName === "GUN_20MM" && attacker.isWinchester) {
+        triggerTacticalRadio("★ ACE DEFLECTION GUN KILL! " + attacker.callsign + " RIPS TARGET AT POINT-BLANK RANGE!");
+      }
+    }
     if (typeof DF !== "undefined") {
       if (targetJet.team === "red") {
         DF.blueKills = (DF.blueKills || 0) + 1;
@@ -31,6 +43,9 @@ function applyAirframeDamage(targetJet, damageAmount, attacker, weaponName) {
       }
     }
     var tCallsign = targetJet.callsign || ("GEN " + (targetJet.gen || 4));
+    if (targetJet.isAce) {
+      triggerTacticalRadio("MAYDAY! ACE PILOT DOWN! " + tCallsign + " (" + (targetJet.kills || 0) + " KILLS) HAS BEEN SPLASHED!");
+    }
     var isOceanCrash = (weaponName === "WATER_IMPACT");
     var isTerrainCrash = (weaponName === "TERRAIN_IMPACT");
 

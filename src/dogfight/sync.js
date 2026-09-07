@@ -118,6 +118,12 @@ function syncFleetToActiveGenerations(blueMask, redMask, canvasW, canvasH) {
     bJet.chaffCooldown = 0;
     bJet.gunCooldown = 0;
     bJet.missileCooldown = bg === 1 ? 999999 : (10 + Math.floor(Math.random() * 11));
+    bJet.missileCapacity = (specB && typeof specB.missileCapacity === "number") ? specB.missileCapacity : (bg === 1 || bg === 7 ? 0 : 6);
+    bJet.missilesRemaining = bJet.missileCapacity;
+    bJet.isWinchester = (bJet.missilesRemaining === 0 && bg < 7);
+    bJet.kills = 0;
+    bJet.isAce = false;
+    bJet.turnAgilityBonus = 1.0;
     bJet.laserCooldown = 0;
     bJet.triLaserCooldown = 0;
     bJet.superLaserCooldown = bg === 7 ? (60 + Math.floor(Math.random() * 60)) : 0;
@@ -192,6 +198,12 @@ function syncFleetToActiveGenerations(blueMask, redMask, canvasW, canvasH) {
     rJet.chaffCooldown = 0;
     rJet.gunCooldown = 0;
     rJet.missileCooldown = rg === 1 ? 999999 : (10 + Math.floor(Math.random() * 11));
+    rJet.missileCapacity = (specR && typeof specR.missileCapacity === "number") ? specR.missileCapacity : (rg === 1 || rg === 7 ? 0 : 6);
+    rJet.missilesRemaining = rJet.missileCapacity;
+    rJet.isWinchester = (rJet.missilesRemaining === 0 && rg < 7);
+    rJet.kills = 0;
+    rJet.isAce = false;
+    rJet.turnAgilityBonus = 1.0;
     rJet.laserCooldown = 0;
     rJet.triLaserCooldown = 0;
     rJet.superLaserCooldown = rg === 7 ? (60 + Math.floor(Math.random() * 60)) : 0;
