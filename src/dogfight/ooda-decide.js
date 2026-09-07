@@ -17,6 +17,15 @@ function oodaDecideAction(jet, obs, ori, targetEnemy, altFt, sCeiling, flaresPoo
     return;
   }
 
+  // Hostile FARP defense standoff has priority to keep jets outside base weapon range
+  if (jet.mode === "EVADE_FARP" && typeof jet.modeTimer === "number" && jet.modeTimer > 0) {
+    jet.isTailChasing = false;
+    jet.zoomClimbActive = false;
+    jet.throttleSetting = 1.3;
+    jet.afterburner = true;
+    return;
+  }
+
   if (ori && ori.recommendedEvasion && ori.recommendedEvasion !== "NONE") {
     jet.isTailChasing = false;
     jet.mode = ori.recommendedEvasion;

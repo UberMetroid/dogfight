@@ -39,21 +39,7 @@ function getSurfaceElevationY(x, worldW, worldH) {
       return mslY - 4;
     }
 
-    // 2. Austere Island Bravo FARP Strip (Mid-Ocean Atoll)
-    var islStart = w * 0.47;
-    var islEnd = w * 0.53;
-    if (x >= islStart - 20 && x <= islEnd + 20) {
-      if (x < islStart) {
-        var tIsl = (x - (islStart - 20)) / 20.0;
-        return mslY - tIsl * 8;
-      } else if (x > islEnd) {
-        var tIsl = (x - islEnd) / 20.0;
-        return (mslY - 8) + tIsl * 8;
-      }
-      return mslY - 8;
-    }
-
-    // 3. Austere Strip Delta (Far Eastern Red Atoll)
+    // 2. Austere Strip Delta (Far Eastern Red Coast / FARP Delta)
     var dStart = w * 0.87;
     var dEnd = w * 0.97;
     if (x >= dStart - 20 && x <= dEnd + 20) {

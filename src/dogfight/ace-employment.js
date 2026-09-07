@@ -35,16 +35,6 @@
         runwayHeading: 0.0
       },
       {
-        id: "bravo",
-        name: "FARP ISLAND BRAVO",
-        type: "AUSTERE_ISLAND",
-        team: "neutral", // Neutral austere island in mid-ocean
-        startX: w * 0.47,
-        endX: w * 0.53,
-        surfaceY: mslY - 8,
-        runwayHeading: 0.0
-      },
-      {
         id: "delta",
         name: "FARP DELTA (AUSTERE STRIP)",
         type: "AUSTERE_STRIP",
@@ -66,8 +56,8 @@
 
     for (var i = 0; i < zones.length; i++) {
       var z = zones[i];
-      // Team compatibility: neutral is open to all; otherwise must match team
-      if (z.team !== "neutral" && z.team !== jet.team) continue;
+      // Team compatibility: must match aircraft team
+      if (z.team !== jet.team) continue;
 
       var midX = (z.startX + z.endX) * 0.5;
       var d = Math.abs(jet.x - midX);
@@ -321,7 +311,7 @@
 
     for (var i = 0; i < zones.length; i++) {
       var z = zones[i];
-      if (z.type === "AUSTERE_ISLAND" || z.type === "AUSTERE_STRIP") {
+      if (z.type === "AUSTERE_STRIP") {
         var startX = z.startX;
         var endX = z.endX;
         var len = endX - startX;
@@ -416,9 +406,9 @@
       team: "blue",
       relX: 0.135,
       surfaceOffsetY: -22,
-      ciwsRange: 420,
-      samRange: 600,
-      exclusionRange: 480,
+      ciwsRange: 380,
+      samRange: 550,
+      exclusionRange: 680,
       ciwsCooldown: 0,
       samCooldown: 0,
       turretAngle: -Math.PI * 0.45,
@@ -435,9 +425,9 @@
       team: "blue",
       relX: 0.225,
       surfaceOffsetY: -4,
-      ciwsRange: 380,
-      samRange: 550,
-      exclusionRange: 420,
+      ciwsRange: 340,
+      samRange: 500,
+      exclusionRange: 640,
       ciwsCooldown: 0,
       samCooldown: 0,
       turretAngle: -Math.PI * 0.5,
@@ -447,25 +437,6 @@
       type: "NAVAL_CIWS"
     },
     {
-      id: "bravo_defense",
-      zoneId: "bravo",
-      name: "FARP BRAVO SHORAD",
-      shortName: "FARP BRAVO CIWS",
-      team: "neutral",
-      relX: 0.500,
-      surfaceOffsetY: -8,
-      ciwsRange: 300,
-      samRange: 420,
-      exclusionRange: 320,
-      ciwsCooldown: 0,
-      samCooldown: 0,
-      turretAngle: -Math.PI * 0.5,
-      radarAngle: 0,
-      muzzleFlashTimer: 0,
-      targetJet: null,
-      type: "SHORAD"
-    },
-    {
       id: "delta_defense",
       zoneId: "delta",
       name: "FARP DELTA PANTSIR-S1",
@@ -473,9 +444,9 @@
       team: "red",
       relX: 0.865,
       surfaceOffsetY: -12,
-      ciwsRange: 420,
-      samRange: 600,
-      exclusionRange: 480,
+      ciwsRange: 380,
+      samRange: 550,
+      exclusionRange: 680,
       ciwsCooldown: 0,
       samCooldown: 0,
       turretAngle: -Math.PI * 0.55,
@@ -725,9 +696,10 @@
     }
   }
 
-  // 9. Hostile Threat Check: Keeps hostile jets away from landing zones during ACE operations
+  // 9. Hostile Threat Check: Keeps hostile jets away from landing zones and outside FARP weapon range
   function isThreatenedByHostileFarp(jet, worldW, worldH) {
     if (!jet || !jet.active || jet.isDying) return null;
+    if (jet.mode === "ACE_APPROACH" || jet.mode === "ACE_TOUCHDOWN" || jet.mode === "FARP_TAKEOFF") return null;
     var w = (typeof worldW === "number" && worldW > 0) ? worldW : 3600;
     var h = (typeof worldH === "number" && worldH > 0) ? worldH : 1200;
 
@@ -737,7 +709,8 @@
       var bx = w * bat.relX;
       var by = (typeof getSurfaceElevationY === "function") ? getSurfaceElevationY(bx, w, h) : (h * 0.84);
       var d = Math.hypot(jet.x - bx, jet.y - by);
-      if (d < bat.exclusionRange) {
+      var safeStandoff = Math.max(bat.exclusionRange || 680, (bat.samRange || 550) + 100);
+      if (d < safeStandoff) {
         return bat;
       }
     }

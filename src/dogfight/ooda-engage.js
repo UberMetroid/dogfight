@@ -3,6 +3,11 @@
 // Logline: Pursuit, merge, and patrol when not in a named mode.
 //
 function oodaDecideEngage(jet, obs, ori, targetEnemy, altFt, sCeiling, flaresPool, chaffPool) {
+  if (!jet) return;
+  // If jet is in EVADE_FARP mode, preserve standoff heading away from hostile defenses
+  if (jet.mode === "EVADE_FARP" && typeof jet.modeTimer === "number" && jet.modeTimer > 0) {
+    return;
+  }
   var isNearCeil = (altFt >= 95000 || (typeof jet.y === "number" && jet.y <= 36.0));
   if (targetEnemy && targetEnemy.active && !targetEnemy.isDying) {
     var dx = targetEnemy.x - jet.x;
@@ -129,8 +134,30 @@ function oodaDecideEngage(jet, obs, ori, targetEnemy, altFt, sCeiling, flaresPoo
     jet.mode = "TACTICAL_SWEEP";
     jet.isTailChasing = false;
     jet.patrolSweepAngle = (jet.patrolSweepAngle || 0) + 0.035;
-    var sweepWeave = Math.sin(jet.patrolSweepAngle) * 0.30;
-    var baseHeading = (jet.team === "blue" ? 0.0 : Math.PI);
+    var sweepWeave = Math.sin(jet.patrolSweepAngle) * 0.25;
+
+    // Boundary-aware Combat Air Patrol: fighters patrol central ocean and stay outside hostile FARP weapon range
+    var worldW = (typeof DF !== "undefined" && DF.worldWidth) ? DF.worldWidth : 3600;
+    var baseHeading;
+    if (jet.team === "blue") {
+      // Blue sweeps East up to 65% of world width, then turns back West to stay clear of Red FARP Delta
+      if (jet.x > worldW * 0.65) {
+        baseHeading = Math.PI;
+      } else if (jet.x < worldW * 0.28) {
+        baseHeading = 0.0;
+      } else {
+        baseHeading = (Math.cos(jet.angle) >= 0) ? 0.0 : Math.PI;
+      }
+    } else {
+      // Red sweeps West down to 35% of world width, then turns back East to stay clear of Blue Base/Carrier
+      if (jet.x < worldW * 0.35) {
+        baseHeading = 0.0;
+      } else if (jet.x > worldW * 0.72) {
+        baseHeading = Math.PI;
+      } else {
+        baseHeading = (Math.cos(jet.angle) >= 0) ? 0.0 : Math.PI;
+      }
+    }
 
     // Generational Altitude Seeking
     var targetAltFt = (typeof CRUISE_ALTITUDES !== "undefined" && CRUISE_ALTITUDES[jet.gen]) ? CRUISE_ALTITUDES[jet.gen] : 45000;

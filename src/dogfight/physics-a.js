@@ -164,14 +164,15 @@ function updateJetPhysics(jet, targetEnemy, incomingThreat, opposingPool, missil
         jet.throttleSetting = 1.5;
         jet.afterburner = true;
       } else if (typeof isThreatenedByHostileFarp === "function" && (threatBat = isThreatenedByHostileFarp(jet, worldW, worldH))) {
-        // Hostile FARP Air Defense Threat Exclusion (Keeps hostiles away from bases & protects ACE rearm)
+        // Hostile FARP Air Defense Threat Exclusion (Keeps hostiles outside base weapon range)
         jet.isTailChasing = false;
         jet.targetJet = null;
         jet.mode = "EVADE_FARP";
+        jet.modeTimer = 60; // Sustained standoff maneuver prevents 1-frame jitter/freezing
         var awayX = (jet.x < threatBat.x) ? -1.0 : 1.0;
-        var awayPitch = -0.38; // Climb sharply away from defense umbrella
+        var awayPitch = -0.15; // Smooth banking turn toward open ocean
         jet.targetAngle = (awayX > 0) ? awayPitch : (jet.angle < 0 ? -Math.PI - awayPitch : Math.PI + awayPitch);
-        jet.throttleSetting = 1.5;
+        jet.throttleSetting = 1.3;
         jet.afterburner = true;
 
         // Deploy countermeasures if under active fire or missile launch
@@ -185,8 +186,17 @@ function updateJetPhysics(jet, targetEnemy, incomingThreat, opposingPool, missil
         }
 
         if (Math.random() < 0.015 && typeof dfRadio === "function") {
-          dfRadio(jet.callsign + ": WARNING: HOSTILE AIR DEFENSE (" + threatBat.shortName + ")! BREAKING OFF PURSUIT!");
+          dfRadio(jet.callsign + ": STANDOFF PERIMETER: " + threatBat.shortName + "! TURNING BACK TO OCEAN ARENA!");
         }
+      } else if (jet.mode === "EVADE_FARP" && typeof jet.modeTimer === "number" && jet.modeTimer > 0) {
+        jet.modeTimer--;
+        jet.isTailChasing = false;
+        jet.targetJet = null;
+        var arenaCenterX = worldW * 0.5;
+        var toCenterX = (arenaCenterX > jet.x) ? 1.0 : -1.0;
+        jet.targetAngle = (toCenterX > 0) ? -0.05 : (jet.angle < 0 ? -Math.PI + 0.05 : Math.PI - 0.05);
+        jet.throttleSetting = 1.3;
+        jet.afterburner = true;
       } else if (gpwsTrigger) {
         jet.mode = "GPWS_PULLUP";
         jet.oodaPhase = "ACT";

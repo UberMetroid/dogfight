@@ -10,12 +10,19 @@ function updateTacticalManeuvers(friendlyPool, opposingPool) {
       continue;
     }
 
+    // Preserve EVADE_FARP standoff maneuver while active to prevent target re-acquisition into defense zone
+    if (jet.mode === "EVADE_FARP" && typeof jet.modeTimer === "number" && jet.modeTimer > 0) {
+      jet.targetJet = null;
+      continue;
+    }
+
     // 1. Dynamic Target Acquisition with Radar Equation, Stealth RCS, and Service Ceiling Filters
     var bestTarget = null;
     var minDist = 999999;
     var mySpec = (typeof AIRCRAFT_SPECS !== "undefined" && AIRCRAFT_SPECS[jet.gen]) ? AIRCRAFT_SPECS[jet.gen] : {};
     var myRadarBase = mySpec.radarBaseline || 600;
     var myCeiling = (typeof SERVICE_CEILINGS !== "undefined" && SERVICE_CEILINGS[jet.gen]) ? SERVICE_CEILINGS[jet.gen] : 60000;
+    var worldW = (typeof DF !== "undefined" && DF.worldWidth) ? DF.worldWidth : 3600;
     var worldH = (typeof DF !== "undefined" && DF.worldHeight) ? DF.worldHeight : 1200;
     var myAltFt = (typeof getAltitudeFeet === "function") ? getAltitudeFeet(jet.y, worldH) : 30000;
 
@@ -41,9 +48,17 @@ function updateTacticalManeuvers(friendlyPool, opposingPool) {
         continue; // Bandit is stealth / undetectable outside sensor envelope
       }
 
-      // De-prioritize targets sheltered inside their defended home FARP umbrella
-      if (opp.mode === "ACE_APPROACH" || opp.mode === "ACE_TOUCHDOWN") {
-        d += 2500;
+      // Do NOT pursue bandits that have retreated inside their home FARP defense umbrella
+      if (jet.team === "blue" && opp.x > worldW * 0.70) {
+        continue; // Blue fighters stay outside Red FARP Delta defense envelope
+      }
+      if (jet.team === "red" && opp.x < worldW * 0.30) {
+        continue; // Red fighters stay outside Blue Base Alpha / Carrier defense envelope
+      }
+
+      // Do NOT target aircraft taking off or landing at their home base
+      if (opp.mode === "ACE_APPROACH" || opp.mode === "ACE_TOUCHDOWN" || opp.mode === "FARP_TAKEOFF") {
+        continue;
       }
       if (d < minDist) {
         minDist = d;
