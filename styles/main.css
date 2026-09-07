@@ -62,7 +62,7 @@ html, body {
   z-index: 10;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  justify-content: space-between;
   padding: 12px 16px;
 }
 
@@ -110,34 +110,148 @@ html, body {
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.75), inset 0 0 16px rgba(239, 68, 68, 0.06);
 }
 
-/* Central Living Generational Campaign Documentary Chronicle Box */
-.hud-campaign-badge {
-  pointer-events: auto;
-  background: rgba(6, 10, 18, 0.94);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(245, 158, 11, 0.5);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.85), inset 0 0 16px rgba(245, 158, 11, 0.08);
-  padding: 8px 14px 6px 14px;
+/* Ultra-Slim Center-Top Era Strip (Leaves 100% Sky Open for Dogfighting) */
+.hud-top-era-strip {
   display: flex;
-  flex-direction: column;
-  gap: 5px;
-  min-width: 320px;
-  max-width: 600px;
-  flex: 1;
-  text-align: left;
+  align-items: center;
+  gap: 8px;
+  background: rgba(6, 10, 18, 0.75);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  border-radius: 4px;
+  padding: 3px 12px;
+  height: 22px;
+  box-sizing: border-box;
   margin: 0 auto;
-  position: relative;
-  overflow: hidden;
+  pointer-events: auto;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
 }
 
-.chronicle-header {
+.era-strip-tag {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #fbbf24;
+  text-transform: uppercase;
+}
+
+.era-strip-sep {
+  color: rgba(148, 163, 184, 0.4);
+  font-size: 0.60rem;
+}
+
+.era-strip-title {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #f8fafc;
+  text-transform: uppercase;
+}
+
+.era-strip-countdown {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #38bdf8;
+}
+
+/* Lower-Third Cinematic Documentary Chronicle Dock (Over Water) */
+.hud-footer {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  width: 100%;
+  pointer-events: none;
+  padding-bottom: 2px;
+  z-index: 12;
+}
+
+.hud-campaign-dock {
+  pointer-events: auto;
+  background: rgba(6, 10, 18, 0.84);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.85), inset 0 0 16px rgba(245, 158, 11, 0.05);
+  border-radius: 6px;
+  padding: 6px 12px;
   display: flex;
   flex-direction: column;
+  gap: 4px;
+  min-width: 340px;
+  max-width: 680px;
+  width: 100%;
+  transition: all 0.25s ease-out;
+}
+
+.hud-campaign-dock.dock-collapsed .dock-body {
+  display: none;
+}
+
+.hud-campaign-dock.dock-collapsed {
+  max-width: 520px;
+  padding: 4px 10px;
+  background: rgba(6, 10, 18, 0.65);
+}
+
+.dock-header {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  text-align: center;
-  gap: 2px;
+  gap: 8px;
   border-bottom: 1px solid rgba(148, 163, 184, 0.15);
-  padding-bottom: 4px;
+  padding-bottom: 3px;
+}
+
+.dock-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dock-era-tag {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.10em;
+  color: #fbbf24;
+  text-transform: uppercase;
+}
+
+.dock-doctrine {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.dock-toggle-btn {
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  color: #cbd5e1;
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.dock-toggle-btn:hover {
+  background: rgba(56, 189, 248, 0.25);
+  border-color: #38bdf8;
+  color: #f8fafc;
+}
+
+.dock-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .campaign-era-tag {

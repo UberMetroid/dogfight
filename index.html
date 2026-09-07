@@ -91,52 +91,13 @@
         </div>
       </div>
 
-      <!-- Living Generational Campaign Documentary Chronicle (Center Top) -->
-      <div class="hud-campaign-badge" id="hud-campaign-badge">
-        <div class="chronicle-header">
-          <div class="campaign-era-tag" id="campaign-era-tag">ERA I // 1950</div>
-          <div class="campaign-era-title" id="campaign-era-title">KOREAN CANYON DOGFIGHT</div>
-          <div class="campaign-era-doctrine" id="campaign-era-doctrine">TRANSONIC GUNFIGHTERS // B-47 IRON BOMB RIPPLE</div>
-        </div>
-
-        <!-- Technology Invented & Historical Impact -->
-        <div class="chronicle-tech-section">
-          <div class="chronicle-tech-row">
-            <span class="tech-badge">INVENTED</span>
-            <span class="tech-name" id="campaign-tech-name">Axial Turbojets & Swept Wings (Mach 0.95)</span>
-          </div>
-          <div class="chronicle-tech-impact" id="campaign-tech-impact">
-            Replaced piston propellers with turbojets, boosting speeds to Mach 0.95. High closing speeds forced visual guns (.50 cal / 37mm) and B-47 iron bomb carpet strikes.
-          </div>
-        </div>
-
-        <!-- Live Battlefield Narrative / What is happening now -->
-        <div class="chronicle-live-section">
-          <div class="chronicle-live-row">
-            <span class="live-dot"></span>
-            <span class="live-label">LIVE COMBAT CHRONICLE</span>
-          </div>
-          <div class="chronicle-live-ticker" id="campaign-live-ticker">
-            F-86 Sabre and MiG-15 scrambling from coastal bases, climbing into the 22,000 ft dogfight arena.
-          </div>
-        </div>
-
-        <!-- Escalation Trigger & Arms Race Countdown -->
-        <div class="chronicle-trigger-row">
-          <div class="trigger-badge-group">
-            <span class="trigger-label">UPGRADE TRIGGER:</span>
-            <span class="trigger-rule">BASE DESTRUCTION BY BOMBER // 60s ARMS RACE TIMEOUT</span>
-          </div>
-          <div class="trigger-countdown">
-            <span class="countdown-lbl">TIMEOUT:</span>
-            <span class="countdown-val" id="campaign-timer-countdown">60s</span>
-          </div>
-        </div>
-
-        <!-- Arms Race Escalation Timeline Progress Bar -->
-        <div class="chronicle-progress-bar">
-          <div class="chronicle-progress-fill" id="campaign-progress-fill"></div>
-        </div>
+      <!-- Ultra-Slim Top Era Pill (Height 22px, Leaves 100% Sky Open for Dogfighting) -->
+      <div class="hud-top-era-strip" id="hud-top-era-strip">
+        <span class="era-strip-tag" id="campaign-era-tag">ERA I // 1950</span>
+        <span class="era-strip-sep">•</span>
+        <span class="era-strip-title" id="campaign-era-title">KOREAN CANYON DOGFIGHT</span>
+        <span class="era-strip-sep">•</span>
+        <span class="era-strip-countdown" id="campaign-timer-countdown">60s</span>
       </div>
 
       <!-- Red Opposing Force Box (Right) -->
@@ -166,6 +127,63 @@
         </div>
       </div>
     </header>
+
+    <!-- Lower-Third Cinematic Documentary Chronicle Dock (Bottom Center, Over Water) -->
+    <footer class="hud-footer">
+      <div class="hud-campaign-dock hud-interactive" id="hud-campaign-badge">
+        <div class="dock-header">
+          <div class="dock-title-group">
+            <span class="dock-era-tag" id="campaign-era-tag-dock">ERA I // 1950</span>
+            <span class="dock-doctrine" id="campaign-era-doctrine">TRANSONIC GUNFIGHTERS // B-47 IRON BOMB RIPPLE</span>
+          </div>
+          <div class="dock-controls">
+            <button type="button" class="dock-toggle-btn" id="dock-toggle-btn" title="Toggle Documentary Chronicle">COLLAPSE NOTES [-]</button>
+          </div>
+        </div>
+
+        <!-- Collapsible Content -->
+        <div class="dock-body" id="dock-body">
+          <!-- Technology Invented & Historical Impact -->
+          <div class="chronicle-tech-section">
+            <div class="chronicle-tech-row">
+              <span class="tech-badge">INVENTED</span>
+              <span class="tech-name" id="campaign-tech-name">Axial Turbojets & Swept Wings (Mach 0.95)</span>
+            </div>
+            <div class="chronicle-tech-impact" id="campaign-tech-impact">
+              Replaced piston propellers to break past transonic limits. High closing speeds forced close-in visual dogfights (.50 cal / 37mm cannons) and B-47 iron bomb carpet strikes.
+            </div>
+          </div>
+
+          <!-- Live Battlefield Narrative / What is happening now -->
+          <div class="chronicle-live-section">
+            <div class="chronicle-live-row">
+              <span class="live-dot"></span>
+              <span class="live-label">LIVE COMBAT CHRONICLE</span>
+            </div>
+            <div class="chronicle-live-ticker" id="campaign-live-ticker">
+              F-86 Sabre and MiG-15 scrambling from coastal bases, climbing into the 22,000 ft dogfight arena.
+            </div>
+          </div>
+
+          <!-- Escalation Trigger & Arms Race Countdown -->
+          <div class="chronicle-trigger-row">
+            <div class="trigger-badge-group">
+              <span class="trigger-label">UPGRADE TRIGGER:</span>
+              <span class="trigger-rule">BASE DESTRUCTION BY BOMBER // 60s ARMS RACE TIMEOUT</span>
+            </div>
+            <div class="trigger-countdown">
+              <span class="countdown-lbl">TIMEOUT:</span>
+              <span class="countdown-val" id="campaign-timer-countdown-dock">60s</span>
+            </div>
+          </div>
+
+          <!-- Arms Race Escalation Timeline Progress Bar -->
+          <div class="chronicle-progress-bar">
+            <div class="chronicle-progress-fill" id="campaign-progress-fill"></div>
+          </div>
+        </div>
+      </div>
+    </footer>
   </div>
 
   <!-- Tactical Application Lifecycle Logic -->

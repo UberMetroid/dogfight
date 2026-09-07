@@ -118,6 +118,15 @@
       this.eraTimer = 0;
       this.isTransitioning = false;
       this.setEra(1, true);
+
+      var toggleBtn = document.getElementById("dock-toggle-btn");
+      var dockEl = document.getElementById("hud-campaign-badge") || document.getElementById("hud-campaign-dock");
+      if (toggleBtn && dockEl) {
+        toggleBtn.addEventListener("click", function () {
+          var isCollapsed = dockEl.classList.toggle("dock-collapsed");
+          toggleBtn.textContent = isCollapsed ? "EXPAND NOTES [+]" : "COLLAPSE NOTES [-]";
+        });
+      }
     },
 
     getEraData: function (eraNum) {
@@ -308,6 +317,31 @@
           return "💥 CANNON DOGFIGHT: High-rate autocannon tracers blazing at close visual merge!";
         }
 
+        var bWm = (DF.bluePool && DF.bluePool[1] && DF.bluePool[1].active) ? DF.bluePool[1] : null;
+        var rWm = (DF.redPool && DF.redPool[1] && DF.redPool[1].active) ? DF.redPool[1] : null;
+
+        // Mutual defensive cover on wingman's six
+        if ((bJet && bJet.mode === "COVER") || (bWm && bWm.mode === "COVER") ||
+            (rJet && rJet.mode === "COVER") || (rWm && rWm.mode === "COVER")) {
+          var covJet = (bJet && bJet.mode === "COVER") ? bJet : (bWm && bWm.mode === "COVER" ? bWm : (rJet && rJet.mode === "COVER" ? rJet : rWm));
+          return "🛡️ MUTUAL DEFENSIVE COVER: " + covJet.callsign + " breaking into threat on element's six!";
+        }
+
+        // Bracket Pincer dual-axis flanking attack
+        if ((bJet && bJet.mode === "PINCER") || (bWm && bWm.mode === "PINCER") ||
+            (rJet && rJet.mode === "PINCER") || (rWm && rWm.mode === "PINCER")) {
+          var pJet = (bJet && bJet.mode === "PINCER") ? bJet : (bWm && bWm.mode === "PINCER" ? bWm : (rJet && rJet.mode === "PINCER" ? rJet : rWm));
+          return "⚔️ TACTICAL BRACKET: " + pJet.callsign + " executing dual-axis pincer flank on adversary!";
+        }
+
+        // Active tactical formation flight
+        if ((bWm && bWm.mode === "FORMATION") || (rWm && rWm.mode === "FORMATION")) {
+          var formJet = (bWm && bWm.mode === "FORMATION") ? bWm : rWm;
+          var leadJet = formJet.wingmanJet;
+          var leadCall = leadJet ? leadJet.callsign : "LEAD";
+          return "✈️ TACTICAL SPREAD: " + formJet.callsign + " holding formation stepped on " + leadCall + "'s wing.";
+        }
+
         // Active GCI Intercept Closure
         if ((bJet && bJet.mode === "PURSUIT" && bJet.targetJet) || (rJet && rJet.mode === "PURSUIT" && rJet.targetJet)) {
           return "⚡ GCI THEATER INTERCEPT: Fighters vectoring at supersonic closing speed across ocean sector for combat merge!";
@@ -349,9 +383,11 @@
 
       // Update arms race countdown timer
       var countdownEl = document.getElementById("campaign-timer-countdown");
-      if (countdownEl) {
+      var countdownDockEl = document.getElementById("campaign-timer-countdown-dock");
+      if (countdownEl || countdownDockEl) {
         var remainSec = Math.max(0, Math.ceil((this.maxEraFrames - this.eraTimer) / 60));
-        countdownEl.textContent = remainSec + "s";
+        if (countdownEl) countdownEl.textContent = remainSec + "s";
+        if (countdownDockEl) countdownDockEl.textContent = remainSec + "s";
       }
 
       // Keep live narrative and badges in sync
@@ -374,6 +410,7 @@
       var data = this.getEraData(this.currentEra);
 
       var tagEl = document.getElementById("campaign-era-tag");
+      var tagDockEl = document.getElementById("campaign-era-tag-dock");
       var titleEl = document.getElementById("campaign-era-title");
       var docEl = document.getElementById("campaign-era-doctrine");
       var techNameEl = document.getElementById("campaign-tech-name");
@@ -381,6 +418,7 @@
       var liveTickerEl = document.getElementById("campaign-live-ticker");
 
       if (tagEl && tagEl.textContent !== data.eraLabel) tagEl.textContent = data.eraLabel;
+      if (tagDockEl && tagDockEl.textContent !== data.eraLabel) tagDockEl.textContent = data.eraLabel;
       if (titleEl && titleEl.textContent !== data.title) titleEl.textContent = data.title;
       if (docEl && docEl.textContent !== data.doctrine) docEl.textContent = data.doctrine;
       if (techNameEl && techNameEl.textContent !== data.techInventedName) techNameEl.textContent = data.techInventedName;

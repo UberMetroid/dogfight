@@ -57,11 +57,28 @@ function syncFleetToActiveGenerations(blueMask, redMask, canvasW, canvasH) {
   var rPool = globalDogfightJetsState.redPool;
   var aJets = globalDogfightJetsState.allJets;
 
+  var bGens = [];
+  var rGens = [];
+  for (var g = 1; g <= 7; g++) {
+    if (bMask[g]) bGens.push(g);
+    if (rMask[g]) rGens.push(g);
+  }
+
   var blueActiveList = [];
   var redActiveList = [];
-  for (var g = 1; g <= 7; g++) {
-    if (bMask[g]) blueActiveList.push(g);
-    if (rMask[g]) redActiveList.push(g);
+  // Deploy 2-ship tactical element (Lead + Wingman) per active generation
+  var bShipsPerGen = (bGens.length <= 3) ? 2 : 1;
+  var rShipsPerGen = (rGens.length <= 3) ? 2 : 1;
+
+  for (var bgi = 0; bgi < bGens.length; bgi++) {
+    for (var s = 0; s < bShipsPerGen && blueActiveList.length < bPool.length; s++) {
+      blueActiveList.push(bGens[bgi]);
+    }
+  }
+  for (var rgi = 0; rgi < rGens.length; rgi++) {
+    for (var s2 = 0; s2 < rShipsPerGen && redActiveList.length < rPool.length; s2++) {
+      redActiveList.push(rGens[rgi]);
+    }
   }
 
   var nBlue = blueActiveList.length;
@@ -97,7 +114,8 @@ function syncFleetToActiveGenerations(blueMask, redMask, canvasW, canvasH) {
     bJet.damageSparksTimer = 0;
     var mslY = (typeof getSeaLevelY === "function") ? getSeaLevelY(h) : Math.floor(h * 0.84);
     var rwyY = mslY - 14;
-    bJet.x = w * 0.04 + (bIdx * 24);
+    // Staggered tactical runway positions for Lead & Wingman
+    bJet.x = w * 0.04 + ((bIdx % 2 === 0) ? 36 : 10);
     bJet.y = rwyY - 1;
     bJet.angle = 0.0;
     bJet.targetAngle = 0.0;
@@ -109,12 +127,12 @@ function syncFleetToActiveGenerations(blueMask, redMask, canvasW, canvasH) {
     bJet.gForce = 1.0;
     bJet.isStalled = false;
     bJet.mode = "TAKEOFF";
-    bJet.takeoffRoll = -bIdx * 8;
+    bJet.takeoffRoll = -(bIdx % 2) * 12;
     bJet.modeTimer = 30;
     bJet.afterburner = true;
     bJet.throttleSetting = 1.5;
     bJet.targetJet = null;
-    bJet.isLead = (bIdx === 0);
+    bJet.isLead = (bIdx % 2 === 0);
     bJet.isHero = (bIdx === 0);
     bJet.rcs = specB.rcsClean || specB.rcs || 1.0;
     bJet.bayDoorTimer = 0;
@@ -184,7 +202,8 @@ function syncFleetToActiveGenerations(blueMask, redMask, canvasW, canvasH) {
     rJet.damageSparksTimer = 0;
     var mslY = (typeof getSeaLevelY === "function") ? getSeaLevelY(h) : Math.floor(h * 0.84);
     var rwyY = mslY - 12;
-    rJet.x = w * 0.96 - (rIdx * 24);
+    // Staggered tactical runway positions for Red Lead & Wingman
+    rJet.x = w * 0.96 - ((rIdx % 2 === 0) ? 36 : 10);
     rJet.y = rwyY - 1;
     rJet.angle = Math.PI;
     rJet.targetAngle = Math.PI;
@@ -196,12 +215,12 @@ function syncFleetToActiveGenerations(blueMask, redMask, canvasW, canvasH) {
     rJet.gForce = 1.0;
     rJet.isStalled = false;
     rJet.mode = "TAKEOFF";
-    rJet.takeoffRoll = -rIdx * 8;
+    rJet.takeoffRoll = -(rIdx % 2) * 12;
     rJet.modeTimer = 30;
     rJet.afterburner = true;
     rJet.throttleSetting = 1.5;
     rJet.targetJet = null;
-    rJet.isLead = (rIdx === 0);
+    rJet.isLead = (rIdx % 2 === 0);
     rJet.isHero = false;
     rJet.rcs = specR.rcsClean || specR.rcs || 1.0;
     rJet.bayDoorTimer = 0;

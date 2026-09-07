@@ -170,6 +170,36 @@ function drawInWorldTacticalStatus(ctx, jet, colors, frameCount) {
       ctx.fillRect(jx - 12 + Math.cos(jet.angle) * 10, jy + Math.sin(jet.angle) * 10, 2, 2);
     }
     ctx.restore();
+  } else if (jet.mode === "FORMATION") {
+    ctx.save();
+    ctx.font = "bold 6.5px monospace";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "bottom";
+    ctx.fillStyle = (jet.team === "blue") ? "rgba(56, 189, 248, 0.9)" : "rgba(244, 63, 94, 0.9)";
+    ctx.shadowColor = "rgba(0,0,0,0.85)";
+    ctx.shadowBlur = 3;
+    ctx.fillText("FORMATION // TWO", jx, jy + (isDamaged ? -24 : -16));
+    ctx.restore();
+  } else if (jet.mode === "COVER") {
+    ctx.save();
+    ctx.font = "bold 7px monospace";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "bottom";
+    ctx.fillStyle = "#f59e0b";
+    ctx.shadowColor = "rgba(0,0,0,0.85)";
+    ctx.shadowBlur = 3;
+    ctx.fillText("MUTUAL DEFENSE", jx, jy + (isDamaged ? -24 : -16));
+    ctx.restore();
+  } else if (jet.mode === "PINCER") {
+    ctx.save();
+    ctx.font = "bold 7px monospace";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "bottom";
+    ctx.fillStyle = "#c084fc";
+    ctx.shadowColor = "rgba(0,0,0,0.85)";
+    ctx.shadowBlur = 3;
+    ctx.fillText("BRACKET PINCER", jx, jy + (isDamaged ? -24 : -16));
+    ctx.restore();
   }
 
   // 2. Missile Ammo Pips & Winchester Alert (for Gen 2-6 with missile capacity)

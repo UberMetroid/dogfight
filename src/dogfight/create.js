@@ -5,39 +5,40 @@
 function setupJetCallsignAndVariant(jet, chosenGen, team, slotIdx) {
   var isBlue = (team === "blue");
   var numSlot = typeof slotIdx === "number" ? slotIdx : 0;
-  var isLead = (numSlot === 0);
+  var isLead = (numSlot % 2 === 0);
+  jet.isLead = isLead;
   var isF16 = false;
   var callsign = "";
 
   if (isBlue) {
-    if (chosenGen === 1) callsign = "SABRE " + (numSlot + 1);
-    else if (chosenGen === 2) callsign = "STARFIGHTER " + (numSlot + 1);
-    else if (chosenGen === 3) callsign = "PHANTOM " + (numSlot + 1);
+    if (chosenGen === 1) callsign = isLead ? "SABRE 1-1" : "SABRE 1-2";
+    else if (chosenGen === 2) callsign = isLead ? "STARFIGHTER 1-1" : "STARFIGHTER 1-2";
+    else if (chosenGen === 3) callsign = isLead ? "PHANTOM 1-1" : "PHANTOM 1-2";
     else if (chosenGen === 4) {
-      if (numSlot === 0) {
+      if (isLead) {
         isF16 = false;
-        callsign = "TOMCAT 1";
+        callsign = "TOMCAT 1-1";
       } else {
         isF16 = true;
-        callsign = "VIPER " + (numSlot + 1);
+        callsign = "VIPER 1-2";
       }
-    } else if (chosenGen === 5) callsign = (numSlot % 2 === 0) ? ("RAPTOR " + (numSlot + 1)) : ("LIGHTNING " + (numSlot + 1));
-    else if (chosenGen === 6) callsign = (numSlot % 2 === 0) ? ("NGAD BLUE " + (numSlot + 1)) : ("CCA BLUE " + (numSlot + 1));
-    else if (chosenGen === 7) callsign = (numSlot === 0) ? "SWARM ALPHA" : ((numSlot === 1) ? "SWARM BRAVO" : ("SWARM BLUE " + (numSlot + 1)));
+    } else if (chosenGen === 5) callsign = isLead ? "RAPTOR 1-1" : "LIGHTNING 1-2";
+    else if (chosenGen === 6) callsign = isLead ? "NGAD 1-1" : "CCA 1-2";
+    else if (chosenGen === 7) callsign = isLead ? "SWARM ALPHA" : "SWARM BRAVO";
   } else {
-    if (chosenGen === 1) callsign = "FAGOT " + (numSlot + 1);
-    else if (chosenGen === 2) callsign = "FISHBED " + (numSlot + 1);
-    else if (chosenGen === 3) callsign = "FLOGGER " + (numSlot + 1);
+    if (chosenGen === 1) callsign = isLead ? "MiG-15 1-1" : "MiG-15 1-2";
+    else if (chosenGen === 2) callsign = isLead ? "MiG-21 1-1" : "MiG-21 1-2";
+    else if (chosenGen === 3) callsign = isLead ? "MiG-23 1-1" : "MiG-23 1-2";
     else if (chosenGen === 4) {
       isF16 = false;
-      callsign = (numSlot % 2 === 0) ? ("FLANKER " + (numSlot + 1)) : ("FULCRUM " + (numSlot + 1));
-    } else if (chosenGen === 5) callsign = (numSlot % 2 === 0) ? ("FELON " + (numSlot + 1)) : ("CHECKMATE " + (numSlot + 1));
-    else if (chosenGen === 6) callsign = (numSlot % 2 === 0) ? ("NGAD RED " + (numSlot + 1)) : ("CCA RED " + (numSlot + 1));
-    else if (chosenGen === 7) callsign = (numSlot === 0) ? "SWARM CHARLIE" : ((numSlot === 1) ? "SWARM DELTA" : ("SWARM RED " + (numSlot + 1)));
+      callsign = isLead ? "FLANKER 1-1" : "FULCRUM 1-2";
+    } else if (chosenGen === 5) callsign = isLead ? "FELON 1-1" : "CHECKMATE 1-2";
+    else if (chosenGen === 6) callsign = isLead ? "H-20 1-1" : "CCA RED 1-2";
+    else if (chosenGen === 7) callsign = isLead ? "SWARM CHARLIE" : "SWARM DELTA";
   }
 
   jet.callsign = callsign || ((isBlue ? "BLUE " : "RED ") + (numSlot + 1));
-  jet.variant = isF16 ? "F16" : (chosenGen === 4 ? "F14" : "STD");
+  jet.variant = isF16 ? "F16" : (chosenGen === 4 && isLead ? "F14" : "STD");
   jet.wingSweep = (chosenGen === 4 && !isF16 ? 0.25 : 0.0);
 }
 

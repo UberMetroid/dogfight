@@ -257,6 +257,32 @@ function updateJetPhysics(jet, targetEnemy, incomingThreat, opposingPool, missil
           jet.afterburner = true;
           dfRadio((jet.callsign || spec.callsign) + ": STALL RECOVERED. ACCELERATING ON THE DECK.");
         }
+      } else if (jet.mode === "FORMATION" && jet.wingmanJet && jet.wingmanJet.active && !jet.wingmanJet.isDying) {
+        // Normal Wingman Formation Station Keeping
+        var lead = jet.wingmanJet;
+        if (typeof getWingmanStation === "function") {
+          var st = getWingmanStation(jet, lead);
+          var dx = st.x - jet.x;
+          var dy = st.y - jet.y;
+          var dStation = Math.hypot(dx, dy);
+
+          if (dStation > 160) {
+            jet.targetAngle = Math.atan2(dy, dx);
+            jet.throttleSetting = 1.45;
+            jet.afterburner = true;
+          } else if (dStation > 30) {
+            var stBearing = Math.atan2(dy, dx);
+            jet.targetAngle = stBearing * 0.45 + lead.targetAngle * 0.55;
+            jet.speed = lead.speed + Math.min(1.2, dStation / 70.0);
+            jet.throttleSetting = lead.throttleSetting;
+            jet.afterburner = lead.afterburner;
+          } else {
+            jet.targetAngle = lead.targetAngle;
+            jet.speed = lead.speed;
+            jet.throttleSetting = lead.throttleSetting;
+            jet.afterburner = lead.afterburner;
+          }
+        }
       } else {
         // 4-Phase Boyd OODA State Machine Execution
         jet.oodaPhase = "OBSERVE";

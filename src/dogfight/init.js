@@ -7,16 +7,24 @@ function scrambleWave(team, gen) {
   var isBlue = (team === "blue");
   var pool = isBlue ? DF.bluePool : DF.redPool;
   var mask = isBlue ? (typeof activeGensBlue !== "undefined" ? activeGensBlue : activeGens) : (typeof activeGensRed !== "undefined" ? activeGensRed : activeGens);
-  var activeList = [];
-  for (var g = 1; g <= 7; g++) if (mask[g]) activeList.push(g);
-  if (activeList.length === 0) {
+  var gens = [];
+  for (var g = 1; g <= 7; g++) if (mask[g]) gens.push(g);
+  if (gens.length === 0) {
     var fallbackGen = (typeof gen === "number" && gen >= 1 && gen <= 7) ? gen : 4;
     mask[fallbackGen] = true;
     if (typeof syncMergedActiveGens === "function") syncMergedActiveGens();
     if (typeof saveActiveGens === "function") saveActiveGens();
     if (typeof updateGenSelectorUI === "function") updateGenSelectorUI();
-    activeList = [fallbackGen];
+    gens = [fallbackGen];
   }
+  var activeList = [];
+  var shipsPerGen = (gens.length <= 3) ? 2 : 1;
+  for (var gi = 0; gi < gens.length; gi++) {
+    for (var s = 0; s < shipsPerGen && activeList.length < pool.length; s++) {
+      activeList.push(gens[gi]);
+    }
+  }
+
   var worldW = DF.worldWidth || 3600;
   var worldH = DF.worldHeight || 1200;
   for (var idx = 0; idx < activeList.length; idx++) {
@@ -37,14 +45,15 @@ function scrambleWave(team, gen) {
       jet.damageSparksTimer = 0;
       var mslY = (typeof getSeaLevelY === "function") ? getSeaLevelY(worldH) : Math.floor(worldH * 0.84);
       var rwyY = isBlue ? (mslY - 14) : (mslY - 12);
-      jet.x = isBlue ? (worldW * 0.04 + idx * 24) : (worldW * 0.96 - idx * 24);
+      // Staggered tactical runway positions for Lead & Wingman
+      jet.x = isBlue ? (worldW * 0.04 + ((idx % 2 === 0) ? 36 : 10)) : (worldW * 0.96 - ((idx % 2 === 0) ? 36 : 10));
       jet.y = rwyY - 1;
       jet.angle = isBlue ? 0.0 : Math.PI;
       jet.targetAngle = jet.angle;
       jet.speed = 1.8;
       jet.baseSpeed = specG.baseSpeed || 4.8;
       jet.mode = "TAKEOFF";
-      jet.takeoffRoll = -idx * 8;
+      jet.takeoffRoll = -(idx % 2) * 12;
       jet.afterburner = true;
       jet.throttleSetting = 1.5;
       jet.missileCapacity = (specG && typeof specG.missileCapacity === "number") ? specG.missileCapacity : (gg === 1 || gg === 7 ? 0 : 6);
@@ -73,6 +82,13 @@ function scrambleWave(team, gen) {
       if (jet.contrail) jet.contrail.clear();
       if (jet.wingVapor) jet.wingVapor.clear();
     }
+  }
+
+  // Cross-link wingmen in 2-ship elements
+  for (var wi = 0; wi < activeList.length; wi++) {
+    var partner = (wi % 2 === 0) ? (wi + 1 < activeList.length ? wi + 1 : wi) : (wi - 1);
+    pool[wi].wingmanJet = pool[partner];
+    pool[wi].isLead = (wi % 2 === 0);
   }
 
   // Cross-target re-link
