@@ -58,321 +58,62 @@
   <!-- Simulation Canvas -->
   <canvas id="dogfight-canvas"></canvas>
 
-  <!-- Tactical HUD Overlay -->
+  <!-- Tactical HUD Overlay (Only Blue and Red Force Boxes in Header) -->
   <div class="hud-overlay">
-    <!-- Top Command Bar -->
-    <header class="hud-header hud-interactive">
-      <!-- Left: Brand / Identity -->
-      <div class="hud-brand">
-        <span class="hud-sigil">&gt;&gt;</span>
-        <div class="brand-text-col">
-          <span class="hud-title">BOYD OODA COMBAT ARENA</span>
-          <span class="hud-formula" title="Col. John Boyd's Specific Excess Power: Ps = ((Thrust - Drag) / Weight) * Velocity">Ps = ((T - D) / W) * V</span>
+    <header class="hud-header">
+      <!-- Blue Allied Force Box (Left) -->
+      <div class="hud-force-box force-blue hud-interactive" id="force-blue">
+        <div class="force-header">
+          <div class="force-title-group">
+            <span class="team-beacon beacon-blue"></span>
+            <span class="force-title">BLUE ALLIED FORCE</span>
+          </div>
+          <div class="force-stats">
+            <span class="stat-item"><span class="stat-lbl">SORTIES:</span> <span class="stat-val stat-val-cyan" id="stat-blue-sorties">1 ACTIVE</span></span>
+            <span class="stat-item"><span class="stat-lbl">KILLS:</span> <span class="stat-val stat-val-cyan" id="stat-blue-kills">0 SPLASHES</span></span>
+          </div>
+        </div>
+        <div class="force-controls">
+          <div class="gen-bar gen-bar-blue" id="gen-bar-blue">
+            <button type="button" class="gen-btn gen-btn-blue" data-team="blue" data-gen="1" title="Blue Gen 1 (F-86 Sabre)"><span class="g-num">1</span><span class="g-name">SABRE</span></button>
+            <button type="button" class="gen-btn gen-btn-blue" data-team="blue" data-gen="2" title="Blue Gen 2 (F-4 Phantom)"><span class="g-num">2</span><span class="g-name">PHANTOM</span></button>
+            <button type="button" class="gen-btn gen-btn-blue" data-team="blue" data-gen="3" title="Blue Gen 3 (F-14 Tomcat)"><span class="g-num">3</span><span class="g-name">TOMCAT</span></button>
+            <button type="button" class="gen-btn gen-btn-blue active" data-team="blue" data-gen="4" title="Blue Gen 4 (F-16 Viper)"><span class="g-num">4</span><span class="g-name">VIPER</span></button>
+            <button type="button" class="gen-btn gen-btn-blue" data-team="blue" data-gen="5" title="Blue Gen 5 (F-22 Raptor)"><span class="g-num">5</span><span class="g-name">RAPTOR</span></button>
+            <button type="button" class="gen-btn gen-btn-blue" data-team="blue" data-gen="6" title="Blue Gen 6 (NGAD + CCA)"><span class="g-num">6</span><span class="g-name">NGAD</span></button>
+            <button type="button" class="gen-btn gen-btn-blue" data-team="blue" data-gen="7" title="Blue Gen 7 (Quantum Swarm)"><span class="g-num">7</span><span class="g-name">SWARM</span></button>
+          </div>
+          <button type="button" class="hud-btn hud-btn-blue force-scramble-btn" onclick="scrambleWave('blue')" title="Scramble Blue Allied Flight">[ + SCRAMBLE ]</button>
         </div>
       </div>
 
-      <!-- TOP CENTER: RAD COMBAT ADVANTAGE GAUGE & MOMENTUM LINE CHART -->
-      <div class="hud-top-center combat-dominance-module" id="combat-dominance-module">
-        <div class="dom-header">
-          <span class="dom-stat dom-stat-blue" id="dom-blue-pct">BLUE 50%</span>
-          <div class="dom-badge-container">
-            <span class="dom-status-badge badge-dom-parity" id="dom-status-badge">⚡ PARITY // CONTESTED AIRSPACE</span>
+      <!-- Red Opposing Force Box (Right) -->
+      <div class="hud-force-box force-red hud-interactive" id="force-red">
+        <div class="force-header">
+          <div class="force-title-group">
+            <span class="team-beacon beacon-red"></span>
+            <span class="force-title">RED OPPOSING FORCE</span>
           </div>
-          <span class="dom-stat dom-stat-red" id="dom-red-pct">50% RED</span>
-        </div>
-
-        <!-- Tug-of-war Balance of Power Scale Bar -->
-        <div class="dom-scale-track" title="Real-time Combat Superiority Tug-of-War">
-          <div class="dom-scale-blue" id="dom-scale-blue" style="width: 50%;"></div>
-          <div class="dom-scale-needle" id="dom-scale-needle" style="left: 50%;"></div>
-          <div class="dom-scale-red" id="dom-scale-red" style="width: 50%;"></div>
-        </div>
-
-        <!-- Rad Live Combat Momentum Line Chart -->
-        <div class="dom-chart-wrap" title="Historical Combat Momentum (Blue advantage above, Red below)">
-          <canvas id="momentum-chart-canvas" width="340" height="46"></canvas>
-          <div class="dom-chart-legend">
-            <span>▲ +BLUE ADVANTAGE</span>
-            <span id="dom-momentum-val">+0.0 INDEX</span>
-            <span>▼ -RED ADVANTAGE</span>
+          <div class="force-stats">
+            <span class="stat-item"><span class="stat-lbl">BANDITS:</span> <span class="stat-val stat-val-red" id="stat-red-sorties">1 ACTIVE</span></span>
+            <span class="stat-item"><span class="stat-lbl">KILLS:</span> <span class="stat-val stat-val-red" id="stat-red-kills">0 SPLASHES</span></span>
           </div>
         </div>
-      </div>
-
-      <!-- Right: Utilities (Time Warp, Sound, Warfare Dossier) -->
-      <div class="hud-utilities">
-        <div class="speed-group" aria-label="Simulation speed">
-          <button type="button" class="speed-btn" id="speed-05" onclick="InteractiveController.setSimSpeed(0.5)" title="0.5x Slow-Motion">0.5x</button>
-          <button type="button" class="speed-btn active" id="speed-10" onclick="InteractiveController.setSimSpeed(1.0)" title="1.0x Realtime">1x</button>
-          <button type="button" class="speed-btn" id="speed-20" onclick="InteractiveController.setSimSpeed(2.0)" title="2.0x Hyper-Speed">2x</button>
-          <button type="button" class="speed-btn" id="speed-pause" onclick="InteractiveController.setSimSpeed(0)" title="Pause / Step">||</button>
+        <div class="force-controls">
+          <div class="gen-bar gen-bar-red" id="gen-bar-red">
+            <button type="button" class="gen-btn gen-btn-red" data-team="red" data-gen="1" title="Red Gen 1 (MiG-15 Fagot)"><span class="g-num">1</span><span class="g-name">MiG-15</span></button>
+            <button type="button" class="gen-btn gen-btn-red" data-team="red" data-gen="2" title="Red Gen 2 (MiG-21 Fishbed)"><span class="g-num">2</span><span class="g-name">MiG-21</span></button>
+            <button type="button" class="gen-btn gen-btn-red" data-team="red" data-gen="3" title="Red Gen 3 (MiG-23)"><span class="g-num">3</span><span class="g-name">MiG-23</span></button>
+            <button type="button" class="gen-btn gen-btn-red active" data-team="red" data-gen="4" title="Red Gen 4 (Su-27 Flanker)"><span class="g-num">4</span><span class="g-name">FLANKER</span></button>
+            <button type="button" class="gen-btn gen-btn-red" data-team="red" data-gen="5" title="Red Gen 5 (Su-57 Felon)"><span class="g-num">5</span><span class="g-name">FELON</span></button>
+            <button type="button" class="gen-btn gen-btn-red" data-team="red" data-gen="6" title="Red Gen 6 (Hostile CCA)"><span class="g-num">6</span><span class="g-name">CCA RED</span></button>
+            <button type="button" class="gen-btn gen-btn-red" data-team="red" data-gen="7" title="Red Gen 7 (Hostile Swarm)"><span class="g-num">7</span><span class="g-name">SWARM</span></button>
+          </div>
+          <button type="button" class="hud-btn hud-btn-red force-scramble-btn" onclick="scrambleWave('red')" title="Scramble Red Hostile Flight">[ + SCRAMBLE ]</button>
         </div>
-        <button type="button" class="sound-btn" id="sound-btn" onclick="toggleTacticalSound(this)" title="Toggle Procedural Web Audio Sound FX">[ 🔊 SOUND: OFF ]</button>
-        <button type="button" class="hud-btn hud-btn-dossier" onclick="openDossier(4)" title="Open Warfare Generations Dossier">[ ⚔ DOSSIER ]</button>
       </div>
     </header>
-
-    <!-- Flanks Layer: Left (Blue Options & Stats) vs Right (Red Options & Stats) -->
-    <div class="hud-flanks-layer">
-      <!-- Left Flank: Blue Allied Force -->
-      <div class="flank-col flank-col-left">
-        <aside class="flank-panel flank-blue hud-interactive" id="flank-blue" aria-label="Blue Allied Force Panel">
-          <div class="flank-header">
-            <span class="team-beacon beacon-blue"></span>
-            <div class="flank-title-group">
-              <span class="flank-title">BLUE ALLIED FORCE</span>
-              <span class="flank-callsign-tag">ALLIED AIR WING // FRIENDLY</span>
-            </div>
-          </div>
-
-          <!-- Blue Generation Options -->
-          <div class="flank-section">
-            <div class="flank-section-title">ACTIVE GENERATION DOCTRINE</div>
-            <div class="gen-bar gen-bar-blue gen-grid" id="gen-bar-blue">
-              <button type="button" class="gen-btn gen-btn-blue" data-team="blue" data-gen="1" title="Blue Gen 1 (F-86 Sabre)"><span class="g-num">1</span><span class="g-name">SABRE</span></button>
-              <button type="button" class="gen-btn gen-btn-blue" data-team="blue" data-gen="2" title="Blue Gen 2 (F-4 Phantom)"><span class="g-num">2</span><span class="g-name">PHANTOM</span></button>
-              <button type="button" class="gen-btn gen-btn-blue" data-team="blue" data-gen="3" title="Blue Gen 3 (F-14 Tomcat)"><span class="g-num">3</span><span class="g-name">TOMCAT</span></button>
-              <button type="button" class="gen-btn gen-btn-blue active" data-team="blue" data-gen="4" title="Blue Gen 4 (F-16 Viper)"><span class="g-num">4</span><span class="g-name">VIPER</span></button>
-              <button type="button" class="gen-btn gen-btn-blue" data-team="blue" data-gen="5" title="Blue Gen 5 (F-22 Raptor)"><span class="g-num">5</span><span class="g-name">RAPTOR</span></button>
-              <button type="button" class="gen-btn gen-btn-blue" data-team="blue" data-gen="6" title="Blue Gen 6 (NGAD + CCA)"><span class="g-num">6</span><span class="g-name">NGAD</span></button>
-              <button type="button" class="gen-btn gen-btn-blue" data-team="blue" data-gen="7" title="Blue Gen 7 (Quantum Swarm)"><span class="g-num">7</span><span class="g-name">SWARM</span></button>
-            </div>
-            <button class="hud-btn hud-btn-blue flank-scramble-btn" onclick="scrambleWave('blue')" title="Scramble Blue Allied Flight">[ + SCRAMBLE BLUE ]</button>
-          </div>
-
-          <!-- Blue Live Combat Stats -->
-          <div class="flank-section flank-stats-box">
-            <div class="flank-section-title">ALLIED TELEMETRY & STATS</div>
-            <div class="flank-stat-row">
-              <span class="stat-lbl">AIRBORNE SORTIES:</span>
-              <span class="stat-val stat-val-cyan" id="stat-blue-sorties">1 ACTIVE</span>
-            </div>
-            <div class="flank-stat-row">
-              <span class="stat-lbl">AIR COMBAT KILLS:</span>
-              <span class="stat-val stat-val-cyan" id="stat-blue-kills">0 SPLASHES</span>
-            </div>
-            <div class="flank-stat-row">
-              <span class="stat-lbl">MISSILES IN FLIGHT:</span>
-              <span class="stat-val" id="stat-blue-missiles">0 IN FLIGHT</span>
-            </div>
-            <div class="flank-stat-row">
-              <span class="stat-lbl">FLEET AVG POWER (Ps):</span>
-              <span class="stat-val stat-val-amber" id="stat-blue-ps">+140 FT/S</span>
-            </div>
-            <div class="flank-stat-row">
-              <span class="stat-lbl">LEAD AIRFRAME:</span>
-              <span class="stat-val" id="stat-blue-lead">F-16 VIPER</span>
-            </div>
-            <div class="flank-stat-row">
-              <span class="stat-lbl">AIRSPACE STANCE:</span>
-              <span class="stat-badge badge-blue-stance" id="stat-blue-stance">OFFENSIVE CAP</span>
-            </div>
-          </div>
-        </aside>
-
-        <!-- Mid-Screen Left: Floating Cockpit Telemetry MFD (Docked cleanly below Blue Panel) -->
-        <div class="mfd-panel hud-interactive" id="mfd-panel">
-          <div class="mfd-panel-header">
-            <span class="mfd-title"><span class="mfd-dot"></span> COCKPIT TELEMETRY MFD</span>
-            <button class="mfd-close-btn" onclick="InteractiveController.clearTrackedJet()" title="Release tracking">✕</button>
-          </div>
-
-          <div class="mfd-airframe-row">
-            <span class="mfd-callsign" id="mfd-callsign">TOMCAT 1</span>
-            <span class="mfd-badge badge-blue" id="mfd-team">BLUE FORCE [ALLIED]</span>
-          </div>
-          <div class="mfd-gen-label" id="mfd-gen">GEN 4 // F-14 TOMCAT</div>
-
-          <!-- Flight Gauges Grid -->
-          <div class="mfd-grid">
-            <div class="mfd-cell">
-              <span class="mfd-label">AIRSPEED</span>
-              <span class="mfd-val" id="mfd-speed">580 KIAS (M 1.7)</span>
-            </div>
-            <div class="mfd-cell">
-              <span class="mfd-label">ALTITUDE</span>
-              <span class="mfd-val" id="mfd-alt">48,200 FT MSL</span>
-            </div>
-            <div class="mfd-cell">
-              <span class="mfd-label">G-LOAD</span>
-              <span class="mfd-val" id="mfd-gforce">+4.2 G</span>
-            </div>
-          </div>
-
-          <!-- Col. John Boyd Specific Excess Power (Ps) Meter -->
-          <div class="ps-meter-box">
-            <div class="ps-header">
-              <span class="ps-title">BOYD SPECIFIC EXCESS POWER (Ps)</span>
-              <span class="ps-value" id="mfd-ps">+140 FT/S</span>
-            </div>
-            <div class="ps-bar-track">
-              <div class="ps-bar-fill ps-positive" id="mfd-ps-bar"></div>
-            </div>
-          </div>
-
-          <!-- Dynamic OODA Loop Indicator -->
-          <div class="ooda-cycle-box">
-            <div class="ooda-header">
-              <span>OODA DECISION CYCLE</span>
-              <span id="ooda-latency-note">BOYD LOOP</span>
-            </div>
-            <div class="ooda-steps">
-              <div class="ooda-step" id="ooda-observe">OBSERVE</div>
-              <div class="ooda-step" id="ooda-orient">ORIENT</div>
-              <div class="ooda-step active" id="ooda-decide">DECIDE</div>
-              <div class="ooda-step" id="ooda-act">ACT</div>
-            </div>
-          </div>
-
-          <!-- Tactical Radar Target & Weapons State -->
-          <div class="mfd-status-row">
-            <div class="mfd-status-line">
-              <span class="mfd-label">RADAR LOCK:</span>
-              <span class="mfd-target-val" id="mfd-target">FLANKER 1 (8.4 NM)</span>
-            </div>
-            <div class="mfd-status-line">
-              <span class="mfd-label">WEAPONRY:</span>
-              <span class="mfd-val" id="mfd-weapons">FOX-3 ARMED // AMRAAM</span>
-            </div>
-          </div>
-
-          <div class="mfd-hint">CLICK ANY AIRCRAFT IN AIRSPACE TO TRACK</div>
-        </div>
-      </div>
-
-      <!-- Right Flank: Red Opposing Force -->
-      <div class="flank-col flank-col-right">
-        <aside class="flank-panel flank-red hud-interactive" id="flank-red" aria-label="Red Opposing Force Panel">
-          <div class="flank-header">
-            <span class="team-beacon beacon-red"></span>
-            <div class="flank-title-group">
-              <span class="flank-title">RED OPPOSING FORCE</span>
-              <span class="flank-callsign-tag">HOSTILE AIR GROUP // BANDIT</span>
-            </div>
-          </div>
-
-          <!-- Red Generation Options -->
-          <div class="flank-section">
-            <div class="flank-section-title">ACTIVE GENERATION DOCTRINE</div>
-            <div class="gen-bar gen-bar-red gen-grid" id="gen-bar-red">
-              <button type="button" class="gen-btn gen-btn-red" data-team="red" data-gen="1" title="Red Gen 1 (MiG-15 Fagot)"><span class="g-num">1</span><span class="g-name">MiG-15</span></button>
-              <button type="button" class="gen-btn gen-btn-red" data-team="red" data-gen="2" title="Red Gen 2 (MiG-21 Fishbed)"><span class="g-num">2</span><span class="g-name">MiG-21</span></button>
-              <button type="button" class="gen-btn gen-btn-red" data-team="red" data-gen="3" title="Red Gen 3 (MiG-23 / Su-27)"><span class="g-num">3</span><span class="g-name">MiG-23</span></button>
-              <button type="button" class="gen-btn gen-btn-red active" data-team="red" data-gen="4" title="Red Gen 4 (Su-27 Flanker)"><span class="g-num">4</span><span class="g-name">FLANKER</span></button>
-              <button type="button" class="gen-btn gen-btn-red" data-team="red" data-gen="5" title="Red Gen 5 (Su-57 Felon)"><span class="g-num">5</span><span class="g-name">FELON</span></button>
-              <button type="button" class="gen-btn gen-btn-red" data-team="red" data-gen="6" title="Red Gen 6 (Hostile CCA)"><span class="g-num">6</span><span class="g-name">CCA RED</span></button>
-              <button type="button" class="gen-btn gen-btn-red" data-team="red" data-gen="7" title="Red Gen 7 (Hostile Swarm)"><span class="g-num">7</span><span class="g-name">SWARM</span></button>
-            </div>
-            <button class="hud-btn hud-btn-red flank-scramble-btn" onclick="scrambleWave('red')" title="Scramble Red Hostile Flight">[ + SCRAMBLE RED ]</button>
-          </div>
-
-          <!-- Red Live Combat Stats -->
-          <div class="flank-section flank-stats-box">
-            <div class="flank-section-title">HOSTILE TELEMETRY & STATS</div>
-            <div class="flank-stat-row">
-              <span class="stat-lbl">BANDITS AIRBORNE:</span>
-              <span class="stat-val stat-val-red" id="stat-red-sorties">1 ACTIVE</span>
-            </div>
-            <div class="flank-stat-row">
-              <span class="stat-lbl">AIR COMBAT KILLS:</span>
-              <span class="stat-val stat-val-red" id="stat-red-kills">0 SPLASHES</span>
-            </div>
-            <div class="flank-stat-row">
-              <span class="stat-lbl">MISSILES IN FLIGHT:</span>
-              <span class="stat-val" id="stat-red-missiles">0 IN FLIGHT</span>
-            </div>
-            <div class="flank-stat-row">
-              <span class="stat-lbl">FLEET AVG POWER (Ps):</span>
-              <span class="stat-val stat-val-amber" id="stat-red-ps">+130 FT/S</span>
-            </div>
-            <div class="flank-stat-row">
-              <span class="stat-lbl">LEAD BANDIT:</span>
-              <span class="stat-val" id="stat-red-lead">Su-27 FLANKER</span>
-            </div>
-            <div class="flank-stat-row">
-              <span class="stat-lbl">THREAT LEVEL:</span>
-              <span class="stat-badge badge-red-stance" id="stat-red-stance">HIGH THREAT</span>
-            </div>
-          </div>
-        </aside>
-      </div>
-    </div>
-
-    <!-- Bottom Footer (Radio Chatter & Multi-Domain Status) -->
-    <footer class="hud-footer">
-      <!-- Tac-Net Radio Stream -->
-      <div class="hud-radio-box hud-interactive">
-        <div class="radio-header">
-          <span>&gt; TAC-NET SECURE COMM LINK // 243.0 MHz</span>
-          <span id="radio-time">LIVE FEED</span>
-        </div>
-        <div class="radio-stream" id="radio-log">
-          [TAC-NET] Multi-Domain Combat Air Patrol established. Airspace hot.
-        </div>
-      </div>
-
-      <!-- Multi-Domain Status & Scenario Selector -->
-      <div class="hud-domain-box hud-interactive">
-        <div class="domain-layers">
-          <div class="domain-line">
-            <span class="domain-tag">AIR / SPACE:</span>
-            <span class="domain-status">0 - 100k FT MSL [HOT BATTLESPACE]</span>
-          </div>
-          <div class="domain-line">
-            <span class="domain-tag">LAND DOMAIN:</span>
-            <span class="domain-status">AIRBASE ALPHA // SAM BTY ACTIVE</span>
-          </div>
-          <div class="domain-line">
-            <span class="domain-tag">OCEAN DOMAIN:</span>
-            <span class="domain-status">CVN-78 CARRIER GROUP // DDG-51</span>
-          </div>
-          <div class="domain-line">
-            <span class="domain-tag">SUB-SURFACE:</span>
-            <span class="domain-status domain-sub">-200m TO -1000m [SONAR ACTIVE - UUV/SSN CORRIDOR]</span>
-          </div>
-        </div>
-
-        <!-- Quick Battle Scenarios -->
-        <div class="scenario-bar">
-          <span class="scenario-title">SCENARIOS:</span>
-          <button class="scenario-btn" onclick="launchScenario('mig-alley')" title="Korea 1950: F-86 Sabre vs MiG-15">[ MIG ALLEY (GEN 1) ]</button>
-          <button class="scenario-btn" onclick="launchScenario('fleet-defense')" title="Fleet Defense: F-14 Tomcat BVR">[ FLEET DEFENSE (GEN 3) ]</button>
-          <button class="scenario-btn" onclick="launchScenario('stealth-clash')" title="Near-Peer Stealth: F-22 vs Su-57">[ STEALTH CLASH (GEN 5) ]</button>
-          <button class="scenario-btn btn-asym" onclick="launchScenario('raptor-vs-mig15')" title="Asymmetric: Gen 5 F-22 Raptor vs Gen 1 MiG-15">[ ⚡ RAPTOR vs MIG-15 (G5 vs G1) ]</button>
-          <button class="scenario-btn btn-asym" onclick="launchScenario('ngad-vs-felon')" title="Asymmetric: Gen 6 NGAD vs Gen 5 Su-57 Felon">[ ⚡ NGAD vs FELON (G6 vs G5) ]</button>
-          <button class="scenario-btn btn-asym" onclick="launchScenario('swarm-vs-tomcat')" title="Asymmetric: Gen 7 AI Swarm vs Gen 3 F-14 Tomcat">[ ⚡ SWARM vs TOMCAT (G7 vs G3) ]</button>
-          <button class="scenario-btn" onclick="launchScenario('all-out')" title="All 7 Generations Mixed">[ ALL-OUT AIR WAR ]</button>
-        </div>
-      </div>
-    </footer>
   </div>
-
-  <!-- Warfare Generations Dossier Slide-Over Modal -->
-  <aside class="dossier-modal hud-interactive" id="dossier-modal" aria-label="Warfare Generations Dossier">
-    <div class="dossier-header">
-      <div class="dossier-title">
-        <span class="hud-sigil">&gt;&gt;</span>
-        <span>WARFARE GENERATIONS DOSSIER</span>
-      </div>
-      <button class="dossier-close" onclick="closeDossier()">[ ✕ CLOSE ]</button>
-    </div>
-
-    <!-- 7 Generation Tabs -->
-    <nav class="dossier-tabs" id="dossier-tabs" aria-label="Select Warfare Generation">
-      <button class="dossier-tab" onclick="switchDossierTab(1)">GEN 1</button>
-      <button class="dossier-tab" onclick="switchDossierTab(2)">GEN 2</button>
-      <button class="dossier-tab" onclick="switchDossierTab(3)">GEN 3</button>
-      <button class="dossier-tab active" onclick="switchDossierTab(4)">GEN 4</button>
-      <button class="dossier-tab" onclick="switchDossierTab(5)">GEN 5</button>
-      <button class="dossier-tab" onclick="switchDossierTab(6)">GEN 6</button>
-      <button class="dossier-tab" onclick="switchDossierTab(7)">GEN 7</button>
-    </nav>
-
-    <!-- Dossier Content Container -->
-    <div class="dossier-body" id="dossier-content">
-      <!-- Injected dynamically by switchDossierTab() -->
-    </div>
-  </aside>
 
   <!-- Tactical Application Lifecycle Logic -->
   <script defer>
@@ -385,185 +126,7 @@
       if (window.InteractiveController) {
         InteractiveController.init();
       }
-
-      // Hook dfRadio chatter to display in HUD radio box
-      var radioLog = document.getElementById('radio-log');
-      var origDfRadio = window.dfRadio;
-      window.dfRadio = function (msg) {
-        if (origDfRadio) origDfRadio(msg);
-        if (radioLog) {
-          var line = document.createElement('div');
-          line.textContent = '> ' + msg;
-          radioLog.prepend(line);
-          while (radioLog.children.length > 5) {
-            radioLog.removeChild(radioLog.lastChild);
-          }
-        }
-      };
-
-      // Populate initial dossier tab (Gen 4)
-      switchDossierTab(4);
     });
-
-    // Sound Toggle
-    function toggleTacticalSound(btn) {
-      if (window.TacticalAudio) {
-        var on = TacticalAudio.toggle();
-        btn.textContent = on ? '[ 🔊 SOUND: ACTIVE ]' : '[ 🔊 SOUND: OFF ]';
-        if (on) btn.classList.add('active');
-        else btn.classList.remove('active');
-      }
-    }
-
-    // Warfare Dossier Drawer Handlers
-    function openDossier(gen) {
-      var modal = document.getElementById('dossier-modal');
-      if (modal) {
-        modal.classList.add('open');
-        switchDossierTab(gen || 4);
-      }
-      if (window.TacticalAudio) TacticalAudio.playClick();
-    }
-
-    function closeDossier() {
-      var modal = document.getElementById('dossier-modal');
-      if (modal) modal.classList.remove('open');
-      if (window.TacticalAudio) TacticalAudio.playClick();
-    }
-
-    function switchDossierTab(gen) {
-      gen = parseInt(gen, 10) || 4;
-      var tabs = document.querySelectorAll('.dossier-tab');
-      tabs.forEach(function (t, idx) {
-        if (idx + 1 === gen) t.classList.add('active');
-        else t.classList.remove('active');
-      });
-
-      var data = InteractiveController.ERA_DATA[gen];
-      if (!data) return;
-
-      var container = document.getElementById('dossier-content');
-      if (!container) return;
-
-      container.innerHTML = `
-        <div class="era-banner">
-          <div class="era-title">GEN ${gen}: ${data.name}</div>
-          <div class="era-period">HISTORICAL ERA: ${data.period}</div>
-        </div>
-
-        <div class="dossier-combatants">
-          <div class="combatant-card card-blue">
-            <div class="combatant-side side-blue">ALLIED / BLUE FORCE</div>
-            <div class="combatant-name">${data.bluePlane}</div>
-          </div>
-          <div class="combatant-card card-red">
-            <div class="combatant-side side-red">OPPOSING / RED FORCE</div>
-            <div class="combatant-name">${data.redPlane}</div>
-          </div>
-        </div>
-
-        <div class="dossier-section">
-          <div class="dossier-section-title">COMBAT DOCTRINE &amp; TACTICAL PARADIGM</div>
-          <div class="dossier-text">${data.doctrine}</div>
-        </div>
-
-        <div class="boyd-insight">
-          <strong>COL. JOHN BOYD E-M ANALYSIS:</strong><br>
-          ${data.boydNote}
-        </div>
-
-        <div class="dossier-section">
-          <div class="dossier-section-title">AIRCRAFT PERFORMANCE SPECIFICATIONS</div>
-          <table class="dossier-specs-table">
-            <tbody>
-              <tr><td>MAX SPEED</td><td>${data.speedMach}</td></tr>
-              <tr><td>SUSTAINED TURN RATE</td><td>${data.turnRate}</td></tr>
-              <tr><td>PRIMARY ARMAMENT</td><td>${data.weapons}</td></tr>
-              <tr><td>RADAR CROSS SECTION (RCS)</td><td>${data.rcs}</td></tr>
-              <tr><td>OODA DECISION LATENCY</td><td>${data.oodaLatency}</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="dossier-actions">
-          <button class="dossier-duel-btn" onclick="InteractiveController.spawnHistoricalDuel(${gen}); closeDossier();">[ ⚔ SPAWN 1v1 HISTORICAL DUEL ]</button>
-          <button class="dossier-scramble-btn" onclick="scrambleWave('blue', ${gen}); scrambleWave('red', ${gen}); closeDossier();">[ ✈ SCRAMBLE 4-SHIP FLIGHT ]</button>
-        </div>
-
-        <div class="dossier-asym-builder">
-          <div class="asym-builder-title">⚡ ASYMMETRIC WARFARE MATCHUP CREATOR</div>
-          <p class="asym-builder-desc">Pit any Allied generation against any Opposing generation to test technological asymmetry and Boyd OODA tempo advantages.</p>
-          <div class="asym-builder-controls">
-            <div class="asym-select-group">
-              <label class="asym-label blue-label">BLUE FORCE AIRFRAME:</label>
-              <select id="asym-blue-gen" class="asym-dropdown">
-                <option value="1">GEN 1 // F-86 Sabre</option>
-                <option value="2">GEN 2 // F-4 Phantom II</option>
-                <option value="3">GEN 3 // F-14 Tomcat</option>
-                <option value="4">GEN 4 // F-16 Viper</option>
-                <option value="5" selected>GEN 5 // F-22 Raptor</option>
-                <option value="6">GEN 6 // NGAD + CCA</option>
-                <option value="7">GEN 7 // Quantum Swarm</option>
-              </select>
-            </div>
-            <div class="asym-vs-badge">VS</div>
-            <div class="asym-select-group">
-              <label class="asym-label red-label">RED FORCE AIRFRAME:</label>
-              <select id="asym-red-gen" class="asym-dropdown">
-                <option value="1" selected>GEN 1 // MiG-15 Fagot</option>
-                <option value="2">GEN 2 // MiG-21 Fishbed</option>
-                <option value="3">GEN 3 // MiG-23 Flogger</option>
-                <option value="4">GEN 4 // Su-27 Flanker</option>
-                <option value="5">GEN 5 // Su-57 Felon</option>
-                <option value="6">GEN 6 // Hostile CCA</option>
-                <option value="7">GEN 7 // Hostile Swarm</option>
-              </select>
-            </div>
-          </div>
-          <button class="dossier-asym-btn" onclick="launchCustomAsymmetricMatchup(); closeDossier();">[ ⚔ ENGAGE ASYMMETRIC DUEL ]</button>
-        </div>
-      `;
-    }
-
-    // Launch Custom Asymmetric Matchup from Dossier
-    function launchCustomAsymmetricMatchup() {
-      if (window.TacticalAudio) TacticalAudio.playClick();
-      var bSelect = document.getElementById('asym-blue-gen');
-      var rSelect = document.getElementById('asym-red-gen');
-      var bGen = bSelect ? parseInt(bSelect.value, 10) : 5;
-      var rGen = rSelect ? parseInt(rSelect.value, 10) : 1;
-      InteractiveController.spawnAsymmetricDuel(bGen, rGen);
-    }
-
-    // Quick Scenario Launcher
-    function launchScenario(type) {
-      if (window.TacticalAudio) TacticalAudio.playClick();
-      if (type === 'mig-alley') {
-        InteractiveController.spawnHistoricalDuel(1);
-      } else if (type === 'fleet-defense') {
-        InteractiveController.spawnHistoricalDuel(3);
-      } else if (type === 'stealth-clash') {
-        InteractiveController.spawnHistoricalDuel(5);
-      } else if (type === 'raptor-vs-mig15') {
-        InteractiveController.spawnAsymmetricDuel(5, 1);
-      } else if (type === 'ngad-vs-felon') {
-        InteractiveController.spawnAsymmetricDuel(6, 5);
-      } else if (type === 'swarm-vs-tomcat') {
-        InteractiveController.spawnAsymmetricDuel(7, 3);
-      } else if (type === 'all-out') {
-        for (var g = 1; g <= 7; g++) {
-          activeGensBlue[g] = true;
-          activeGensRed[g] = true;
-        }
-        syncMergedActiveGens();
-        saveActiveGens();
-        setupGenSelector();
-        syncFleetToActiveGenerations(activeGensBlue, activeGensRed, DF.width, DF.height);
-        scrambleWave('blue', 4);
-        scrambleWave('red', 4);
-        dfRadio('ALL-OUT AIR WAR INITIATED: ALL 7 WARFARE GENERATIONS ENGAGED IN MULTI-DOMAIN AIRSPACE!');
-      }
-    }
   </script>
 </body>
 </html>
