@@ -10,13 +10,37 @@ function updateTacticalManeuvers(friendlyPool, opposingPool) {
       continue;
     }
 
-    // 1. Dynamic Nearest Target Acquisition
+    // 1. Dynamic Target Acquisition with Radar Equation, Stealth RCS, and Service Ceiling Filters
     var bestTarget = null;
     var minDist = 999999;
+    var mySpec = (typeof AIRCRAFT_SPECS !== "undefined" && AIRCRAFT_SPECS[jet.gen]) ? AIRCRAFT_SPECS[jet.gen] : {};
+    var myRadarBase = mySpec.radarBaseline || 600;
+    var myCeiling = (typeof SERVICE_CEILINGS !== "undefined" && SERVICE_CEILINGS[jet.gen]) ? SERVICE_CEILINGS[jet.gen] : 60000;
+    var worldH = (typeof DF !== "undefined" && DF.worldHeight) ? DF.worldHeight : 1200;
+    var myAltFt = (typeof getAltitudeFeet === "function") ? getAltitudeFeet(jet.y, worldH) : 30000;
+
     for (var j = 0; j < opposingPool.length; j++) {
       var opp = opposingPool[j];
-      if (!opp.active || opp.isDying) continue;
+      if (!opp || !opp.active || opp.isDying) continue;
+
       var d = Math.hypot(opp.x - jet.x, opp.y - jet.y);
+      var oppAltFt = (typeof getAltitudeFeet === "function") ? getAltitudeFeet(opp.y, worldH) : 30000;
+
+      // Service ceiling limit: lower generation jets cannot reach or lock targets high above their ceiling
+      if (oppAltFt > myCeiling + 3000) {
+        continue;
+      }
+
+      // Radar Range & Stealth Cross Section (RCS) Equation: R_detect = R_baseline * (RCS ^ 0.25)
+      var oppRcs = (typeof opp.rcs === "number") ? opp.rcs : 1.0;
+      var effectiveRadarReach = myRadarBase * Math.pow(Math.max(0.000001, oppRcs), 0.25);
+      // Visual spotting envelope: ~240px visual identification range for pilots
+      var maxDetectionRange = Math.max(240, effectiveRadarReach);
+
+      if (d > maxDetectionRange) {
+        continue; // Bandit is stealth / undetectable outside sensor envelope
+      }
+
       // De-prioritize targets sheltered inside their defended home FARP umbrella
       if (opp.mode === "ACE_APPROACH" || opp.mode === "ACE_TOUCHDOWN") {
         d += 2500;

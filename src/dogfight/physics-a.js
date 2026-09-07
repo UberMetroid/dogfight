@@ -67,7 +67,7 @@ function updateJetPhysics(jet, targetEnemy, incomingThreat, opposingPool, missil
 
     var mslY = (typeof getSeaLevelY === "function") ? getSeaLevelY(worldH) : Math.floor(worldH * 0.84);
     var isBlueJet = (jet.team === "blue");
-    var rwyY = isBlueJet ? (mslY - 14) : (mslY - 10);
+    var rwyY = isBlueJet ? (mslY - 14) : (mslY - 12);
 
     // Staggered pause on runway threshold
     if (jet.takeoffRoll < 0) {

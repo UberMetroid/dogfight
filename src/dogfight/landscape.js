@@ -15,7 +15,7 @@
   // Multi-Domain Registry for future land, surface, and undersea weapons
   global.MultiDomainSystem = {
     seaLevelRatio: 0.84, // Mean Sea Level at 84% canvas height (leaves ~120-150px for ocean depths)
-    coastRatio: 0.38,    // Coastline transition at 38% canvas width
+    coastRatio: 0.15,    // Coastline transition at 15% canvas width (vast central ocean)
     subSurfaceCorridorActive: true,
     sonarPulseRadius: 0,
     sonarPulseMax: 180,
@@ -24,12 +24,12 @@
 
     // Modular entity registries for user expansion
     landAssets: [
-      { id: "airbase-1", name: "FORWARD AIR BASE ALPHA", type: "airfield", xRatio: 0.24, runwayLength: 160 },
-      { id: "sam-battery-1", name: "PATRIOT/S-400 SAM SITE", type: "sam", xRatio: 0.35, rangeKm: 40 }
+      { id: "airbase-1", name: "FORWARD AIR BASE ALPHA", type: "airfield", xRatio: 0.08, runwayLength: 160 },
+      { id: "sam-battery-1", name: "PATRIOT/S-400 SAM SITE", type: "sam", xRatio: 0.14, rangeKm: 40 }
     ],
     surfaceCombatants: [
-      { id: "cvn-78", name: "CVN-78 GERALD R. FORD", type: "carrier", xRatio: 0.70, airWingActive: true },
-      { id: "ddg-51", name: "DDG-51 ARLEIGH BURKE", type: "destroyer", xRatio: 0.86, aegisRadar: true }
+      { id: "cvn-78", name: "CVN-78 GERALD R. FORD", type: "carrier", xRatio: 0.22, airWingActive: true },
+      { id: "ddg-51", name: "DDG-51 ARLEIGH BURKE", type: "destroyer", xRatio: 0.28, aegisRadar: true }
     ],
     subSurfaceCorridors: [
       { id: "sub-trench-1", name: "CONTINENTAL TRENCH PATROL", depthM: -450, type: "ssn_patrol_zone" }
@@ -225,20 +225,20 @@
     ctx.font = "8.5px ui-monospace, monospace";
     ctx.fillText("0 FT MSL // OCEAN DOMAIN (CONTINUOUS OPEN SEA SURFACE OPERATIONS)", oceanLabelX, mslY - 8);
 
-    // Render Aircraft Carrier (CVN-78)
-    var cvnX = Math.floor(width * 0.70);
+    // Render Aircraft Carrier (CVN-78 in Western blue waters)
+    var cvnX = Math.floor(width * 0.22);
     drawAircraftCarrier(ctx, cvnX, mslY, sys.wavePhase);
 
     // Render Aegis Destroyer (DDG-51)
-    var ddgX = Math.floor(width * 0.87);
+    var ddgX = Math.floor(width * 0.28);
     drawAegisDestroyer(ctx, ddgX, mslY, sys.wavePhase);
 
-    // Render Guided Missile Cruiser in extended open waters (CG-69)
-    var cgX = Math.floor(width * 1.18);
+    // Render Guided Missile Cruiser in eastern waters (CG-69)
+    var cgX = Math.floor(width * 0.76);
     drawAegisCruiser(ctx, cgX, mslY, sys.wavePhase);
 
-    // Render Submarine Patrol Station in open eastern ocean
-    var ssnX = Math.floor(width * 1.52);
+    // Render Submarine Patrol Station in open ocean
+    var ssnX = Math.floor(width * 1.35);
     drawSubmarinePatrol(ctx, ssnX, mslY, height, sys.wavePhase, now);
 
     // ------------------------------------------------------------------------
@@ -257,20 +257,19 @@
       ctx.lineTo(mx, mAlt);
     }
     ctx.lineTo(0, mslY - 45); // Western mountain peak (elevation ~5k ft)
-    ctx.lineTo(width * 0.06, mslY - 55);
-    ctx.lineTo(width * 0.12, mslY - 30);
-    ctx.lineTo(width * 0.16, mslY - 14); // Valley slope
+    ctx.lineTo(width * 0.015, mslY - 50);
+    ctx.lineTo(width * 0.025, mslY - 24);
 
-    // Airbase plateau (elevation ~14px / 1200 ft)
-    var runwayStartX = width * 0.18;
-    var runwayEndX = width * 0.32;
+    // Airbase plateau (elevation ~14px / 1200 ft on far West edge)
+    var runwayStartX = width * 0.03;
+    var runwayEndX = width * 0.13;
     ctx.lineTo(runwayStartX, mslY - 14);
     ctx.lineTo(runwayEndX, mslY - 14);
 
-    // Coastal cliff peak
-    var samRidgeX = width * 0.35;
-    ctx.lineTo(samRidgeX, mslY - 26);
-    // Coast drops down to sea level
+    // Coastal cliff peak with SAM battery
+    var samRidgeX = width * 0.142;
+    ctx.lineTo(samRidgeX, mslY - 22);
+    // Coast drops down to sea level at coastX = 0.15 * width
     ctx.lineTo(coastX, mslY);
     ctx.lineTo(coastX, height);
     ctx.closePath();

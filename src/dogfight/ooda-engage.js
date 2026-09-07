@@ -125,15 +125,28 @@ function oodaDecideEngage(jet, obs, ori, targetEnemy, altFt, sCeiling, flaresPoo
       }
     }
   } else {
-    // Zero Passive Cruising Mandate: Continuous Active Radar S-Turns & Flank Sweep
+    // Zero Passive Cruising Mandate: Continuous Generational Altitude Cruise & Radar S-Turns
     jet.mode = "TACTICAL_SWEEP";
     jet.isTailChasing = false;
     jet.patrolSweepAngle = (jet.patrolSweepAngle || 0) + 0.035;
-    var sweepWeave = Math.sin(jet.patrolSweepAngle) * 0.40;
+    var sweepWeave = Math.sin(jet.patrolSweepAngle) * 0.30;
     var baseHeading = (jet.team === "blue" ? 0.0 : Math.PI);
-    jet.targetAngle = baseHeading + sweepWeave;
-    jet.throttleSetting = 1.0;
+
+    // Generational Altitude Seeking
+    var targetAltFt = (typeof CRUISE_ALTITUDES !== "undefined" && CRUISE_ALTITUDES[jet.gen]) ? CRUISE_ALTITUDES[jet.gen] : 45000;
+    var worldH = (typeof DF !== "undefined" && DF.worldHeight) ? DF.worldHeight : 1200;
+    var targetAltY = (typeof getYFromAltitude === "function") ? getYFromAltitude(targetAltFt, worldH) : 250;
+    var altDiffY = targetAltY - jet.y; // < 0: climb, > 0: descend
+    var pitchCorr = Math.max(-0.35, Math.min(0.35, altDiffY * 0.005));
+
+    jet.targetAngle = baseHeading + sweepWeave + (baseHeading === 0.0 ? pitchCorr : -pitchCorr);
+    jet.throttleSetting = 1.2;
     jet.afterburner = true;
   }
 
+  // Strict Service Ceiling Aerodynamic Clamp: Prevent lower-gen fighters from pitching up beyond their flight envelope
+  if (altFt >= sCeiling - 1200 && Math.sin(jet.targetAngle) < 0) {
+    var isRightHeading = Math.cos(jet.angle) >= 0;
+    jet.targetAngle = isRightHeading ? 0.05 : (jet.angle < 0 ? -Math.PI - 0.05 : Math.PI + 0.05);
+  }
 }

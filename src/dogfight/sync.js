@@ -97,7 +97,7 @@ function syncFleetToActiveGenerations(blueMask, redMask, canvasW, canvasH) {
     bJet.damageSparksTimer = 0;
     var mslY = (typeof getSeaLevelY === "function") ? getSeaLevelY(h) : Math.floor(h * 0.84);
     var rwyY = mslY - 14;
-    bJet.x = w * 0.19 + (bIdx * 28);
+    bJet.x = w * 0.04 + (bIdx * 24);
     bJet.y = rwyY - 1;
     bJet.angle = 0.0;
     bJet.targetAngle = 0.0;
@@ -180,8 +180,8 @@ function syncFleetToActiveGenerations(blueMask, redMask, canvasW, canvasH) {
     rJet.damageSmokeTimer = 0;
     rJet.damageSparksTimer = 0;
     var mslY = (typeof getSeaLevelY === "function") ? getSeaLevelY(h) : Math.floor(h * 0.84);
-    var rwyY = mslY - 10;
-    rJet.x = w * 0.93 - (rIdx * 28);
+    var rwyY = mslY - 12;
+    rJet.x = w * 0.96 - (rIdx * 24);
     rJet.y = rwyY - 1;
     rJet.angle = Math.PI;
     rJet.targetAngle = Math.PI;

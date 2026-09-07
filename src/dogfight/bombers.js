@@ -34,8 +34,8 @@
       red: { name: "H-20 + CCA SWARM", speed: 4.8, altFt: 55000, hp: 480, weaponName: "HYPERSONIC STRIKE & SWARM", bombType: "HYPERSONIC", bombCount: 2, stealth: true, hasLaserCiws: true }
     },
     7: {
-      blue: { name: "AURORA SUB-ORBITAL PLATFORM", speed: 8.2, altFt: 88000, hp: 520, weaponName: "RODS FROM GOD (KINETIC TUNGSTEN)", bombType: "KINETIC_ROD", bombCount: 3, nearSpace: true },
-      red: { name: "ORBITAL FOBS PLATFORM", speed: 8.2, altFt: 88000, hp: 520, weaponName: "ORBITAL KINETIC PENETRATORS", bombType: "KINETIC_ROD", bombCount: 3, nearSpace: true }
+      blue: { name: "HELIOS ORBITAL LASER SATELLITE", speed: 6.8, altFt: 98000, hp: 560, weaponName: "⚡ ORBITAL DIRECTED-ENERGY LASER (DEW)", bombType: "ORBITAL_LASER", bombCount: 1, nearSpace: true },
+      red: { name: "PERESVET-O ORBITAL CANNON SATELLITE", speed: 6.8, altFt: 98000, hp: 560, weaponName: "⚡ ORBITAL DIRECTED-ENERGY LASER (DEW)", bombType: "ORBITAL_LASER", bombCount: 1, nearSpace: true }
     }
   };
 
@@ -142,11 +142,11 @@
       var heading = isBlue ? 0.0 : Math.PI;
 
       // Target FARP
-      // Blue targets Red's FARP Delta (x ~ worldW * 0.88)
-      // Red targets Blue's Base Alpha (x ~ worldW * 0.25)
-      var targetFarpX = isBlue ? (worldW * 0.88) : (worldW * 0.25);
+      // Blue targets Red's FARP Delta (x ~ worldW * 0.92)
+      // Red targets Blue's Base Alpha (x ~ worldW * 0.08)
+      var targetFarpX = isBlue ? (worldW * 0.92) : (worldW * 0.08);
       var mslY = (typeof getSeaLevelY === "function") ? getSeaLevelY(worldH) : Math.floor(worldH * 0.84);
-      var targetFarpY = isBlue ? (mslY - 10) : (mslY - 14);
+      var targetFarpY = isBlue ? (mslY - 12) : (mslY - 14);
 
       this.activeBomber = {
         team: team,
@@ -255,6 +255,71 @@
 
       // PHASE 2: BOMB RUN & WEAPON RELEASE
       if (b.state === "BOMB_RUN") {
+        if (b.bombType === "ORBITAL_LASER") {
+          if (!b.orbitalLaserActive) {
+            b.orbitalLaserActive = true;
+            b.orbitalLaserTimer = 110; // ~1.8 seconds continuous orbital laser beam
+            this.screenShake = 16.0;
+            if (typeof window !== "undefined" && window.TacticalAudio && typeof window.TacticalAudio.playOrbitalLaser === "function") {
+              window.TacticalAudio.playOrbitalLaser();
+            }
+            if (typeof dfRadio === "function") {
+              dfRadio(b.name + ": SATELLITE OPTICS LOCKED // FIRING HIGH-ENERGY ORBITAL LASER BEAM!");
+            }
+          }
+          b.orbitalLaserTimer--;
+          this.screenShake = Math.max(this.screenShake, 8.0);
+
+          // Thermal ground ionization effects at FARP target
+          if (globalVfxParticlePool && Math.random() < 0.85) {
+            for (var p = 0; p < 3; p++) {
+              var spIdx = globalVfxParticlePool.alloc();
+              if (spIdx >= 0) {
+                var spo = spIdx * 8;
+                globalVfxParticlePool.buffer[spo] = b.targetFarpX + (Math.random() - 0.5) * 80;
+                globalVfxParticlePool.buffer[spo + 1] = b.targetFarpY + (Math.random() - 0.5) * 6;
+                globalVfxParticlePool.buffer[spo + 2] = (Math.random() - 0.5) * 6;
+                globalVfxParticlePool.buffer[spo + 3] = -2.5 - Math.random() * 4.5;
+                globalVfxParticlePool.buffer[spo + 4] = 20;
+                globalVfxParticlePool.buffer[spo + 5] = 20;
+                globalVfxParticlePool.buffer[spo + 6] = 2.0;
+                globalVfxParticlePool.buffer[spo + 7] = 1; // Plasma sparks
+              }
+            }
+          }
+
+          if (b.orbitalLaserTimer <= 0) {
+            b.orbitalLaserActive = false;
+            b.bombsDropped = 1;
+            b.state = "EGRESS";
+            b.speed *= 1.35;
+
+            var targetTeam = (b.team === "blue") ? "red" : "blue";
+            this.detonations.push({
+              type: "KINETIC_PLASMA",
+              x: b.targetFarpX,
+              y: b.targetFarpY,
+              timer: 0,
+              radius: 25,
+              maxRadius: 130,
+              expansionRate: 6.5,
+              maxLife: 45
+            });
+            this.craters.push({
+              x: b.targetFarpX,
+              y: b.targetFarpY,
+              radius: 90,
+              smokeTimer: 900,
+              team: targetTeam
+            });
+            this.farpBlackout[targetTeam] = 1200; // 20s blackout
+            if (typeof dfRadio === "function") {
+              dfRadio("SPACE COMMAND: ORBITAL LASER BARRAGE COMPLETE! TARGET BASE VAPORIZED INTO MOLTEN SLAG!");
+            }
+          }
+          return;
+        }
+
         b.dropTimer++;
         var dropInterval = (b.bombType === "NUKE" || b.bombType === "MOP") ? 1 : 12;
 
@@ -900,28 +965,50 @@
       ctx.fillStyle = factionColor;
       ctx.fillRect(-4, -2, 8, 4);
     } else if (b.gen === 7) {
-      // AURORA Sub-Orbital Platform / Orbital FOBS
-      ctx.fillStyle = "#090d16";
-      ctx.strokeStyle = "#38bdf8";
+      // HELIOS / PERESVET-O Orbital Directed-Energy Satellite Platform
+      ctx.fillStyle = "#0f172a";
+      ctx.strokeStyle = (b.team === "blue") ? "#38bdf8" : "#f43f5e";
       ctx.lineWidth = 1.5;
 
+      // Hexagonal Central Avionics & Fusion Capacitor Hull
       ctx.beginPath();
-      ctx.moveTo(36, 0);
-      ctx.lineTo(-24, -28);
-      ctx.lineTo(-18, 0);
-      ctx.lineTo(-24, 28);
+      ctx.moveTo(14, 0);
+      ctx.lineTo(7, -10);
+      ctx.lineTo(-7, -10);
+      ctx.lineTo(-14, 0);
+      ctx.lineTo(-7, 10);
+      ctx.lineTo(7, 10);
       ctx.closePath();
       ctx.fill(); ctx.stroke();
 
-      ctx.strokeStyle = "rgba(56, 189, 248, 0.75)";
-      ctx.lineWidth = 3;
+      // Massive Photovoltaic Solar Array / Thermal Radiator Wings
+      ctx.fillStyle = "#1e3a8a";
+      ctx.strokeStyle = "rgba(56, 189, 248, 0.8)";
+      ctx.lineWidth = 1;
+      // Port solar panel
+      ctx.fillRect(-28, -26, 18, 14);
+      ctx.strokeRect(-28, -26, 18, 14);
+      // Starboard solar panel
+      ctx.fillRect(-28, 12, 18, 14);
+      ctx.strokeRect(-28, 12, 18, 14);
+
+      // Downward-pointing High-Energy Laser Optical Collimator Dome
+      ctx.fillStyle = b.orbitalLaserActive ? "#ffffff" : (b.team === "blue" ? "#0284c7" : "#be123c");
       ctx.beginPath();
-      ctx.moveTo(-24, -28); ctx.lineTo(36, 0); ctx.lineTo(-24, 28);
+      ctx.arc(4, 0, 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Ion Thruster Plume
+      ctx.strokeStyle = "rgba(56, 189, 248, 0.85)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-14, 0);
+      ctx.lineTo(-24 - Math.random() * 8, 0);
       ctx.stroke();
     }
 
     // Open Bomb Bay Doors Animation
-    if (b.bayOpen) {
+    if (b.bayOpen && b.gen !== 7) {
       ctx.fillStyle = "#090d16";
       ctx.fillRect(-10, -6, 20, 12);
       ctx.strokeStyle = "#fbbf24";
@@ -932,6 +1019,60 @@
     }
 
     ctx.restore();
+
+    // ------------------------------------------------------------------------
+    // ORBITAL DIRECTED-ENERGY LASER (DEW) CONTINUOUS BEAM RENDERING
+    // ------------------------------------------------------------------------
+    if (b.orbitalLaserActive) {
+      ctx.save();
+      var tx = b.targetFarpX;
+      var ty = b.targetFarpY;
+      var laserColor = (b.team === "blue") ? "#38bdf8" : "#f43f5e";
+
+      // Atmospheric ionization column
+      ctx.strokeStyle = (b.team === "blue") ? "rgba(56, 189, 248, 0.28)" : "rgba(244, 63, 94, 0.28)";
+      ctx.lineWidth = 36;
+      ctx.beginPath();
+      ctx.moveTo(bx, by);
+      ctx.lineTo(tx, ty);
+      ctx.stroke();
+
+      // Searing plasma beam
+      ctx.strokeStyle = (b.team === "blue") ? "rgba(14, 165, 233, 0.75)" : "rgba(225, 29, 72, 0.75)";
+      ctx.lineWidth = 16;
+      ctx.beginPath();
+      ctx.moveTo(bx, by);
+      ctx.lineTo(tx, ty);
+      ctx.stroke();
+
+      // Incandescent coherent core
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(bx, by);
+      ctx.lineTo(tx, ty);
+      ctx.stroke();
+
+      // Ground strike point plasma burst & shockwave
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(tx, ty, 22 + Math.random() * 10, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = laserColor;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(tx, ty, 38 + (b.orbitalLaserTimer % 18) * 3.5, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Satellite Optical Emitter Starburst
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(bx, by, 12 + Math.random() * 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
 
     // In-World Bomber Telemetry & Health Bar
     ctx.save();

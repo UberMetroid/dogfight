@@ -28,43 +28,43 @@ function getSurfaceElevationY(x, worldW, worldH) {
   var w = (typeof worldW === "number" && worldW > 0) ? worldW : ((typeof DF !== "undefined" && DF.worldWidth) ? DF.worldWidth : 3600);
   var h = (typeof worldH === "number" && worldH > 0) ? worldH : ((typeof DF !== "undefined" && DF.worldHeight) ? DF.worldHeight : 1200);
   var mslY = (typeof getSeaLevelY === "function") ? getSeaLevelY(h) : Math.floor(h * 0.84);
-  var coastRatio = (typeof MultiDomainSystem !== "undefined" && MultiDomainSystem && MultiDomainSystem.coastRatio) ? MultiDomainSystem.coastRatio : 0.38;
+  var coastRatio = (typeof MultiDomainSystem !== "undefined" && MultiDomainSystem && MultiDomainSystem.coastRatio) ? MultiDomainSystem.coastRatio : 0.15;
   var coastX = w * coastRatio;
 
   // Ocean Domain (Water with dynamic waves, islands, and naval decks)
   if (x >= coastX) {
-    // 1. Austere Island Bravo FARP Strip (Offshore Atoll)
-    var islStart = w * 0.48;
-    var islEnd = w * 0.58;
-    if (x >= islStart - 20 && x <= islEnd + 20) {
-      if (x < islStart) {
-        var tIsl = (x - (islStart - 20)) / 20.0;
-        return mslY - tIsl * 10;
-      } else if (x > islEnd) {
-        var tIsl = (x - islEnd) / 20.0;
-        return (mslY - 10) + tIsl * 10;
-      }
-      return mslY - 10;
-    }
-
-    // 2. CVN-78 Carrier Flight Deck
-    var cvnMid = w * 0.70;
+    // 1. CVN-78 Carrier Flight Deck (Western waters)
+    var cvnMid = w * 0.225;
     if (x >= cvnMid - 35 && x <= cvnMid + 35) {
       return mslY - 4;
     }
 
-    // 3. Austere Strip Delta (Eastern Dispersed Atoll)
-    var dStart = w * 0.82;
-    var dEnd = w * 0.94;
+    // 2. Austere Island Bravo FARP Strip (Mid-Ocean Atoll)
+    var islStart = w * 0.47;
+    var islEnd = w * 0.53;
+    if (x >= islStart - 20 && x <= islEnd + 20) {
+      if (x < islStart) {
+        var tIsl = (x - (islStart - 20)) / 20.0;
+        return mslY - tIsl * 8;
+      } else if (x > islEnd) {
+        var tIsl = (x - islEnd) / 20.0;
+        return (mslY - 8) + tIsl * 8;
+      }
+      return mslY - 8;
+    }
+
+    // 3. Austere Strip Delta (Far Eastern Red Atoll)
+    var dStart = w * 0.87;
+    var dEnd = w * 0.97;
     if (x >= dStart - 20 && x <= dEnd + 20) {
       if (x < dStart) {
         var tD = (x - (dStart - 20)) / 20.0;
-        return mslY - tD * 10;
+        return mslY - tD * 12;
       } else if (x > dEnd) {
         var tD = (x - dEnd) / 20.0;
-        return (mslY - 10) + tD * 10;
+        return (mslY - 12) + tD * 12;
       }
-      return mslY - 10;
+      return mslY - 12;
     }
 
     var wavePhase = (typeof MultiDomainSystem !== "undefined" && MultiDomainSystem && MultiDomainSystem.wavePhase) ? MultiDomainSystem.wavePhase : 0;
@@ -72,35 +72,26 @@ function getSurfaceElevationY(x, worldW, worldH) {
     return mslY + waveY;
   }
 
-  // Land Domain (Piecewise Mountain & Airbase polygon profile)
-  // x = 0: mslY - 45
-  // x = w * 0.06: mslY - 55
-  // x = w * 0.12: mslY - 30
-  // x = w * 0.16: mslY - 14
-  // x = w * 0.32: mslY - 14 (Runway plateau)
-  // x = w * 0.35: mslY - 26 (SAM coastal ridge)
+  // Land Domain (Piecewise Mountain & Airbase polygon profile on far West edge)
   if (x <= 0) return mslY - 45 - Math.sin(x * 0.006) * 28 - Math.cos(x * 0.012) * 12;
-  if (x <= w * 0.06) {
-    var t = x / (w * 0.06);
-    return (mslY - 45) + t * (-10);
+  if (x <= w * 0.015) {
+    var t = x / (w * 0.015);
+    return (mslY - 45) + t * (-5);
   }
-  if (x <= w * 0.12) {
-    var t = (x - w * 0.06) / (w * 0.06);
-    return (mslY - 55) + t * 25;
+  if (x <= w * 0.03) {
+    var t = (x - w * 0.015) / (w * 0.015);
+    return (mslY - 50) + t * 36;
   }
-  if (x <= w * 0.16) {
-    var t = (x - w * 0.12) / (w * 0.04);
-    return (mslY - 30) + t * 16;
-  }
-  if (x <= w * 0.32) {
+  // Airbase Runway Plateau: w * 0.03 to w * 0.13
+  if (x <= w * 0.13) {
     return mslY - 14;
   }
-  if (x <= w * 0.35) {
-    var t = (x - w * 0.32) / (w * 0.03);
-    return (mslY - 14) + t * (-12);
+  if (x <= w * 0.142) {
+    var t = (x - w * 0.13) / (w * 0.012);
+    return (mslY - 14) + t * (-8);
   }
-  var t = (x - w * 0.35) / (coastX - w * 0.35);
-  return (mslY - 26) + t * 26;
+  var t = (x - w * 0.142) / (coastX - w * 0.142);
+  return (mslY - 22) + t * 22;
 }
 
 // Altitude Above Ground Level (AGL) in feet

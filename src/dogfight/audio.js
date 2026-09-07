@@ -362,6 +362,39 @@
       gain.connect(c.destination);
       osc.start(now);
       osc.stop(now + 0.72);
+    },
+
+    playOrbitalLaser: function () {
+      if (!enabled) return;
+      var c = initContext();
+      if (!c) return;
+      var now = c.currentTime;
+
+      // Deep resonant charging hum
+      var subOsc = c.createOscillator();
+      var subGain = c.createGain();
+      subOsc.type = "sine";
+      subOsc.frequency.setValueAtTime(55, now);
+      subOsc.frequency.linearRampToValueAtTime(110, now + 1.6);
+      subGain.gain.setValueAtTime(0.12, now);
+      subGain.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
+      subOsc.connect(subGain);
+      subGain.connect(c.destination);
+      subOsc.start(now);
+      subOsc.stop(now + 1.85);
+
+      // High-energy searing particle beam screech
+      var beamOsc = c.createOscillator();
+      var beamGain = c.createGain();
+      beamOsc.type = "sawtooth";
+      beamOsc.frequency.setValueAtTime(2400, now);
+      beamOsc.frequency.exponentialRampToValueAtTime(800, now + 1.5);
+      beamGain.gain.setValueAtTime(0.08, now);
+      beamGain.gain.exponentialRampToValueAtTime(0.001, now + 1.7);
+      beamOsc.connect(beamGain);
+      beamGain.connect(c.destination);
+      beamOsc.start(now);
+      beamOsc.stop(now + 1.75);
     }
   };
 

@@ -36,8 +36,8 @@ function scrambleWave(team, gen) {
       jet.damageSmokeTimer = 0;
       jet.damageSparksTimer = 0;
       var mslY = (typeof getSeaLevelY === "function") ? getSeaLevelY(worldH) : Math.floor(worldH * 0.84);
-      var rwyY = isBlue ? (mslY - 14) : (mslY - 10);
-      jet.x = isBlue ? (worldW * 0.19 + idx * 28) : (worldW * 0.93 - idx * 28);
+      var rwyY = isBlue ? (mslY - 14) : (mslY - 12);
+      jet.x = isBlue ? (worldW * 0.04 + idx * 24) : (worldW * 0.96 - idx * 24);
       jet.y = rwyY - 1;
       jet.angle = isBlue ? 0.0 : Math.PI;
       jet.targetAngle = jet.angle;
