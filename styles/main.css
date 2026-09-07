@@ -264,6 +264,54 @@ html, body {
   min-height: 22px;
 }
 
+/* Escalation Trigger & Arms Race Countdown Row */
+.chronicle-trigger-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px dashed rgba(245, 158, 11, 0.35);
+  padding: 3px 6px;
+  font-family: var(--font-mono);
+  font-size: 0.53rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.trigger-badge-group {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.trigger-label {
+  font-weight: 800;
+  color: #f59e0b;
+}
+
+.trigger-rule {
+  font-weight: 600;
+  color: #fde68a;
+}
+
+.trigger-countdown {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.countdown-lbl {
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.countdown-val {
+  font-weight: 800;
+  color: #38bdf8;
+  text-shadow: 0 0 6px rgba(56, 189, 248, 0.4);
+}
+
 /* Timeline Progress Bar */
 .chronicle-progress-bar {
   width: 100%;

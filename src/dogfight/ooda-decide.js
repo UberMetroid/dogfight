@@ -26,6 +26,28 @@ function oodaDecideAction(jet, obs, ori, targetEnemy, altFt, sCeiling, flaresPoo
     return;
   }
 
+  // Intercepting hostile bomber to protect home base has mission priority
+  if (jet.mode === "INTERCEPT_BOMBER") {
+    if (ori && (ori.recommendedEvasion === "BEAM_NOTCH" || ori.recommendedEvasion === "BREAK_9G")) {
+      // Evasion takes brief priority to survive immediate missile attack
+    } else {
+      jet.throttleSetting = 1.6;
+      jet.afterburner = true;
+      return;
+    }
+  }
+
+  // Escorting friendly bomber has priority over random wandering
+  if (jet.mode === "ESCORT_BOMBER" && targetEnemy && targetEnemy.active) {
+    if (ori && (ori.recommendedEvasion === "BEAM_NOTCH" || ori.recommendedEvasion === "BREAK_9G")) {
+      // Defensive break
+    } else {
+      jet.throttleSetting = 1.5;
+      jet.afterburner = true;
+      return;
+    }
+  }
+
   if (ori && ori.recommendedEvasion && ori.recommendedEvasion !== "NONE") {
     jet.isTailChasing = false;
     jet.mode = ori.recommendedEvasion;

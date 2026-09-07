@@ -3,7 +3,14 @@
 // Logline: Laser, tri-lance, singularity.
 //
 function evaluateJetWeapons(jet, targetEnemy, colors) {
-  if (!jet.active || jet.isDying || jet.isStalled || !targetEnemy || !targetEnemy.active || targetEnemy.isDying) return;
+  if (!jet.active || jet.isDying || jet.isStalled) return;
+  var actBomber = (typeof StrategicBomberSystem !== "undefined") ? StrategicBomberSystem.activeBomber : null;
+  var target = targetEnemy;
+  if ((jet.mode === "INTERCEPT_BOMBER" || !target || !target.active) && actBomber && actBomber.state !== "SPLASHED" && actBomber.team !== jet.team) {
+    target = actBomber;
+  }
+  if (!target || !target.active || target.isDying || target.state === "SPLASHED") return;
+  targetEnemy = target;
 
   var dx = targetEnemy.x - jet.x;
   var dy = targetEnemy.y - jet.y;
@@ -110,7 +117,10 @@ function evaluateJetWeapons(jet, targetEnemy, colors) {
         DF.ctx.restore();
 
         var triDmg = 35.0 + Math.random() * 15.0;
-        if (targetEnemy.gen === 7) {
+        if (targetEnemy.bombType || targetEnemy === actBomber) {
+          StrategicBomberSystem.applyDamage(triDmg, jet);
+          dfRadio(jet.callsign + ": TRI-LANCE PARTICLE BEAM STRIKE ON ENEMY STRATEGIC BOMBER!");
+        } else if (targetEnemy.gen === 7) {
           targetEnemy.shieldPulse = 1.0;
           if (Math.random() < 0.35) {
             var triLethal7 = applyAirframeDamage(targetEnemy, triDmg, jet, "TRI_LANCE");
@@ -198,7 +208,10 @@ function evaluateJetWeapons(jet, targetEnemy, colors) {
         }
       }
 
-      if (targetEnemy.gen === 7) {
+      if (targetEnemy.bombType || targetEnemy === actBomber) {
+        StrategicBomberSystem.applyDamage(120.0, jet);
+        dfRadio(jet.callsign + ": SINGULARITY SUPER LASER HIT ENEMY STRATEGIC BOMBER!");
+      } else if (targetEnemy.gen === 7) {
         targetEnemy.shieldPulse = 1.0;
         targetEnemy.mode = "BREAK";
         targetEnemy.modeTimer = 35;

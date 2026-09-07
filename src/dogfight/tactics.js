@@ -3,6 +3,8 @@
 // Logline: Pool vs pool targeting.
 //
 function updateTacticalManeuvers(friendlyPool, opposingPool) {
+  var actBomber = (typeof StrategicBomberSystem !== "undefined") ? StrategicBomberSystem.activeBomber : null;
+
   for (var i = 0; i < friendlyPool.length; i++) {
     var jet = friendlyPool[i];
     if (!jet.active || jet.isDying) {
@@ -16,7 +18,46 @@ function updateTacticalManeuvers(friendlyPool, opposingPool) {
       continue;
     }
 
-    // 1. Dynamic Target Acquisition with Radar Equation, Stealth RCS, and Service Ceiling Filters
+    // 1. Defending fighters prioritize intercepting incoming hostile Strategic Bomber
+    var hostileBomber = (actBomber && actBomber.state !== "SPLASHED" && actBomber.team !== jet.team) ? actBomber : null;
+    var friendlyBomber = (actBomber && actBomber.state !== "SPLASHED" && actBomber.team === jet.team) ? actBomber : null;
+
+    if (hostileBomber) {
+      // FIGHTERS GO AFTER BOMBERS: Defend home base by vectoring to intercept incoming bomber
+      jet.targetJet = hostileBomber;
+      jet.mode = "INTERCEPT_BOMBER";
+      jet.throttleSetting = 1.6;
+      jet.afterburner = true;
+      var dbx = hostileBomber.x - jet.x;
+      var dby = hostileBomber.y - jet.y;
+      jet.targetAngle = Math.atan2(dby, dbx);
+      continue;
+    }
+
+    // 2. Escort fighters protect friendly bomber from hostile interceptors
+    if (friendlyBomber) {
+      var threatToBomber = null;
+      var minThreatDist = 800;
+      for (var oj = 0; oj < opposingPool.length; oj++) {
+        var oppInt = opposingPool[oj];
+        if (!oppInt || !oppInt.active || oppInt.isDying) continue;
+        var distToB = Math.hypot(oppInt.x - friendlyBomber.x, oppInt.y - friendlyBomber.y);
+        if (distToB < minThreatDist) {
+          minThreatDist = distToB;
+          threatToBomber = oppInt;
+        }
+      }
+      if (threatToBomber) {
+        jet.targetJet = threatToBomber;
+        jet.mode = "ESCORT_BOMBER";
+        jet.throttleSetting = 1.5;
+        jet.afterburner = true;
+        jet.targetAngle = Math.atan2(threatToBomber.y - jet.y, threatToBomber.x - jet.x);
+        continue;
+      }
+    }
+
+    // 3. Dynamic Target Acquisition: Fighters go after fighters
     var bestTarget = null;
     var minDist = 999999;
     var mySpec = (typeof AIRCRAFT_SPECS !== "undefined" && AIRCRAFT_SPECS[jet.gen]) ? AIRCRAFT_SPECS[jet.gen] : {};

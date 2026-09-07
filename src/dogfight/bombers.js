@@ -152,6 +152,10 @@
         team: team,
         gen: gen,
         name: spec.name,
+        callsign: spec.name,
+        active: true,
+        isDying: false,
+        rcs: (gen >= 5 ? 0.05 : 12.0),
         weaponName: spec.weaponName,
         bombType: spec.bombType,
         bombCount: spec.bombCount || 1,
@@ -468,6 +472,8 @@
       var b = this.activeBomber;
       if (!b) return;
       b.state = "SPLASHED";
+      b.active = false;
+      b.isDying = true;
 
       // Catastrophic mid-air breakup explosion
       if (DF && DF.explosionsPool) {

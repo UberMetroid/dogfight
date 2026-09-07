@@ -5,7 +5,7 @@ function evaluateKineticWeapons(jet, targetEnemy, colors) {
     var shooterTeamCode = (jet.team === "blue") ? 0 : 1;
 
     // Direct engagement against incoming hostile Strategic Bomber
-    if (jet.mode === "INTERCEPT_BOMBER" || !targetEnemy) {
+    if (jet.mode === "INTERCEPT_BOMBER" || !targetEnemy || (targetEnemy && targetEnemy.bombType)) {
       if (typeof StrategicBomberSystem !== "undefined" && StrategicBomberSystem.activeBomber) {
         var actB = StrategicBomberSystem.activeBomber;
         if (actB.team !== jet.team && actB.state !== "SPLASHED") {
@@ -50,10 +50,11 @@ function evaluateKineticWeapons(jet, targetEnemy, colors) {
               DF.missilesPool.buffer[moB + 1] = jet.y + Math.sin(jet.angle) * 20;
               DF.missilesPool.buffer[moB + 2] = Math.cos(jet.angle) * misSpeedB;
               DF.missilesPool.buffer[moB + 3] = Math.sin(jet.angle) * misSpeedB;
-              DF.missilesPool.buffer[moB + 4] = shooterTeamCode;
-              DF.missilesPool.buffer[moB + 5] = 4;
+              DF.missilesPool.buffer[moB + 4] = (shooterTeamCode === 0 ? 100 : 200) + (jet.slotIdx || 0);
+              DF.missilesPool.buffer[moB + 5] = 99; // Target code 99 for strategic bomber
               DF.missilesPool.buffer[moB + 6] = 240;
-              DF.missilesPool.buffer[moB + 7] = 0;
+              DF.missilesPool.buffer[moB + 7] = (jet.gen >= 4 ? 4 : (jet.gen === 3 ? 3 : 1));
+              if (DF.missileSmokes && DF.missileSmokes[mIdxB]) DF.missileSmokes[mIdxB].clear();
             }
             dfRadio(jet.callsign + ": FOX AWAY! ENGAGING STRATEGIC BOMBER!");
           }

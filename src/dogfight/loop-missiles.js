@@ -21,12 +21,24 @@ function dfStepMissiles() {
     var friendlyLauncherPool = (misOwnerTeam === 0) ? DF.bluePool : DF.redPool;
     var launcherJet = (launcherSlot >= 0 && launcherSlot < friendlyLauncherPool.length) ? friendlyLauncherPool[launcherSlot] : friendlyLauncherPool[0];
 
-    var tgtJet = (tgtSlot >= 0 && tgtSlot < oppPool.length && oppPool[tgtSlot].active && !oppPool[tgtSlot].isDying) ? oppPool[tgtSlot] : null;
+    var tgtJet = null;
+    if (tgtSlot === 99) {
+      if (typeof StrategicBomberSystem !== "undefined" && StrategicBomberSystem.activeBomber) {
+        var strB = StrategicBomberSystem.activeBomber;
+        var oppTeamName = (misOwnerTeam === 0 ? "red" : "blue");
+        if (strB.team === oppTeamName && strB.state !== "SPLASHED") {
+          tgtJet = strB;
+        }
+      }
+    }
     if (!tgtJet) {
-      for (var opi = 0; opi < oppPool.length; opi++) {
-        if (oppPool[opi].active && !oppPool[opi].isDying) {
-          tgtJet = oppPool[opi];
-          break;
+      tgtJet = (tgtSlot >= 0 && tgtSlot < oppPool.length && oppPool[tgtSlot].active && !oppPool[tgtSlot].isDying) ? oppPool[tgtSlot] : null;
+      if (!tgtJet && tgtSlot !== 99) {
+        for (var opi = 0; opi < oppPool.length; opi++) {
+          if (oppPool[opi].active && !oppPool[opi].isDying) {
+            tgtJet = oppPool[opi];
+            break;
+          }
         }
       }
     }

@@ -8,6 +8,19 @@ function oodaDecideEngage(jet, obs, ori, targetEnemy, altFt, sCeiling, flaresPoo
   if (jet.mode === "EVADE_FARP" && typeof jet.modeTimer === "number" && jet.modeTimer > 0) {
     return;
   }
+
+  // If intercepting hostile bomber to save base, vector directly toward bomber
+  if (jet.mode === "INTERCEPT_BOMBER") {
+    var strB = (typeof StrategicBomberSystem !== "undefined") ? StrategicBomberSystem.activeBomber : null;
+    if (strB && strB.state !== "SPLASHED" && strB.team !== jet.team) {
+      var dbx = strB.x - jet.x;
+      var dby = strB.y - jet.y;
+      jet.targetAngle = Math.atan2(dby, dbx);
+      jet.throttleSetting = 1.6;
+      jet.afterburner = true;
+      return;
+    }
+  }
   var isNearCeil = (altFt >= 95000 || (typeof jet.y === "number" && jet.y <= 36.0));
   if (targetEnemy && targetEnemy.active && !targetEnemy.isDying) {
     var dx = targetEnemy.x - jet.x;

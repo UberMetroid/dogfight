@@ -109,6 +109,7 @@
     maxEraFrames: 3600, // ~60s maximum combat before automatic technological escalation
     isTransitioning: false,
     transitionTimer: 0,
+    pendingReason: null,
     escalationCount: 0,
     lastNarrativeText: "",
 
@@ -185,6 +186,11 @@
     getLiveNarrative: function () {
       var data = this.getEraData(this.currentEra);
 
+      // 0. Imminent generational transition
+      if (this.transitionTimer > 0 && this.pendingReason) {
+        return "⚡ DECISIVE KNOCKOUT: " + this.pendingReason + " — Technological escalation imminent!";
+      }
+
       // 1. Check Strategic Bomber / Nuclear / Orbital Laser state
       if (typeof StrategicBomberSystem !== "undefined") {
         var sb = StrategicBomberSystem;
@@ -193,6 +199,9 @@
         }
         if (sb.activeBomber) {
           var ab = sb.activeBomber;
+          if (ab.state === "SPLASHED" || ab.isDying) {
+            return "💥 BOMBER SPLASHED: Interceptors destroyed hostile strategic bomber mid-air! Home base secured!";
+          }
           var bTeam = (ab.team === "blue") ? "Blue Allied" : "Red Opposing";
           if (ab.bombType === "ORBITAL_DEW_LASER") {
             return "🛰️ ORBITAL DIRECTED ENERGY: " + bTeam + " Helios Satellite channeling multi-gigawatt continuous laser beam from 98,000 ft!";
@@ -243,6 +252,22 @@
         var bJet = (DF.bluePool && DF.bluePool[0] && DF.bluePool[0].active) ? DF.bluePool[0] : null;
         var rJet = (DF.redPool && DF.redPool[0] && DF.redPool[0].active) ? DF.redPool[0] : null;
 
+        // Bomber intercept missions
+        if (bJet && bJet.mode === "INTERCEPT_BOMBER") {
+          return "🚨 EMERGENCY INTERCEPT: " + bJet.callsign + " vectoring supersonic to splash incoming Strategic Bomber before base strike!";
+        }
+        if (rJet && rJet.mode === "INTERCEPT_BOMBER") {
+          return "🚨 EMERGENCY INTERCEPT: " + rJet.callsign + " climbing on afterburner to intercept incoming Strategic Bomber!";
+        }
+
+        // Bomber escort doctrine
+        if (bJet && bJet.mode === "ESCORT_BOMBER") {
+          return "🛡️ BOMBER ESCORT: " + bJet.callsign + " engaging interceptors to shield friendly strategic bomb run!";
+        }
+        if (rJet && rJet.mode === "ESCORT_BOMBER") {
+          return "🛡️ BOMBER ESCORT: " + rJet.callsign + " shielding friendly strategic bomber against incoming interceptors!";
+        }
+
         // Countermeasure deployments
         if ((bJet && bJet.flareCooldown > 20) || (rJet && rJet.flareCooldown > 20)) {
           return "✨ DEFENSIVE COUNTERMEASURES: Pilot deployed burning magnesium flares & aluminum chaff to decoy missile!";
@@ -289,9 +314,17 @@
     update: function () {
       this.eraTimer++;
 
-      // Trigger automatic technological escalation if an era has raged without decisive knockout
-      if (this.eraTimer >= this.maxEraFrames) {
-        this.advanceEra("STALEMATE EVOLUTION // GENERATIONAL UPGRADE");
+      // Handle pending decisive transition
+      if (this.transitionTimer > 0) {
+        this.transitionTimer--;
+        if (this.transitionTimer === 0 && this.pendingReason) {
+          var r = this.pendingReason;
+          this.pendingReason = null;
+          this.advanceEra(r);
+        }
+      } else if (this.eraTimer >= this.maxEraFrames) {
+        // Trigger automatic technological escalation if an era has reached stalemate
+        this.advanceEra("STALEMATE TIMEOUT // 60s ARMS RACE ESCALATION");
       }
 
       // Update timeline progress bar every frame for smooth animation
@@ -299,6 +332,13 @@
       if (progressEl) {
         var pct = Math.min(100, Math.floor((this.eraTimer / this.maxEraFrames) * 100));
         progressEl.style.width = pct + "%";
+      }
+
+      // Update arms race countdown timer
+      var countdownEl = document.getElementById("campaign-timer-countdown");
+      if (countdownEl) {
+        var remainSec = Math.max(0, Math.ceil((this.maxEraFrames - this.eraTimer) / 60));
+        countdownEl.textContent = remainSec + "s";
       }
 
       // Keep live narrative and badges in sync
@@ -309,11 +349,11 @@
 
     // Handle strategic bomb detonation knockout event
     onStrategicStrikeLanded: function (gen, targetTeam) {
-      // Advance era when strategic bombing hits target FARP
-      if (this.eraTimer >= this.minEraFrames) {
-        var teamName = (targetTeam === "blue") ? "BLUE BASE" : "RED FARP";
-        this.advanceEra(teamName + " CRIPPLED BY STRATEGIC STRIKE");
-      }
+      if (this.transitionTimer > 0) return; // Debounce multi-bomb salvos
+      if (this.eraTimer < 180) return; // Allow minimum visual development
+      var teamName = (targetTeam === "blue") ? "BLUE BASE" : "RED FARP";
+      this.pendingReason = teamName + " DESTROYED BY STRATEGIC BOMB RUN";
+      this.transitionTimer = 90; // ~1.5s delay to let explosion, mushroom cloud, and shockwaves render
     },
 
     // Render / update DOM Header Badge and Documentary Chronicle Notes
