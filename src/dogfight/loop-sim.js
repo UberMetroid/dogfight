@@ -107,6 +107,11 @@ function dfStepSim() {
   updateTacticalManeuvers(DF.bluePool, DF.redPool);
   updateTacticalManeuvers(DF.redPool, DF.bluePool);
 
+  // 2B. Update Agile Combat Employment FARP & Base Defenses (CIWS, SHORAD, Point Defense)
+  if (typeof updateFarpDefenses === "function") {
+    updateFarpDefenses(DF.worldWidth || 3600, DF.worldHeight || 1200);
+  }
+
   // 3. Physics & Weapon Simulation for all active aircraft
   for (var aji = 0; aji < DF.allJets.length; aji++) {
     var airframe = DF.allJets[aji];

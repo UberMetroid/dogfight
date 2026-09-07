@@ -100,6 +100,58 @@
       whiteNoise.start();
     },
 
+    playCiwsBurst: function () {
+      if (!enabled) return;
+      var c = initContext();
+      if (!c) return;
+      // High-cadence 4500 RPM rotary Gatling CIWS buzz
+      var now = c.currentTime;
+      for (var i = 0; i < 8; i++) {
+        var t = now + i * 0.011;
+        var osc = c.createOscillator();
+        var gain = c.createGain();
+        osc.type = "sawtooth";
+        osc.frequency.setValueAtTime(160, t);
+        osc.frequency.exponentialRampToValueAtTime(55, t + 0.010);
+        gain.gain.setValueAtTime(0.09, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.010);
+        osc.connect(gain);
+        gain.connect(c.destination);
+        osc.start(t);
+        osc.stop(t + 0.011);
+      }
+    },
+
+    playSamLaunch: function () {
+      if (!enabled) return;
+      var c = initContext();
+      if (!c) return;
+      // Sharp solid-fuel rocket motor blast and high-G boost hiss
+      var bufferSize = c.sampleRate * 0.40;
+      var noiseBuffer = c.createBuffer(1, bufferSize, c.sampleRate);
+      var output = noiseBuffer.getChannelData(0);
+      for (var i = 0; i < bufferSize; i++) {
+        output[i] = Math.random() * 2 - 1;
+      }
+      var whiteNoise = c.createBufferSource();
+      whiteNoise.buffer = noiseBuffer;
+
+      var filter = c.createBiquadFilter();
+      filter.type = "bandpass";
+      filter.frequency.setValueAtTime(800, c.currentTime);
+      filter.frequency.exponentialRampToValueAtTime(3200, c.currentTime + 0.30);
+      filter.Q.value = 4.5;
+
+      var gain = c.createGain();
+      gain.gain.setValueAtTime(0.18, c.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.40);
+
+      whiteNoise.connect(filter);
+      filter.connect(gain);
+      gain.connect(c.destination);
+      whiteNoise.start();
+    },
+
     playRadarLockTone: function () {
       if (!enabled) return;
       var c = initContext();

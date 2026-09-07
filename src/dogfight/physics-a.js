@@ -63,10 +63,41 @@ function updateJetPhysics(jet, targetEnemy, incomingThreat, opposingPool, missil
     return;
   }
 
-  // Autonomous ACE touch-and-go divert decision when out of missiles
-  if (jet.isWinchester && (!jet.mode || jet.mode === "PURSUIT" || jet.mode === "PATROL") && Math.random() < 0.03) {
+  // Autonomous ACE touch-and-go divert decision when out of missiles or critically damaged
+  var needsAceRearm = jet.isWinchester || (jet.hp < 45.0 && jet.damageState !== "NOMINAL");
+  if (needsAceRearm && (!jet.mode || jet.mode === "PURSUIT" || jet.mode === "PATROL" || jet.mode === "EXTEND") && Math.random() < 0.035) {
     if (typeof orderAceTouchAndGo === "function") {
       orderAceTouchAndGo(jet);
+      return;
+    }
+  }
+
+  // Hostile FARP Air Defense Threat Exclusion (Keeps hostiles away from bases & protects ACE rearm)
+  if (!isAceMode && typeof isThreatenedByHostileFarp === "function") {
+    var threatBat = isThreatenedByHostileFarp(jet, worldW, worldH);
+    if (threatBat) {
+      jet.isTailChasing = false;
+      jet.targetJet = null;
+      jet.mode = "EVADE_FARP";
+      var awayX = (jet.x < threatBat.x) ? -1.0 : 1.0;
+      var awayPitch = -0.38; // Climb sharply away from defense umbrella
+      jet.targetAngle = (awayX > 0) ? awayPitch : (jet.angle < 0 ? -Math.PI - awayPitch : Math.PI + awayPitch);
+      jet.throttleSetting = 1.5;
+      jet.afterburner = true;
+
+      // Deploy countermeasures if under active fire or missile launch
+      if (threatBat.samCooldown > 110 && Math.random() < 0.25) {
+        if (typeof oodaDeployFlares === "function" && DF.flaresPool) {
+          oodaDeployFlares(jet, DF.flaresPool);
+        }
+        if (typeof oodaDeployChaff === "function" && DF.chaffPool) {
+          oodaDeployChaff(jet, DF.chaffPool);
+        }
+      }
+
+      if (Math.random() < 0.015 && typeof dfRadio === "function") {
+        dfRadio(jet.callsign + ": WARNING: HOSTILE AIR DEFENSE (" + threatBat.shortName + ")! BREAKING OFF PURSUIT!");
+      }
       return;
     }
   }

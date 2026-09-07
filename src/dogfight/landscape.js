@@ -296,8 +296,10 @@
       drawAceAirstrips(ctx, width, height, now, colors);
     }
 
-    // Render SAM Site (Launcher & Tracking Radar)
-    drawSamSite(ctx, samRidgeX, mslY - 26);
+    // Render FARP & Airbase Defenses (CIWS, SHORAD, Radar, Defense Umbrellas)
+    if (typeof drawFarpDefenses === "function") {
+      drawFarpDefenses(ctx, width, height, now, colors);
+    }
 
     // Coastline Surf Breakers
     ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";

@@ -201,50 +201,7 @@ html, body {
   max-width: 100%;
 }
 
-.force-scramble-btn {
-  white-space: nowrap;
-  padding: 6px 10px;
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  height: 38px;
-  border-radius: 0;
-  cursor: pointer;
-  background: #0f172a;
-}
 
-.force-ace-btn {
-  white-space: nowrap;
-  padding: 6px 9px;
-  font-size: 0.65rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  height: 38px;
-  border-radius: 0;
-  cursor: pointer;
-  background: rgba(245, 158, 11, 0.12);
-  border: 1px solid rgba(245, 158, 11, 0.45);
-  color: #fbbf24;
-  transition: all 0.15s ease;
-}
-
-.force-ace-btn:hover {
-  background: rgba(245, 158, 11, 0.25);
-  border-color: #fbbf24;
-  box-shadow: 0 0 8px rgba(251, 191, 36, 0.4);
-}
-
-.force-ace-red {
-  background: rgba(239, 68, 68, 0.12);
-  border: 1px solid rgba(239, 68, 68, 0.45);
-  color: #f87171;
-}
-
-.force-ace-red:hover {
-  background: rgba(239, 68, 68, 0.25);
-  border-color: #ef4444;
-  box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
-}
 
 .hud-brand {
   display: flex;
@@ -1581,10 +1538,5 @@ html, body {
   .force-controls .g-name {
     font-size: 0.38rem;
   }
-  .force-scramble-btn {
-    width: 100%;
-    height: 26px;
-    padding: 3px 6px;
-    font-size: 0.62rem;
-  }
+
 }

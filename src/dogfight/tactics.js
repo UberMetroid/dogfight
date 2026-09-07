@@ -17,6 +17,10 @@ function updateTacticalManeuvers(friendlyPool, opposingPool) {
       var opp = opposingPool[j];
       if (!opp.active || opp.isDying) continue;
       var d = Math.hypot(opp.x - jet.x, opp.y - jet.y);
+      // De-prioritize targets sheltered inside their defended home FARP umbrella
+      if (opp.mode === "ACE_APPROACH" || opp.mode === "ACE_TOUCHDOWN") {
+        d += 2500;
+      }
       if (d < minDist) {
         minDist = d;
         bestTarget = opp;
