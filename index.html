@@ -40,6 +40,7 @@
   <script defer src="src/dogfight/weapons-lo.js"></script>
   <script defer src="src/dogfight/weapons-hi.js"></script>
   <script defer src="src/dogfight/bombers.js"></script>
+  <script defer src="src/dogfight/campaign.js"></script>
   <script defer src="src/dogfight/loop-sim.js"></script>
   <script defer src="src/dogfight/loop-draw.js"></script>
   <script defer src="src/dogfight/loop-bullets.js"></script>
@@ -60,7 +61,7 @@
   <!-- Simulation Canvas -->
   <canvas id="dogfight-canvas"></canvas>
 
-  <!-- Tactical HUD Overlay (Only Blue and Red Force Boxes in Header) -->
+  <!-- Tactical HUD Overlay (Blue and Red Force Boxes with Center Campaign Era Badge) -->
   <div class="hud-overlay">
     <header class="hud-header">
       <!-- Blue Allied Force Box (Left) -->
@@ -87,6 +88,13 @@
             <button type="button" class="gen-btn gen-btn-blue" data-team="blue" data-gen="7" title="Blue Gen 7 (Quantum Swarm)"><span class="g-num">7</span><span class="g-name">SWARM</span></button>
           </div>
         </div>
+      </div>
+
+      <!-- Living Generational Campaign Era Badge (Center) -->
+      <div class="hud-campaign-badge" id="hud-campaign-badge">
+        <div class="campaign-era-tag" id="campaign-era-tag">ERA I // 1950</div>
+        <div class="campaign-era-title" id="campaign-era-title">KOREAN CANYON DOGFIGHT</div>
+        <div class="campaign-era-doctrine" id="campaign-era-doctrine">TRANSONIC GUNFIGHTERS // B-47 IRON BOMB RIPPLE</div>
       </div>
 
       <!-- Red Opposing Force Box (Right) -->
@@ -121,9 +129,13 @@
   <script defer>
     window.addEventListener('load', function () {
       jetsEnabled = true;
-      if (!hasAnyActiveGen()) activeGens[4] = true;
+      if (!hasAnyActiveGen()) activeGens[1] = true;
       setupGenSelector();
       initGlobalDogfight();
+
+      if (window.GenerationalCampaign) {
+        GenerationalCampaign.init();
+      }
 
       if (window.InteractiveController) {
         InteractiveController.init();

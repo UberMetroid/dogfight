@@ -139,6 +139,12 @@ function toggleGeneration(team, genNum) {
   if (typeof syncFleetToActiveGenerations === "function") {
     syncFleetToActiveGenerations(activeGensBlue, activeGensRed);
   }
+
+  if (typeof GenerationalCampaign !== "undefined") {
+    GenerationalCampaign.currentEra = genNum;
+    GenerationalCampaign.eraTimer = 0;
+    GenerationalCampaign.updateHeaderBadge();
+  }
 }
 
 function setupGenSelector() {

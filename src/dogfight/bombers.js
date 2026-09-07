@@ -316,6 +316,9 @@
             if (typeof dfRadio === "function") {
               dfRadio("SPACE COMMAND: ORBITAL LASER BARRAGE COMPLETE! TARGET BASE VAPORIZED INTO MOLTEN SLAG!");
             }
+            if (typeof GenerationalCampaign !== "undefined" && typeof GenerationalCampaign.onStrategicStrikeLanded === "function") {
+              GenerationalCampaign.onStrategicStrikeLanded(b.gen, targetTeam);
+            }
           }
           return;
         }
@@ -576,6 +579,11 @@
     // Trigger Generational Bomb Detonation
     triggerBombDetonation: function (bomb, x, y, worldW, worldH) {
       var targetTeam = (bomb.team === "blue") ? "red" : "blue";
+
+      // Notify Living Generational Campaign of strategic strike impact
+      if (typeof GenerationalCampaign !== "undefined" && typeof GenerationalCampaign.onStrategicStrikeLanded === "function") {
+        GenerationalCampaign.onStrategicStrikeLanded(bomb.gen, targetTeam);
+      }
 
       // ----------------------------------------------------------------------
       // GEN 2: THERMONUCLEAR GRAVITY NUKE DETONATION

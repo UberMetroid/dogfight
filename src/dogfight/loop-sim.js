@@ -41,6 +41,11 @@ function dfStepSim() {
     StrategicBomberSystem.updateDominance(blueActiveCount, redActiveCount);
   }
 
+  // 1C. Living Generational Campaign Autonomous Escalation
+  if (typeof GenerationalCampaign !== "undefined") {
+    GenerationalCampaign.update();
+  }
+
   // Wipeout Patrol Cruise Transition & Air Dominance Scramble Flow
   var bomberActive = (typeof StrategicBomberSystem !== "undefined" && StrategicBomberSystem.activeBomber);
 
