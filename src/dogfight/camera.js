@@ -18,8 +18,8 @@
     targetX: 1800,
     targetY: 550,
     targetScale: 0.75,
-    minScale: 0.35,  // Zoom out to view entire theater (3600x1200)
-    maxScale: 1.35,  // Zoom in for merged dogfight
+    minScale: 0.28,  // Zoom out to view entire theater (up to 100k ft near-space and wide BVR arena)
+    maxScale: 1.25,  // Zoom in for merged dogfight
     lerpRate: 0.055, // Smooth camera tracking rate
     isAutoZoom: true,
     userOverrideTimer: 0,
@@ -53,12 +53,13 @@
     update: function (viewportW, viewportH) {
       if (!viewportW) viewportW = DF.width || 1440;
       if (!viewportH) viewportH = DF.height || 900;
+      var floorY = DF.worldHeight || 1200;
 
       if (this.userOverrideTimer > 0) {
         this.userOverrideTimer--;
       }
 
-      // Collect all tactical points of interest: active aircraft, missiles, bullets, tracked targets
+      // Collect all tactical points of interest: active aircraft, missiles, bullets
       var points = [];
 
       // 1. Active Aircraft
@@ -66,12 +67,17 @@
       if (DF.allJets) {
         for (var i = 0; i < DF.allJets.length; i++) {
           var j = DF.allJets[i];
-          if (j.active && !j.isDying) {
-            activeJetCount++;
-            points.push({ x: j.x, y: j.y });
-            // Lookahead lead point in flight direction
-            var lead = Math.min(180, (j.speed || 4.8) * 14.0);
-            points.push({ x: j.x + Math.cos(j.angle) * lead, y: j.y + Math.sin(j.angle) * lead });
+          if (j.active) {
+            if (!j.isDying) {
+              activeJetCount++;
+              points.push({ x: j.x, y: j.y });
+              // Lookahead lead point in flight direction
+              var lead = Math.min(180, (j.speed || 4.8) * 14.0);
+              points.push({ x: j.x + Math.cos(j.angle) * lead, y: j.y + Math.sin(j.angle) * lead });
+            } else if ((j.deathTimer || 0) < 25) {
+              // Frame dying aircraft briefly during splash/impact explosion
+              points.push({ x: j.x, y: j.y });
+            }
           }
         }
       }
@@ -85,8 +91,7 @@
           var mvx = DF.missilesPool.buffer[mo + 2];
           var mvy = DF.missilesPool.buffer[mo + 3];
           points.push({ x: mx, y: my });
-          // Velocity projection for missile trajectory
-          points.push({ x: mx + mvx * 12.0, y: my + mvy * 12.0 });
+          points.push({ x: mx + mvx * 8.0, y: my + mvy * 8.0 });
         }
       }
 
@@ -99,17 +104,17 @@
       }
 
       if (this.userOverrideTimer > 0 && !this.isAutoZoom) {
-        // User manual zoom active
+        // User manual zoom active: strictly anchor bottom to floorY so ground/sea never drops off screen
         this.scale += (this.targetScale - this.scale) * this.lerpRate;
         this.x += (this.targetX - this.x) * this.lerpRate;
-        this.y += (this.targetY - this.y) * this.lerpRate;
+        this.y = floorY - (viewportH * 0.5) / this.scale;
         return;
       }
 
       if (points.length === 0) {
-        this.targetX = DF.worldWidth * 0.5;
-        this.targetY = DF.worldHeight * 0.48;
+        this.targetX = (DF.worldWidth || 3600) * 0.5;
         this.targetScale = 0.70;
+        this.targetY = floorY - (viewportH * 0.5) / this.targetScale;
       } else {
         var minX = Infinity, maxX = -Infinity;
         var minY = Infinity, maxY = -Infinity;
@@ -122,110 +127,47 @@
           if (pt.y > maxY) maxY = pt.y;
         }
 
-        // Add generous tactical padding so weapons and aircraft have room
+        // Vertical: Expand UP into sky/space so highest object is safely below the top header
+        var topMargin = Math.max(90, viewportH * 0.11);
+        var targetMinY = Math.max(10, minY - 60);
+        var verticalSpan = Math.max(280, floorY - targetMinY);
+        var requiredScaleY = (viewportH - topMargin) / verticalSpan;
+
+        // Horizontal: Expand LEFT and RIGHT to frame all combatants with generous margins
         var spanX = maxX - minX;
-        var spanY = maxY - minY;
-        var padX = Math.max(180, spanX * 0.20);
-        var padY = Math.max(140, spanY * 0.20);
+        var padX = Math.max(180, spanX * 0.18);
+        var boxW = Math.max(920, spanX + padX * 2);
+        var requiredScaleX = viewportW / boxW;
 
-        minX -= padX;
-        maxX += padX;
-        minY -= padY;
-        maxY += padY;
+        // Scale is constrained by both vertical ceiling and horizontal arena span
+        var desiredScale = Math.min(requiredScaleX, requiredScaleY);
+        this.targetScale = Math.max(this.minScale, Math.min(this.maxScale, desiredScale));
 
-        // Minimum bounding box dimension to avoid excessive zoom on single aircraft
-        var minBoxW = 920;
-        var minBoxH = 580;
-        if ((maxX - minX) < minBoxW) {
-          var midX = (minX + maxX) * 0.5;
-          minX = midX - minBoxW * 0.5;
-          maxX = midX + minBoxW * 0.5;
-        }
-        if ((maxY - minY) < minBoxH) {
-          var midY = (minY + maxY) * 0.5;
-          minY = midY - minBoxH * 0.5;
-          maxY = midY + minBoxH * 0.5;
-        }
+        // Center camera horizontally on the action
+        this.targetX = (minX + maxX) * 0.5;
+
+        // Target Y strictly anchors the ground/sea bottom to viewport bottom (no downward expansion)
+        this.targetY = floorY - (viewportH * 0.5) / this.targetScale;
 
         this.bounds.minX = minX;
         this.bounds.maxX = maxX;
         this.bounds.minY = minY;
         this.bounds.maxY = maxY;
-
-        var boxW = maxX - minX;
-        var boxH = maxY - minY;
-
-        var desiredScale = Math.min(viewportW / boxW, viewportH / boxH);
-        this.targetScale = Math.max(this.minScale, Math.min(this.maxScale, desiredScale));
-
-        this.targetX = (minX + maxX) * 0.5;
-        this.targetY = (minY + maxY) * 0.5;
-
-        // Ensure camera center stays within reasonable world bounds
-        var halfVisW = (viewportW * 0.5) / this.targetScale;
-        var halfVisH = (viewportH * 0.5) / this.targetScale;
-        var marginX = Math.min(halfVisW, 300);
-        var marginY = Math.min(halfVisH, 200);
-        this.targetX = Math.max(marginX, Math.min(DF.worldWidth - marginX, this.targetX));
-        this.targetY = Math.max(marginY, Math.min(DF.worldHeight - marginY, this.targetY));
       }
 
-      // Smooth interpolation (lerp)
+      // Smooth camera interpolation
       this.scale += (this.targetScale - this.scale) * this.lerpRate;
       this.x += (this.targetX - this.x) * this.lerpRate;
-      this.y += (this.targetY - this.y) * this.lerpRate;
+
+      // Absolute invariant: strictly anchor the bottom of the screen to the floor/sea bed at current scale.
+      // Ground and sea ALWAYS stay on screen, expanding UP when zooming out, never downwards.
+      this.y = floorY - (viewportH * 0.5) / this.scale;
     },
 
-    // Draw Tactical Camera HUD Overlay (Scale Ruler & Zoom Status)
+    // Draw Tactical Camera HUD Overlay (clean per user request: only header boxes remain)
     drawTacticalHud: function (ctx, viewportW, viewportH) {
-      if (!ctx) return;
-      ctx.save();
-
-      // Tactical Zoom Badge (Bottom-Right, above domain box)
-      var zoomStr = "SCALE: " + this.scale.toFixed(2) + "x";
-      var zoomMode = (this.scale < 0.60) ? "THEATER WIDE (BVR)" : ((this.scale > 1.05) ? "MERGED DOGFIGHT" : "TACTICAL PATROL");
-      
-      // Calculate 10 Nautical Miles length in screen pixels (~12.5 world px = 1 NM)
-      var nm10Px = Math.round(125 * this.scale);
-
-      ctx.fillStyle = "rgba(10, 16, 28, 0.78)";
-      ctx.strokeStyle = "rgba(56, 189, 248, 0.4)";
-      ctx.lineWidth = 1;
-      
-      var boxW = Math.max(nm10Px + 36, 175);
-      var boxH = 46;
-      var boxX = viewportW - boxW - 16;
-      var boxY = viewportH - 128;
-
-      ctx.fillRect(boxX, boxY, boxW, boxH);
-      ctx.strokeRect(boxX, boxY, boxW, boxH);
-
-      // Label
-      ctx.fillStyle = "#38bdf8";
-      ctx.font = "8px ui-monospace, SFMono-Regular, monospace";
-      ctx.fillText("DYNAMIC TACTICAL CAMERA", boxX + 8, boxY + 12);
-      ctx.fillStyle = "#94a3b8";
-      ctx.fillText(zoomStr + " // " + zoomMode, boxX + 8, boxY + 23);
-
-      // Nautical Miles Scale Bar
-      var barX = boxX + 8;
-      var barY = boxY + 36;
-      ctx.strokeStyle = "#38bdf8";
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      // Tick left
-      ctx.moveTo(barX, barY - 4); ctx.lineTo(barX, barY);
-      // Line
-      ctx.lineTo(barX + nm10Px, barY);
-      // Tick right
-      ctx.lineTo(barX + nm10Px, barY - 4);
-      ctx.stroke();
-
-      ctx.fillStyle = "#e2e8f0";
-      ctx.font = "7px ui-monospace, monospace";
-      ctx.fillText("10 NM", barX + (nm10Px / 2) - 10, barY - 3);
-
-      ctx.restore();
+      // Kept clean: only red and blue force boxes in the header
+      return;
     }
   };
 

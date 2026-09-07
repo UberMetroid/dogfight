@@ -61,16 +61,34 @@
     sys.sonarPulseRadius = (sys.sonarPulseRadius + 0.85);
     if (sys.sonarPulseRadius > sys.sonarPulseMax) sys.sonarPulseRadius = 0;
 
+    // Calculate world space bounds visible through camera viewport
+    var viewLeft = -2000;
+    var viewRight = width + 2000;
+    if (global.DF && global.DF.camera && typeof global.DF.camera.screenToWorld === "function") {
+      var p0 = global.DF.camera.screenToWorld(0, 0);
+      var p1 = global.DF.camera.screenToWorld(global.DF.width || 1440, 0);
+      if (p0 && p1) {
+        viewLeft = Math.min(p0.x, p1.x);
+        viewRight = Math.max(p0.x, p1.x);
+      }
+    }
+
+    // Dynamic horizontal theater bounds:
+    // Mountains extend far to the West, and Ocean extends continuously far to the East
+    var landStartX = Math.min(-12000, Math.floor(viewLeft - 3000));
+    var oceanEndX = Math.max(width + 25000, Math.ceil(viewRight + 6000));
+
     // ------------------------------------------------------------------------
     // 1. SKY & STRATOSPHERE ALTITUDE LADDER (0 ft MSL to 100k ft)
     // ------------------------------------------------------------------------
     ctx.save();
 
-    // Subtle atmospheric vertical grid lines
+    // Subtle atmospheric vertical grid lines across theater
     ctx.strokeStyle = "rgba(30, 41, 59, 0.4)";
     ctx.lineWidth = 1;
     ctx.beginPath();
-    for (var gx = 120; gx < width; gx += 160) {
+    var gridStart = Math.floor(landStartX / 160) * 160;
+    for (var gx = gridStart; gx <= oceanEndX; gx += 160) {
       ctx.moveTo(gx, 0);
       ctx.lineTo(gx, mslY);
     }
@@ -94,26 +112,27 @@
         ctx.strokeStyle = (item.alt === 100000) ? "rgba(56, 189, 248, 0.25)" : "rgba(148, 163, 184, 0.15)";
         ctx.setLineDash([4, 6]);
         ctx.beginPath();
-        ctx.moveTo(0, ly);
-        ctx.lineTo(width, ly);
+        ctx.moveTo(landStartX, ly);
+        ctx.lineTo(oceanEndX, ly);
         ctx.stroke();
 
+        var labelX = Math.max(16, viewLeft + 24);
         ctx.fillStyle = (item.alt === 100000) ? "rgba(56, 189, 248, 0.55)" : "rgba(148, 163, 184, 0.40)";
-        ctx.fillText(item.label, 12, ly > 14 ? ly - 4 : 14);
+        ctx.fillText(item.label, labelX, ly > 14 ? ly - 4 : 14);
       }
     }
     ctx.setLineDash([]);
 
     // ------------------------------------------------------------------------
-    // 2. SUB-SURFACE DOMAIN (Y: mslY to height // Ocean Depths & Trench)
+    // 2. SUB-SURFACE DOMAIN (Y: mslY to height // Continuous Ocean Depths & Trench)
     // ------------------------------------------------------------------------
-    // Deep ocean bathymetric background
+    // Deep ocean bathymetric background (extends continuously eastward)
     var oceanGrad = ctx.createLinearGradient(0, mslY, 0, height);
     oceanGrad.addColorStop(0, "rgba(7, 26, 44, 0.85)");     // Epipelagic surface blue
     oceanGrad.addColorStop(0.35, "rgba(4, 18, 32, 0.92)");  // Mesopelagic thermocline
     oceanGrad.addColorStop(1, "rgba(1, 8, 16, 0.98)");      // Bathypelagic trench
     ctx.fillStyle = oceanGrad;
-    ctx.fillRect(coastX, mslY, width - coastX, height - mslY);
+    ctx.fillRect(coastX, mslY, oceanEndX - coastX, height - mslY);
 
     // Bathymetric Depth Lines & Labels
     var depthLayers = [
@@ -129,16 +148,17 @@
       ctx.setLineDash([3, 5]);
       ctx.beginPath();
       ctx.moveTo(coastX, dy);
-      ctx.lineTo(width, dy);
+      ctx.lineTo(oceanEndX, dy);
       ctx.stroke();
 
+      var depthLabelX = Math.max(coastX + 16, viewLeft + 24);
       ctx.fillStyle = "rgba(56, 189, 248, 0.50)";
       ctx.font = "8.5px ui-monospace, SFMono-Regular, monospace";
-      ctx.fillText("DEPTH: " + dItem.depth + " // " + dItem.label, coastX + 16, dy - 4);
+      ctx.fillText("DEPTH: " + dItem.depth + " // " + dItem.label, depthLabelX, dy - 4);
     }
     ctx.setLineDash([]);
 
-    // Continental Slope & Undersea Seabed Polygon
+    // Continental Slope & Undersea Seabed Polygon extending continuously eastward
     ctx.fillStyle = "rgba(15, 23, 42, 0.95)";
     ctx.strokeStyle = "rgba(30, 41, 59, 0.9)";
     ctx.lineWidth = 1.5;
@@ -150,12 +170,12 @@
     ctx.lineTo(shelfBreakX, shelfBreakY);
     var trenchBottomX = coastX + Math.floor(width * 0.28);
     ctx.lineTo(trenchBottomX, height - 12);
-    // Seabed ridges along bottom
-    for (var bx = trenchBottomX; bx <= width; bx += 40) {
+    // Seabed ridges continue along bottom all the way to oceanEndX without stopping
+    for (var bx = trenchBottomX; bx <= oceanEndX; bx += 40) {
       var ridgeY = height - 12 + Math.sin(bx * 0.05) * 4;
       ctx.lineTo(bx, ridgeY);
     }
-    ctx.lineTo(width, height);
+    ctx.lineTo(oceanEndX, height);
     ctx.lineTo(coastX, height);
     ctx.closePath();
     ctx.fill();
@@ -179,49 +199,63 @@
     ctx.font = "8px ui-monospace, monospace";
     ctx.fillText("SONAR PING (3.5 kHz) [SUB-SURFACE ACTIVE]", sonarCenter.x + 14, sonarCenter.y - 6);
 
-    // Architectural callout for user's future undersea weapons
+    // Architectural callout for continuous sub-surface domain
+    var subLabelX = Math.max(coastX + 24, viewLeft + 30);
     ctx.fillStyle = "rgba(56, 189, 248, 0.35)";
     ctx.font = "8px ui-monospace, monospace";
-    ctx.fillText(">> SUB-SURFACE DOMAIN // ANCHOR FOR SUBMARINES, TORPEDOES & UUVs", coastX + 24, height - 8);
+    ctx.fillText(">> SUB-SURFACE DOMAIN // CONTINUOUS SEABED CORRIDOR // ANCHOR FOR SUBMARINES, TORPEDOES & UUVs", subLabelX, height - 8);
 
     // ------------------------------------------------------------------------
-    // 3. OCEAN SURFACE (WAVES & NAVAL CARRIER GROUP)
+    // 3. OCEAN SURFACE (WAVES & CONTINUOUS NAVAL THEATER)
     // ------------------------------------------------------------------------
-    // Animated wave surface line
+    // Animated wave surface line extending continuously eastward without stopping
     ctx.strokeStyle = "rgba(56, 189, 248, 0.75)";
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(coastX, mslY);
-    for (var wx = coastX; wx <= width; wx += 8) {
+    for (var wx = coastX; wx <= oceanEndX; wx += 10) {
       var wy = mslY + Math.sin(wx * 0.04 + sys.wavePhase) * 2.5 + Math.cos(wx * 0.08 - sys.wavePhase) * 1.5;
       ctx.lineTo(wx, wy);
     }
     ctx.stroke();
 
     // Ocean Surface Label
+    var oceanLabelX = Math.max(coastX + 16, viewLeft + 24);
     ctx.fillStyle = "rgba(56, 189, 248, 0.8)";
     ctx.font = "8.5px ui-monospace, monospace";
-    ctx.fillText("0 FT MSL // OCEAN DOMAIN (SURFACE OPERATIONS)", coastX + 16, mslY - 8);
+    ctx.fillText("0 FT MSL // OCEAN DOMAIN (CONTINUOUS OPEN SEA SURFACE OPERATIONS)", oceanLabelX, mslY - 8);
 
     // Render Aircraft Carrier (CVN-78)
     var cvnX = Math.floor(width * 0.70);
-    var cvnY = mslY;
-    drawAircraftCarrier(ctx, cvnX, cvnY, sys.wavePhase);
+    drawAircraftCarrier(ctx, cvnX, mslY, sys.wavePhase);
 
     // Render Aegis Destroyer (DDG-51)
     var ddgX = Math.floor(width * 0.87);
-    var ddgY = mslY;
-    drawAegisDestroyer(ctx, ddgX, ddgY, sys.wavePhase);
+    drawAegisDestroyer(ctx, ddgX, mslY, sys.wavePhase);
+
+    // Render Guided Missile Cruiser in extended open waters (CG-69)
+    var cgX = Math.floor(width * 1.18);
+    drawAegisCruiser(ctx, cgX, mslY, sys.wavePhase);
+
+    // Render Submarine Patrol Station in open eastern ocean
+    var ssnX = Math.floor(width * 1.52);
+    drawSubmarinePatrol(ctx, ssnX, mslY, height, sys.wavePhase, now);
 
     // ------------------------------------------------------------------------
     // 4. LAND DOMAIN (WEST SECTION // MOUNTAINS, RUNWAY, RADAR & SAM)
     // ------------------------------------------------------------------------
-    // Mountainous Terrain Polygon
+    // Mountainous Terrain Polygon extending continuously westward
     ctx.fillStyle = "#090e17";
     ctx.strokeStyle = "rgba(52, 211, 153, 0.4)";
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.moveTo(0, height);
+    ctx.moveTo(landStartX, height);
+    ctx.lineTo(landStartX, mslY - 45);
+    // Western mountain ridges from landStartX to 0
+    for (var mx = landStartX + 160; mx < 0; mx += 160) {
+      var mAlt = mslY - 45 - Math.sin(mx * 0.006) * 28 - Math.cos(mx * 0.012) * 12;
+      ctx.lineTo(mx, mAlt);
+    }
     ctx.lineTo(0, mslY - 45); // Western mountain peak (elevation ~5k ft)
     ctx.lineTo(width * 0.06, mslY - 55);
     ctx.lineTo(width * 0.12, mslY - 30);
@@ -247,7 +281,7 @@
     ctx.strokeStyle = "rgba(30, 41, 59, 0.5)";
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(0, mslY - 20);
+    ctx.moveTo(landStartX, mslY - 20);
     ctx.lineTo(width * 0.08, mslY - 25);
     ctx.lineTo(width * 0.15, mslY - 6);
     ctx.moveTo(samRidgeX - 15, mslY - 12);
@@ -432,6 +466,82 @@
     ctx.fillStyle = "rgba(56, 189, 248, 0.75)";
     ctx.font = "7px ui-monospace, monospace";
     ctx.fillText("DDG-51 AEGIS", x - 14, dy - 15);
+  }
+
+  function drawAegisCruiser(ctx, x, y, wavePhase) {
+    var bob = Math.sin(x * 0.04 + wavePhase) * 1.5;
+    var cy = y + bob;
+
+    ctx.fillStyle = "#0b1422";
+    ctx.strokeStyle = "rgba(56, 189, 248, 0.75)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x - 26, cy + 2);
+    ctx.lineTo(x + 28, cy - 2);
+    ctx.lineTo(x + 30, cy + 2);
+    ctx.lineTo(x - 24, cy + 5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = "rgba(148, 163, 184, 0.85)";
+    ctx.fillRect(x - 8, cy - 9, 14, 7);
+    ctx.fillRect(x - 4, cy - 14, 6, 5);
+
+    // SPY radar mast
+    ctx.strokeStyle = "#38bdf8";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x - 1, cy - 14);
+    ctx.lineTo(x - 1, cy - 19);
+    ctx.stroke();
+
+    // Wake
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.35)";
+    ctx.beginPath();
+    ctx.moveTo(x + 28, cy);
+    ctx.lineTo(x + 34, cy + 2);
+    ctx.stroke();
+
+    ctx.fillStyle = "rgba(56, 189, 248, 0.75)";
+    ctx.font = "7px ui-monospace, monospace";
+    ctx.fillText("CG-69 TICONDEROGA", x - 18, cy - 16);
+  }
+
+  function drawSubmarinePatrol(ctx, x, y, height, wavePhase, now) {
+    var bob = Math.sin(x * 0.04 + wavePhase) * 1.2;
+    var sy = y + bob;
+
+    // Periscope and snorkel wake on surface
+    ctx.strokeStyle = "rgba(56, 189, 248, 0.6)";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(x, sy - 1);
+    ctx.lineTo(x, sy - 8);
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+    ctx.beginPath();
+    ctx.moveTo(x - 4, sy);
+    ctx.lineTo(x + 6, sy + 1);
+    ctx.stroke();
+
+    // Submerged hull silhouette in mesopelagic layer
+    var subDepthY = y + (height - y) * 0.45;
+    ctx.fillStyle = "rgba(10, 20, 35, 0.7)";
+    ctx.strokeStyle = "rgba(14, 165, 233, 0.35)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.ellipse(x, subDepthY, 32, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Sail / conning tower
+    ctx.fillRect(x - 4, subDepthY - 10, 8, 5);
+
+    ctx.fillStyle = "rgba(52, 211, 153, 0.7)";
+    ctx.font = "7px ui-monospace, monospace";
+    ctx.fillText("SSN VIRGINIA [FAST ATTACK PATROL]", x - 28, sy - 11);
   }
 
 })(typeof window !== "undefined" ? window : this);

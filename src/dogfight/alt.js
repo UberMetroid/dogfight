@@ -45,8 +45,7 @@ function getSurfaceElevationY(x, worldW, worldH) {
   // x = w * 0.16: mslY - 14
   // x = w * 0.32: mslY - 14 (Runway plateau)
   // x = w * 0.35: mslY - 26 (SAM coastal ridge)
-  // x = coastX: mslY (Beach / Surf line)
-  if (x <= 0) return mslY - 45;
+  if (x <= 0) return mslY - 45 - Math.sin(x * 0.006) * 28 - Math.cos(x * 0.012) * 12;
   if (x <= w * 0.06) {
     var t = x / (w * 0.06);
     return (mslY - 45) + t * (-10);
