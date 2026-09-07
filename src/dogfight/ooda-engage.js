@@ -37,26 +37,27 @@ function oodaDecideEngage(jet, obs, ori, targetEnemy, altFt, sCeiling, flaresPoo
     var aotTargetTail = Math.abs(bearingToTarget - targetEnemy.angle);
     while (aotTargetTail > Math.PI) aotTargetTail = Math.abs(aotTargetTail - Math.PI * 2);
 
-    var isWinchester = (jet.isWinchester || (typeof jet.missilesRemaining === "number" && jet.missilesRemaining <= 0 && jet.gen < 7));
-    if (isWinchester && dist > 260) {
+    if (dist > 480) {
+      // High-Speed AWACS Intercept Closure
       jet.mode = "PURSUIT";
       jet.isTailChasing = false;
-      var closeLead = Math.min(dist / 14.0, 15.0);
-      var clx = targetEnemy.x + Math.cos(targetEnemy.angle) * targetEnemy.speed * closeLead;
-      var cly = targetEnemy.y + Math.sin(targetEnemy.angle) * targetEnemy.speed * closeLead;
-      jet.targetAngle = Math.atan2(cly - jet.y, clx - jet.x);
+      var leadT = Math.min(dist / 14.0, 24.0);
+      var lx = targetEnemy.x + Math.cos(targetEnemy.angle) * targetEnemy.speed * leadT;
+      var ly = targetEnemy.y + Math.sin(targetEnemy.angle) * targetEnemy.speed * leadT;
+      jet.targetAngle = Math.atan2(ly - jet.y, lx - jet.x);
       jet.throttleSetting = 1.5;
       jet.afterburner = true;
-    } else if ((dist < 250 && hdgDiff > 1.8) || (closureRate < 0 && dist < 350 && hdgDiff > 1.8)) {
+    } else if ((dist < 400 && hdgDiff > 1.4) || (dist < 320 && closureRate < -1.0)) {
+      // Explosive Head-on Merge & 9G Post-Merge Pitchback
       jet.mode = "MERGE_PITCHBACK";
       jet.isTailChasing = false;
-      jet.modeTimer = 24;
-      jet.pitchbackTimer = 24;
-      var leadTime = Math.min(dist / 14.0, 15.0);
+      jet.modeTimer = 28;
+      jet.pitchbackTimer = 28;
+      var leadTime = Math.min(dist / 14.0, 16.0);
       var leadX = targetEnemy.x + Math.cos(targetEnemy.angle) * targetEnemy.speed * leadTime;
       var leadY = targetEnemy.y + Math.sin(targetEnemy.angle) * targetEnemy.speed * leadTime;
       jet.targetAngle = Math.atan2(leadY - jet.y, leadX - jet.x);
-      jet.throttleSetting = 1.5;
+      jet.throttleSetting = 1.6;
       jet.afterburner = true;
     } else if (ori && ori.recommendedPursuit === "LAG") {
       jet.mode = "PURSUIT";

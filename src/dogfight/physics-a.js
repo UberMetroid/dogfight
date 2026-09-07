@@ -140,15 +140,51 @@ function updateJetPhysics(jet, targetEnemy, incomingThreat, opposingPool, missil
     }
   }
 
-  // Autonomous ACE touch-and-go divert decision when out of missiles or critically damaged
-  var needsAceRearm = jet.isWinchester || (jet.hp < 45.0 && jet.damageState !== "NOMINAL");
-  if (needsAceRearm && (!jet.mode || jet.mode === "PURSUIT" || jet.mode === "PATROL" || jet.mode === "EXTEND") && Math.random() < 0.035) {
+  // Aviation Fuel Physics & Burn Dynamics
+  if (typeof jet.fuel !== "number") {
+    jet.fuel = 100.0;
+    jet.fuelMax = 100.0;
+  }
+  var isAceMode = (jet.mode === "ACE_APPROACH" || jet.mode === "ACE_TOUCHDOWN" || jet.mode === "ACE_SCRAMBLE");
+  if (!isAceMode && jet.mode !== "FARP_TAKEOFF") {
+    // Standard cruise burn: ~0.024% per frame (~70 seconds of flight)
+    // Afterburner reheat consumes fuel at 3.5x rate (~20 seconds of sustained dogfight reheat)
+    var isBurningHot = (jet.afterburner || (typeof jet.throttleSetting === "number" && jet.throttleSetting > 1.2));
+    var burnRate = isBurningHot ? 0.082 : 0.024;
+    jet.fuel = Math.max(0, jet.fuel - burnRate);
+
+    // Bingo Fuel Alert & Autonomous RTB Divert
+    if (jet.fuel <= 24.0 && !jet.isBingoFuel) {
+      jet.isBingoFuel = true;
+      if (typeof dfRadio === "function") {
+        dfRadio("⛽ " + jet.callsign + ": BINGO FUEL (" + Math.round(jet.fuel) + "%)! DISENGAGING -> DIVERTING TO FARP FOR REFUEL!");
+      }
+      if (typeof orderAceTouchAndGo === "function") {
+        orderAceTouchAndGo(jet);
+      }
+    }
+
+    // Engine Flameout on Total Fuel Exhaustion
+    if (jet.fuel <= 0.0) {
+      jet.fuel = 0.0;
+      jet.isStalled = true;
+      jet.afterburner = false;
+      jet.throttleSetting = 0.0;
+      if (Math.random() < 0.01 && typeof dfRadio === "function") {
+        dfRadio("⚠️ MAYDAY! " + jet.callsign + ": FLAMEOUT! DUAL ENGINE COMPRESSOR STALL / ZERO FUEL GLIDE!");
+      }
+    }
+  }
+
+  // Autonomous ACE touch-and-go divert decision when Bingo Fuel or critically damaged
+  var needsAceRearm = jet.isBingoFuel || (jet.hp < 45.0 && jet.damageState !== "NOMINAL");
+  if (needsAceRearm && !isAceMode && jet.mode !== "FARP_TAKEOFF" && (!jet.aceZone)) {
     if (typeof orderAceTouchAndGo === "function") {
       orderAceTouchAndGo(jet);
     }
   }
 
-  var isAceMode = (jet.mode === "ACE_APPROACH" || jet.mode === "ACE_TOUCHDOWN" || jet.mode === "ACE_SCRAMBLE");
+  isAceMode = (jet.mode === "ACE_APPROACH" || jet.mode === "ACE_TOUCHDOWN" || jet.mode === "ACE_SCRAMBLE");
   if (isAceMode) {
     if (typeof updateAceEmployment === "function") {
       updateAceEmployment(jet, worldW, worldH);

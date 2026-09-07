@@ -76,6 +76,8 @@ function dfStepSim() {
           if (bsJet.active && !bsJet.isDying) {
             bsJet.missilesRemaining = bsJet.missileCapacity;
             bsJet.isWinchester = (bsJet.missilesRemaining === 0 && bsJet.gen < 7);
+            bsJet.fuel = 100.0;
+            bsJet.isBingoFuel = false;
           }
         }
       }
@@ -107,6 +109,8 @@ function dfStepSim() {
           if (rsJet.active && !rsJet.isDying) {
             rsJet.missilesRemaining = rsJet.missileCapacity;
             rsJet.isWinchester = (rsJet.missilesRemaining === 0 && rsJet.gen < 7);
+            rsJet.fuel = 100.0;
+            rsJet.isBingoFuel = false;
           }
         }
       }

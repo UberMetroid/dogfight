@@ -394,6 +394,13 @@
       var sBlueSorties = document.getElementById("stat-blue-sorties");
       if (sBlueSorties) sBlueSorties.textContent = this.blueAirframes + (this.blueAirframes === 1 ? " SORTIE" : " SORTIES");
 
+      var sBlueFuel = document.getElementById("stat-blue-fuel");
+      if (sBlueFuel) {
+        var bFuel = (DF && DF.bluePool && DF.bluePool[0]) ? Math.round(DF.bluePool[0].fuel || 100) : 100;
+        sBlueFuel.textContent = bFuel + "%";
+        sBlueFuel.className = "stat-val " + (bFuel <= 25 ? "stat-val-red" : "stat-val-cyan");
+      }
+
       var sBlueKills = document.getElementById("stat-blue-kills");
       if (sBlueKills) sBlueKills.textContent = (DF.blueKills || 0) + ((DF.blueKills === 1) ? " SPLASH" : " SPLASHES");
 
@@ -421,6 +428,13 @@
       // 3. Right Flank (Red Options & Stats)
       var sRedSorties = document.getElementById("stat-red-sorties");
       if (sRedSorties) sRedSorties.textContent = this.redAirframes + (this.redAirframes === 1 ? " BANDIT" : " BANDITS");
+
+      var sRedFuel = document.getElementById("stat-red-fuel");
+      if (sRedFuel) {
+        var rFuel = (DF && DF.redPool && DF.redPool[0]) ? Math.round(DF.redPool[0].fuel || 100) : 100;
+        sRedFuel.textContent = rFuel + "%";
+        sRedFuel.className = "stat-val " + (rFuel <= 25 ? "stat-val-red" : "stat-val-red");
+      }
 
       var sRedKills = document.getElementById("stat-red-kills");
       if (sRedKills) sRedKills.textContent = (DF.redKills || 0) + ((DF.redKills === 1) ? " SPLASH" : " SPLASHES");

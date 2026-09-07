@@ -70,40 +70,24 @@ function updateTacticalManeuvers(friendlyPool, opposingPool) {
     for (var j = 0; j < opposingPool.length; j++) {
       var opp = opposingPool[j];
       if (!opp || !opp.active || opp.isDying) continue;
+      // Grounded aircraft during touch-and-go roll are sheltered by FARP CIWS
+      if (opp.mode === "ACE_TOUCHDOWN") continue;
 
       var d = Math.hypot(opp.x - jet.x, opp.y - jet.y);
       var oppAltFt = (typeof getAltitudeFeet === "function") ? getAltitudeFeet(opp.y, worldH) : 30000;
 
-      // Service ceiling limit: lower generation jets cannot reach or lock targets high above their ceiling
-      if (oppAltFt > myCeiling + 3000) {
-        continue;
-      }
-
       // Radar Range & Stealth Cross Section (RCS) Equation: R_detect = R_baseline * (RCS ^ 0.25)
       var oppRcs = (typeof opp.rcs === "number") ? opp.rcs : 1.0;
       var effectiveRadarReach = myRadarBase * Math.pow(Math.max(0.000001, oppRcs), 0.25);
-      // Visual spotting envelope: ~240px visual identification range for pilots
-      var maxDetectionRange = Math.max(240, effectiveRadarReach);
+      var maxDetectionRange = Math.max(260, effectiveRadarReach);
 
-      if (d > maxDetectionRange) {
-        continue; // Bandit is stealth / undetectable outside sensor envelope
-      }
-
-      // Do NOT pursue bandits that have retreated inside their home FARP defense umbrella
-      if (jet.team === "blue" && opp.x > worldW * 0.70) {
-        continue; // Blue fighters stay outside Red FARP Delta defense envelope
-      }
-      if (jet.team === "red" && opp.x < worldW * 0.30) {
-        continue; // Red fighters stay outside Blue Base Alpha / Carrier defense envelope
-      }
-
-      // Do NOT target aircraft taking off or landing at their home base
-      if (opp.mode === "ACE_APPROACH" || opp.mode === "ACE_TOUCHDOWN" || opp.mode === "FARP_TAKEOFF") {
-        continue;
-      }
+      // AWACS / GCI Theater Vectoring: Fighters maintain situational awareness of airborne bandits
+      // and vector directly to engage. Onboard lock is established inside sensor reach.
+      var hasLocalLock = (d <= maxDetectionRange && oppAltFt <= myCeiling + 3000);
       if (d < minDist) {
         minDist = d;
         bestTarget = opp;
+        jet.hasOnboardLock = hasLocalLock;
       }
     }
     jet.targetJet = bestTarget;

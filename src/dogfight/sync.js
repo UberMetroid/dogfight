@@ -125,6 +125,9 @@ function syncFleetToActiveGenerations(blueMask, redMask, canvasW, canvasH) {
     bJet.missileCapacity = (specB && typeof specB.missileCapacity === "number") ? specB.missileCapacity : (bg === 1 || bg === 7 ? 0 : 6);
     bJet.missilesRemaining = bJet.missileCapacity;
     bJet.isWinchester = (bJet.missilesRemaining === 0 && bg < 7);
+    bJet.fuelMax = 100.0;
+    bJet.fuel = 100.0;
+    bJet.isBingoFuel = false;
     bJet.kills = 0;
     bJet.isAce = false;
     bJet.turnAgilityBonus = 1.0;
@@ -209,6 +212,9 @@ function syncFleetToActiveGenerations(blueMask, redMask, canvasW, canvasH) {
     rJet.missileCapacity = (specR && typeof specR.missileCapacity === "number") ? specR.missileCapacity : (rg === 1 || rg === 7 ? 0 : 6);
     rJet.missilesRemaining = rJet.missileCapacity;
     rJet.isWinchester = (rJet.missilesRemaining === 0 && rg < 7);
+    rJet.fuelMax = 100.0;
+    rJet.fuel = 100.0;
+    rJet.isBingoFuel = false;
     rJet.kills = 0;
     rJet.isAce = false;
     rJet.turnAgilityBonus = 1.0;

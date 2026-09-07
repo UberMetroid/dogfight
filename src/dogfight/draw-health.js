@@ -214,4 +214,42 @@ function drawInWorldTacticalStatus(ctx, jet, colors, frameCount) {
       ctx.restore();
     }
   }
+
+  // 3. In-World Tactical Fuel Bar & Bingo Fuel Alert
+  var curFuel = (typeof jet.fuel === "number") ? jet.fuel : 100.0;
+  if (curFuel < 99.5 && curFuel > 0.0) {
+    ctx.save();
+    var fuelBarW = 18;
+    var fuelBarH = 2;
+    var fuelFillW = Math.max(0, Math.min(fuelBarW, Math.round((curFuel / 100.0) * fuelBarW)));
+    var fuelBx = jx - Math.floor(fuelBarW / 2);
+    var fuelBy = isDamaged ? (jy - 22) : (jy - 15);
+
+    // Fuel backdrop
+    ctx.fillStyle = "rgba(0, 0, 0, 0.65)";
+    ctx.fillRect(fuelBx - 1, fuelBy - 1, fuelBarW + 2, fuelBarH + 2);
+
+    // Fuel color: Cyan -> Gold -> Flashing Red on Bingo
+    var fColor = "#38bdf8";
+    if (curFuel <= 25.0) {
+      var isBFlash = (Math.floor((frameCount || 0) / 10) % 2 === 0);
+      fColor = isBFlash ? "#ef4444" : "#f59e0b";
+    } else if (curFuel <= 45.0) {
+      fColor = "#f59e0b";
+    }
+    ctx.fillStyle = fColor;
+    ctx.fillRect(fuelBx, fuelBy, fuelFillW, fuelBarH);
+
+    // Bingo Fuel Flashing Tag
+    if (curFuel <= 25.0 || jet.isBingoFuel) {
+      ctx.font = "bold 7px monospace";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      ctx.fillStyle = (Math.floor((frameCount || 0) / 10) % 2 === 0) ? "#f59e0b" : "#ef4444";
+      ctx.shadowColor = "rgba(0,0,0,0.85)";
+      ctx.shadowBlur = 4;
+      ctx.fillText("BINGO FUEL (" + Math.round(curFuel) + "%)", jx, jy + 22);
+    }
+    ctx.restore();
+  }
 }

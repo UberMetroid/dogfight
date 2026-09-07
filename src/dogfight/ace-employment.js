@@ -58,6 +58,10 @@
       var z = zones[i];
       // Team compatibility: must match aircraft team
       if (z.team !== jet.team) continue;
+      // Land-based fighters prefer Main Base / Austere strip over small carrier deck
+      if (z.type === "CARRIER" && jet.variant !== "F14" && (jet.callsign && jet.callsign.indexOf("TOMCAT") === -1)) {
+        continue;
+      }
 
       var midX = (z.startX + z.endX) * 0.5;
       var d = Math.abs(jet.x - midX);
@@ -124,44 +128,50 @@
     }
 
     var rwyY = zone.surfaceY;
-    var headingRight = (zone.runwayHeading === 0.0);
 
     // ------------------------------------------------------------------------
     // PHASE A: GLIDESLOPE APPROACH (Descending towards runway threshold)
     // ------------------------------------------------------------------------
     if (jet.mode === "ACE_APPROACH") {
-      var thresholdX = headingRight ? (zone.startX + 20) : (zone.endX - 20);
-      var dx = thresholdX - jet.x;
-      var dy = (rwyY - 4) - jet.y;
+      var isBlue = (jet.team === "blue");
+      var runwayCenterX = (zone.startX + zone.endX) * 0.5;
+      var distToCenter = Math.abs(jet.x - runwayCenterX);
 
-      // Desired approach heading
-      var approachAngle = Math.atan2(dy, dx);
-      // Clamp descent glide slope to safe flare angle (-15 deg to +5 deg)
-      if (headingRight) {
-        jet.targetAngle = Math.max(-0.25, Math.min(0.20, approachAngle));
+      // Touchdown target box on the runway deck:
+      // Aim past the threshold closest to the approaching jet
+      var targetX;
+      if (jet.x > zone.endX) {
+        targetX = zone.endX - 100;
+      } else if (jet.x < zone.startX) {
+        targetX = zone.startX + 100;
       } else {
-        var basePi = approachAngle < 0 ? -Math.PI : Math.PI;
-        jet.targetAngle = basePi + Math.max(-0.20, Math.min(0.25, approachAngle - basePi));
+        targetX = runwayCenterX;
       }
+      var targetY = rwyY - 2;
 
-      // Approach speed regulation: throttle back to 0.75 for controlled descent
-      jet.throttleSetting = 0.75;
+      // Glide slope angle directly into the runway touchdown zone
+      var dx = targetX - jet.x;
+      var dy = targetY - jet.y;
+      jet.targetAngle = Math.atan2(dy, dx);
+
+      jet.throttleSetting = (distToCenter > 250) ? 1.1 : 0.75;
       jet.afterburner = false;
-      if (jet.speed > 3.8) {
+      if (jet.speed > 3.6) {
         jet.speed *= 0.985;
       }
 
       // Check for touchdown on runway surface
-      var withinRunwayBounds = (jet.x >= zone.startX - 15 && jet.x <= zone.endX + 15);
-      var atGroundLevel = (jet.y >= rwyY - 6 && jet.y <= rwyY + 4);
+      var withinRunwayBounds = (jet.x >= zone.startX - 20 && jet.x <= zone.endX + 20);
+      var atGroundLevel = (jet.y >= rwyY - 8 && jet.y <= rwyY + 6);
 
       if (withinRunwayBounds && atGroundLevel) {
         // TOUCHDOWN! Transition to ground roll
         jet.mode = "ACE_TOUCHDOWN";
         jet.aceRollTimer = 65; // ~1.1 seconds ground roll
         jet.y = rwyY - 1;
-        jet.targetAngle = headingRight ? 0.0 : Math.PI;
-        jet.angle = jet.targetAngle;
+        var rollHeading = isBlue ? Math.PI : 0.0;
+        jet.targetAngle = rollHeading;
+        jet.angle = rollHeading;
 
         // Audio & Radio Callouts
         if (typeof window !== "undefined" && window.TacticalAudio) {
@@ -184,18 +194,27 @@
     if (jet.mode === "ACE_TOUCHDOWN") {
       jet.aceRollTimer--;
       jet.y = rwyY - 1;
-      jet.targetAngle = headingRight ? 0.0 : Math.PI;
-      jet.speed = 3.6; // Steady ground roll speed
+      var isBlue = (jet.team === "blue");
+      var isFacingRight = Math.cos(jet.angle) >= 0;
+      jet.targetAngle = isFacingRight ? 0.0 : Math.PI;
+      jet.speed = 1.0; // Steady hot-pit ground roll taxi speed
 
       // Continuous tire sparks/smoke during roll
       if (Math.random() < 0.35) {
-        spawnAceTireSmoke(jet.x - (headingRight ? 8 : -8), rwyY);
+        spawnAceTireSmoke(jet.x - (isFacingRight ? 8 : -8), rwyY);
       }
 
-      // Service completion: Restores airframe health and loads full missile capacity
+      // Hot-pit turnaround: progressively refuels tanks and restores ordnance
+      if (typeof jet.fuel === "number") {
+        jet.fuel = Math.min(100.0, jet.fuel + 1.8);
+      }
+
+      // Service completion: Restores airframe health, fuel, and loads full missile capacity
       if (jet.aceRollTimer <= 0) {
-        // Replenish munitions & repair airframe
+        // Replenish fuel, munitions & repair airframe
         jet.hp = 100.0;
+        jet.fuel = 100.0;
+        jet.isBingoFuel = false;
         jet.damageState = "NOMINAL";
         jet.missilesRemaining = (typeof jet.missileCapacity === "number") ? jet.missileCapacity : 6;
         jet.isWinchester = false;
@@ -205,12 +224,14 @@
         jet.scrambleTimer = 35;
         jet.throttleSetting = 1.5;
         jet.afterburner = true;
+        jet.speed = 3.6; // Reheat catapult / runway scramble liftoff speed
+        jet.isStalled = false;
 
         if (typeof window !== "undefined" && window.TacticalAudio && typeof window.TacticalAudio.playMissileLaunch === "function") {
           window.TacticalAudio.playMissileLaunch();
         }
         if (typeof dfRadio === "function") {
-          dfRadio(jet.callsign + ": HOT-PIT COMPLETE! FULL MISSILES & FUEL! SCRAMBLING REHEAT OFF " + zone.name + "!");
+          dfRadio("⛽ " + jet.callsign + ": HOT-PIT COMPLETE! 100% FUEL & FULL WEAPONS! SCRAMBLING REHEAT OFF " + zone.name + "!");
         }
       }
       return true;
@@ -223,8 +244,10 @@
       jet.scrambleTimer--;
       jet.throttleSetting = 1.5;
       jet.afterburner = true;
-      // Steep climb angle (-26 degrees)
-      jet.targetAngle = headingRight ? -0.45 : (jet.angle < 0 ? -Math.PI + 0.45 : Math.PI - 0.45);
+      var isBlue = (jet.team === "blue");
+      // Blue scrambles Eastbound (heading 0.0, climbing at -0.45), Red scrambles Westbound (heading Math.PI, climbing at -Math.PI + 0.45)
+      jet.targetAngle = isBlue ? -0.45 : (-Math.PI + 0.45);
+      jet.angle = jet.targetAngle;
 
       if (jet.scrambleTimer <= 0) {
         jet.mode = "PURSUIT";
@@ -406,9 +429,9 @@
       team: "blue",
       relX: 0.135,
       surfaceOffsetY: -22,
-      ciwsRange: 380,
-      samRange: 550,
-      exclusionRange: 680,
+      ciwsRange: 240,
+      samRange: 320,
+      exclusionRange: 350,
       ciwsCooldown: 0,
       samCooldown: 0,
       turretAngle: -Math.PI * 0.45,
@@ -425,9 +448,9 @@
       team: "blue",
       relX: 0.225,
       surfaceOffsetY: -4,
-      ciwsRange: 340,
-      samRange: 500,
-      exclusionRange: 640,
+      ciwsRange: 220,
+      samRange: 300,
+      exclusionRange: 320,
       ciwsCooldown: 0,
       samCooldown: 0,
       turretAngle: -Math.PI * 0.5,
@@ -444,9 +467,9 @@
       team: "red",
       relX: 0.865,
       surfaceOffsetY: -12,
-      ciwsRange: 380,
-      samRange: 550,
-      exclusionRange: 680,
+      ciwsRange: 240,
+      samRange: 320,
+      exclusionRange: 350,
       ciwsCooldown: 0,
       samCooldown: 0,
       turretAngle: -Math.PI * 0.55,
@@ -709,7 +732,7 @@
       var bx = w * bat.relX;
       var by = (typeof getSurfaceElevationY === "function") ? getSurfaceElevationY(bx, w, h) : (h * 0.84);
       var d = Math.hypot(jet.x - bx, jet.y - by);
-      var safeStandoff = Math.max(bat.exclusionRange || 680, (bat.samRange || 550) + 100);
+      var safeStandoff = Math.max(bat.exclusionRange || 350, (bat.samRange || 320) + 20);
       if (d < safeStandoff) {
         return bat;
       }

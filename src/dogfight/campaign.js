@@ -268,6 +268,14 @@
           return "🛡️ BOMBER ESCORT: " + rJet.callsign + " shielding friendly strategic bomber against incoming interceptors!";
         }
 
+        // Bingo fuel RTB divert
+        if (bJet && bJet.isBingoFuel) {
+          return "⛽ BINGO FUEL: " + bJet.callsign + " fuel critical (" + Math.round(bJet.fuel) + "%)! Disengaging dogfight -> RTB for hot-pit refuel!";
+        }
+        if (rJet && rJet.isBingoFuel) {
+          return "⛽ BINGO FUEL: " + rJet.callsign + " fuel critical (" + Math.round(rJet.fuel) + "%)! Disengaging dogfight -> RTB for hot-pit refuel!";
+        }
+
         // Countermeasure deployments
         if ((bJet && bJet.flareCooldown > 20) || (rJet && rJet.flareCooldown > 20)) {
           return "✨ DEFENSIVE COUNTERMEASURES: Pilot deployed burning magnesium flares & aluminum chaff to decoy missile!";
@@ -277,7 +285,7 @@
         if ((bJet && (bJet.mode === "ACE_APPROACH" || bJet.mode === "ACE_TOUCHDOWN")) ||
             (rJet && (rJet.mode === "ACE_APPROACH" || rJet.mode === "ACE_TOUCHDOWN"))) {
           var rearmingJet = (bJet && (bJet.mode === "ACE_APPROACH" || bJet.mode === "ACE_TOUCHDOWN")) ? bJet : rJet;
-          return "🛬 AUSTERE TOUCH-AND-GO: " + rearmingJet.callsign + " touching down on runway for rapid hot-pit refueling and missile rearm!";
+          return "🛬 AUSTERE TOUCH-AND-GO: " + rearmingJet.callsign + " hot-pit turnaround on runway — rapid refueling and missile rearm!";
         }
 
         // Takeoff rollout
@@ -289,12 +297,7 @@
         // Merge or pitchback
         if ((bJet && (bJet.mode === "MERGE_PITCHBACK" || bJet.mode === "BREAK_9G")) ||
             (rJet && (rJet.mode === "MERGE_PITCHBACK" || rJet.mode === "BREAK_9G"))) {
-          return "🔄 9G RATE FIGHT: Fighters executing maximum-G merge and post-merge pitchback to capture adversary's 6 o'clock!";
-        }
-
-        // Standoff evasion
-        if ((bJet && bJet.mode === "EVADE_FARP") || (rJet && rJet.mode === "EVADE_FARP")) {
-          return "⚠️ DEFENSE STANDOFF: Fighter reached enemy FARP air defense perimeter — turning back to ocean combat arena.";
+          return "🔄 9G RATE FIGHT: Fighters crossing head-on at Mach 1+, pulling maximum-G pitchbacks to capture adversary's 6 o'clock!";
         }
 
         // Close gun / cannon engagement
@@ -302,7 +305,17 @@
           if (this.currentEra === 1) {
             return "💥 TRANSONIC GUNFIGHT: F-86 Sabre and MiG-15 trading .50 Cal M3 Browning and 37mm cannon bursts at 22,000 ft!";
           }
-          return "💥 CANNON DOGFIGHT: High-rate autocannon burst fired at close visual merge!";
+          return "💥 CANNON DOGFIGHT: High-rate autocannon tracers blazing at close visual merge!";
+        }
+
+        // Active GCI Intercept Closure
+        if ((bJet && bJet.mode === "PURSUIT" && bJet.targetJet) || (rJet && rJet.mode === "PURSUIT" && rJet.targetJet)) {
+          return "⚡ GCI THEATER INTERCEPT: Fighters vectoring at supersonic closing speed across ocean sector for combat merge!";
+        }
+
+        // Standoff evasion
+        if ((bJet && bJet.mode === "EVADE_FARP") || (rJet && rJet.mode === "EVADE_FARP")) {
+          return "⚠️ DEFENSE STANDOFF: Fighter reached enemy FARP air defense perimeter — turning back to ocean combat arena.";
         }
       }
 
