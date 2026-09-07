@@ -60,106 +60,106 @@ function updateJetPhysics(jet, targetEnemy, incomingThreat, opposingPool, missil
   var isAceMode = (jet.mode === "ACE_APPROACH" || jet.mode === "ACE_TOUCHDOWN" || jet.mode === "ACE_SCRAMBLE");
   if (isAceMode && typeof updateAceEmployment === "function") {
     updateAceEmployment(jet, worldW, worldH);
-    return;
-  }
-
-  // Autonomous ACE touch-and-go divert decision when out of missiles or critically damaged
-  var needsAceRearm = jet.isWinchester || (jet.hp < 45.0 && jet.damageState !== "NOMINAL");
-  if (needsAceRearm && (!jet.mode || jet.mode === "PURSUIT" || jet.mode === "PATROL" || jet.mode === "EXTEND") && Math.random() < 0.035) {
-    if (typeof orderAceTouchAndGo === "function") {
-      orderAceTouchAndGo(jet);
-      return;
-    }
-  }
-
-  // Hostile FARP Air Defense Threat Exclusion (Keeps hostiles away from bases & protects ACE rearm)
-  if (!isAceMode && typeof isThreatenedByHostileFarp === "function") {
-    var threatBat = isThreatenedByHostileFarp(jet, worldW, worldH);
-    if (threatBat) {
-      jet.isTailChasing = false;
-      jet.targetJet = null;
-      jet.mode = "EVADE_FARP";
-      var awayX = (jet.x < threatBat.x) ? -1.0 : 1.0;
-      var awayPitch = -0.38; // Climb sharply away from defense umbrella
-      jet.targetAngle = (awayX > 0) ? awayPitch : (jet.angle < 0 ? -Math.PI - awayPitch : Math.PI + awayPitch);
-      jet.throttleSetting = 1.5;
-      jet.afterburner = true;
-
-      // Deploy countermeasures if under active fire or missile launch
-      if (threatBat.samCooldown > 110 && Math.random() < 0.25) {
-        if (typeof oodaDeployFlares === "function" && DF.flaresPool) {
-          oodaDeployFlares(jet, DF.flaresPool);
-        }
-        if (typeof oodaDeployChaff === "function" && DF.chaffPool) {
-          oodaDeployChaff(jet, DF.chaffPool);
-        }
-      }
-
-      if (Math.random() < 0.015 && typeof dfRadio === "function") {
-        dfRadio(jet.callsign + ": WARNING: HOSTILE AIR DEFENSE (" + threatBat.shortName + ")! BREAKING OFF PURSUIT!");
-      }
-      return;
-    }
-  }
-
-  if ((hitLeftBoundary || hitRightBoundary) && jet.mode !== "GPWS_PULLUP") {
-    jet.mode = "BOUNDARY_SLICE";
-    jet.modeTimer = 36;
-    var targetArenaX = worldW * 0.5;
-    var targetArenaY = Math.min(Math.max(jet.y, 140), worldH - 180);
-    jet.targetAngle = Math.atan2(targetArenaY - jet.y, targetArenaX - jet.x);
-    jet.throttleSetting = 1.5;
-    jet.afterburner = true;
-  } else if (gpwsTrigger) {
-    jet.mode = "GPWS_PULLUP";
-    jet.oodaPhase = "ACT";
-    jet.targetAngle = Math.max(-0.45, -vyFps / 120.0);
-    jet.throttleSetting = 1.5;
-    jet.afterburner = true;
-    if (Math.random() < 0.04) {
-      dfRadio((jet.callsign || spec.callsign) + ": GPWS PULL UP! RECOVERY PITCH ENGAGED (" + Math.round(altAgl) + " FT AGL)");
-    }
-  } else if (jet.isStalled) {
-    jet.mode = "STALL_RECOVERY";
-    jet.oodaPhase = "ACT";
-    var isHeadingRightStall = Math.cos(jet.angle) >= 0;
-    jet.targetAngle = isHeadingRightStall ? 0.0 : (jet.angle < 0 ? -Math.PI : Math.PI);
-    jet.throttleSetting = 1.5;
-    jet.afterburner = true;
-    if (jet.speed > DF.V_CORNER * 0.75) {
-      jet.isStalled = false;
-      jet.mode = "EXTEND";
-      jet.modeTimer = 60;
-      jet.throttleSetting = 1.5;
-      jet.afterburner = true;
-      dfRadio((jet.callsign || spec.callsign) + ": STALL RECOVERED. ACCELERATING ON THE DECK.");
-    }
   } else {
-    // 4-Phase Boyd OODA State Machine Execution
-    jet.oodaPhase = "OBSERVE";
-    var mPool = missilesPoolRef || DF.missilesPool;
-    var oPool = opposingPool || (jet.team === "blue" ? DF.redPool : DF.bluePool);
-    var obs = oodaObserveThreats(jet, oPool, mPool, worldW, worldH);
-
-    jet.oodaPhase = "ORIENT";
-    var ori = oodaOrientTactics(jet, obs, altFt, sCeiling);
-
-    // Generational reaction latency management
-    if (typeof jet.oodaLatencyTimer === "undefined") jet.oodaLatencyTimer = 0;
-    if (jet.oodaLatencyTimer > 0) {
-      jet.oodaLatencyTimer--;
+    // Autonomous ACE touch-and-go divert decision when out of missiles or critically damaged
+    var needsAceRearm = jet.isWinchester || (jet.hp < 45.0 && jet.damageState !== "NOMINAL");
+    if (needsAceRearm && (!jet.mode || jet.mode === "PURSUIT" || jet.mode === "PATROL" || jet.mode === "EXTEND") && Math.random() < 0.035) {
+      if (typeof orderAceTouchAndGo === "function") {
+        orderAceTouchAndGo(jet);
+      }
     }
 
-    if (jet.oodaLatencyTimer <= 0) {
-      oodaDecideAction(jet, obs, ori, targetEnemy, altFt, sCeiling, DF.flaresPool, DF.chaffPool);
-      var baseLatency = spec.oodaLatencyFrames || 0;
-      jet.oodaLatencyTimer = jet.isAce ? Math.floor(baseLatency * 0.5) : baseLatency;
+    if (jet.mode === "ACE_APPROACH" || jet.mode === "ACE_TOUCHDOWN" || jet.mode === "ACE_SCRAMBLE") {
+      isAceMode = true;
+      if (typeof updateAceEmployment === "function") {
+        updateAceEmployment(jet, worldW, worldH);
+      }
+    } else {
+      var threatBat = null;
+      if ((hitLeftBoundary || hitRightBoundary) && jet.mode !== "GPWS_PULLUP") {
+        jet.mode = "BOUNDARY_SLICE";
+        jet.modeTimer = 36;
+        var targetArenaX = worldW * 0.5;
+        var targetArenaY = Math.min(Math.max(jet.y, 140), worldH - 180);
+        jet.targetAngle = Math.atan2(targetArenaY - jet.y, targetArenaX - jet.x);
+        jet.throttleSetting = 1.5;
+        jet.afterburner = true;
+      } else if (typeof isThreatenedByHostileFarp === "function" && (threatBat = isThreatenedByHostileFarp(jet, worldW, worldH))) {
+        // Hostile FARP Air Defense Threat Exclusion (Keeps hostiles away from bases & protects ACE rearm)
+        jet.isTailChasing = false;
+        jet.targetJet = null;
+        jet.mode = "EVADE_FARP";
+        var awayX = (jet.x < threatBat.x) ? -1.0 : 1.0;
+        var awayPitch = -0.38; // Climb sharply away from defense umbrella
+        jet.targetAngle = (awayX > 0) ? awayPitch : (jet.angle < 0 ? -Math.PI - awayPitch : Math.PI + awayPitch);
+        jet.throttleSetting = 1.5;
+        jet.afterburner = true;
+
+        // Deploy countermeasures if under active fire or missile launch
+        if (threatBat.samCooldown > 110 && Math.random() < 0.25) {
+          if (typeof oodaDeployFlares === "function" && DF.flaresPool) {
+            oodaDeployFlares(jet, DF.flaresPool);
+          }
+          if (typeof oodaDeployChaff === "function" && DF.chaffPool) {
+            oodaDeployChaff(jet, DF.chaffPool);
+          }
+        }
+
+        if (Math.random() < 0.015 && typeof dfRadio === "function") {
+          dfRadio(jet.callsign + ": WARNING: HOSTILE AIR DEFENSE (" + threatBat.shortName + ")! BREAKING OFF PURSUIT!");
+        }
+      } else if (gpwsTrigger) {
+        jet.mode = "GPWS_PULLUP";
+        jet.oodaPhase = "ACT";
+        jet.targetAngle = Math.max(-0.45, -vyFps / 120.0);
+        jet.throttleSetting = 1.5;
+        jet.afterburner = true;
+        if (Math.random() < 0.04) {
+          dfRadio((jet.callsign || spec.callsign) + ": GPWS PULL UP! RECOVERY PITCH ENGAGED (" + Math.round(altAgl) + " FT AGL)");
+        }
+      } else if (jet.isStalled) {
+        jet.mode = "STALL_RECOVERY";
+        jet.oodaPhase = "ACT";
+        var isHeadingRightStall = Math.cos(jet.angle) >= 0;
+        jet.targetAngle = isHeadingRightStall ? 0.0 : (jet.angle < 0 ? -Math.PI : Math.PI);
+        jet.throttleSetting = 1.5;
+        jet.afterburner = true;
+        if (jet.speed > DF.V_CORNER * 0.75) {
+          jet.isStalled = false;
+          jet.mode = "EXTEND";
+          jet.modeTimer = 60;
+          jet.throttleSetting = 1.5;
+          jet.afterburner = true;
+          dfRadio((jet.callsign || spec.callsign) + ": STALL RECOVERED. ACCELERATING ON THE DECK.");
+        }
+      } else {
+        // 4-Phase Boyd OODA State Machine Execution
+        jet.oodaPhase = "OBSERVE";
+        var mPool = missilesPoolRef || DF.missilesPool;
+        var oPool = opposingPool || (jet.team === "blue" ? DF.redPool : DF.bluePool);
+        var obs = oodaObserveThreats(jet, oPool, mPool, worldW, worldH);
+
+        jet.oodaPhase = "ORIENT";
+        var ori = oodaOrientTactics(jet, obs, altFt, sCeiling);
+
+        // Generational reaction latency management
+        if (typeof jet.oodaLatencyTimer === "undefined") jet.oodaLatencyTimer = 0;
+        if (jet.oodaLatencyTimer > 0) {
+          jet.oodaLatencyTimer--;
+        }
+
+        if (jet.oodaLatencyTimer <= 0) {
+          oodaDecideAction(jet, obs, ori, targetEnemy, altFt, sCeiling, DF.flaresPool, DF.chaffPool);
+          var baseLatency = spec.oodaLatencyFrames || 0;
+          jet.oodaLatencyTimer = jet.isAce ? Math.floor(baseLatency * 0.5) : baseLatency;
+        }
+      }
     }
   }
 
   // Low-altitude aerodynamic leveling (only for intact airframes; critical/stalled airframes plunge naturally):
   var isHealthyFlight = (!jet.isDying && (!jet.hp || jet.hp >= 20.0) && !jet.isStalled);
-  if (isHealthyFlight && jet.mode !== "BREAK" && jet.mode !== "GPWS_PULLUP") {
+  if (isHealthyFlight && jet.mode !== "BREAK" && jet.mode !== "GPWS_PULLUP" && !isAceMode) {
     var isFacingRight = Math.cos(jet.angle) >= 0;
     if (altAgl <= 1500) {
       if (Math.sin(jet.targetAngle) > -0.08) {
