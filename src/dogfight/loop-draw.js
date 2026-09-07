@@ -73,6 +73,9 @@ function dfDrawAircraft(now, colors) {
     if (typeof drawInWorldTacticalStatus === "function") {
       drawInWorldTacticalStatus(DF.ctx, rJet, colors, globalHudFrameCount);
     }
+    if (typeof drawAceInWorldStatus === "function") {
+      drawAceInWorldStatus(DF.ctx, rJet, colors, globalHudFrameCount);
+    }
   }
 
 }

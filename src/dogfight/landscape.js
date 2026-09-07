@@ -291,6 +291,11 @@
     // Render Military Air Base (Runway, Lights, Tower, EW Radar)
     drawAirBase(ctx, runwayStartX, runwayEndX, mslY - 14, now, sys.radarSweepAngle);
 
+    // Render Agile Combat Employment (ACE) Austere Airstrips & FARPs
+    if (typeof drawAceAirstrips === "function") {
+      drawAceAirstrips(ctx, width, height, now, colors);
+    }
+
     // Render SAM Site (Launcher & Tracking Radar)
     drawSamSite(ctx, samRidgeX, mslY - 26);
 
@@ -364,7 +369,7 @@
     // Airbase Label
     ctx.fillStyle = "rgba(52, 211, 153, 0.7)";
     ctx.font = "7.5px ui-monospace, monospace";
-    ctx.fillText("BASE ALPHA // RUNWAY 09L", startX + 16, groundY - 6);
+    ctx.fillText("BASE ALPHA // RUNWAY 09L [ACE HUB]", startX + 16, groundY - 6);
   }
 
   function drawSamSite(ctx, ridgeX, groundY) {

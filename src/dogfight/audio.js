@@ -167,11 +167,47 @@
       filter.frequency.exponentialRampToValueAtTime(150, c.currentTime + 0.25);
       var gain = c.createGain();
       gain.gain.setValueAtTime(0.18, c.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.25);
       noise.connect(filter);
       filter.connect(gain);
       gain.connect(c.destination);
       noise.start();
+    },
+
+    playTouchdown: function () {
+      if (!enabled) return;
+      var c = initContext();
+      if (!c) return;
+      // High-frequency rubber tire squeal chirp
+      var osc = c.createOscillator();
+      var gain = c.createGain();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(2200, c.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(700, c.currentTime + 0.08);
+      gain.gain.setValueAtTime(0.10, c.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.08);
+      osc.connect(gain);
+      gain.connect(c.destination);
+      osc.start();
+      osc.stop(c.currentTime + 0.085);
+    },
+
+    playRearmChime: function () {
+      if (!enabled) return;
+      var c = initContext();
+      if (!c) return;
+      var now = c.currentTime;
+      [520, 780].forEach(function (freq, i) {
+        var osc = c.createOscillator();
+        var gain = c.createGain();
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(freq, now + i * 0.04);
+        gain.gain.setValueAtTime(0.12, now + i * 0.04);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.04 + 0.15);
+        osc.connect(gain);
+        gain.connect(c.destination);
+        osc.start(now + i * 0.04);
+        osc.stop(now + i * 0.04 + 0.16);
+      });
     }
   };
 

@@ -149,6 +149,20 @@
           DF.camera.onWheel(e.deltaY);
         }
       }, { passive: false });
+
+      // Keyboard shortcuts for Agile Combat Employment (ACE) Touch-and-Go
+      window.addEventListener("keydown", function (e) {
+        if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
+        if (e.key === "a" || e.key === "A") {
+          if (typeof orderFleetAceTouchAndGo === "function") {
+            orderFleetAceTouchAndGo("blue");
+          }
+        } else if (e.key === "r" || e.key === "R") {
+          if (typeof orderFleetAceTouchAndGo === "function") {
+            orderFleetAceTouchAndGo("red");
+          }
+        }
+      });
     },
 
     selectJet: function (jet) {

@@ -31,8 +31,42 @@ function getSurfaceElevationY(x, worldW, worldH) {
   var coastRatio = (typeof MultiDomainSystem !== "undefined" && MultiDomainSystem && MultiDomainSystem.coastRatio) ? MultiDomainSystem.coastRatio : 0.38;
   var coastX = w * coastRatio;
 
-  // Ocean Domain (Water with dynamic waves)
+  // Ocean Domain (Water with dynamic waves, islands, and naval decks)
   if (x >= coastX) {
+    // 1. Austere Island Bravo FARP Strip (Offshore Atoll)
+    var islStart = w * 0.48;
+    var islEnd = w * 0.58;
+    if (x >= islStart - 20 && x <= islEnd + 20) {
+      if (x < islStart) {
+        var tIsl = (x - (islStart - 20)) / 20.0;
+        return mslY - tIsl * 10;
+      } else if (x > islEnd) {
+        var tIsl = (x - islEnd) / 20.0;
+        return (mslY - 10) + tIsl * 10;
+      }
+      return mslY - 10;
+    }
+
+    // 2. CVN-78 Carrier Flight Deck
+    var cvnMid = w * 0.70;
+    if (x >= cvnMid - 35 && x <= cvnMid + 35) {
+      return mslY - 4;
+    }
+
+    // 3. Austere Strip Delta (Eastern Dispersed Atoll)
+    var dStart = w * 0.82;
+    var dEnd = w * 0.94;
+    if (x >= dStart - 20 && x <= dEnd + 20) {
+      if (x < dStart) {
+        var tD = (x - (dStart - 20)) / 20.0;
+        return mslY - tD * 10;
+      } else if (x > dEnd) {
+        var tD = (x - dEnd) / 20.0;
+        return (mslY - 10) + tD * 10;
+      }
+      return mslY - 10;
+    }
+
     var wavePhase = (typeof MultiDomainSystem !== "undefined" && MultiDomainSystem && MultiDomainSystem.wavePhase) ? MultiDomainSystem.wavePhase : 0;
     var waveY = Math.sin(x * 0.04 + wavePhase) * 2.5 + Math.cos(x * 0.08 - wavePhase) * 1.5;
     return mslY + waveY;

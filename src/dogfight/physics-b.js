@@ -84,6 +84,33 @@ function updateJetPhysicsLate(jet, targetEnemy, incomingThreat, opposingPool, mi
     var isOcean = jet.x >= (worldW * coastRatio);
     var crashType = isOcean ? "WATER_IMPACT" : "TERRAIN_IMPACT";
 
+    // Agile Combat Employment (ACE) Touchdown & Ground Roll Exemption
+    var isAceControlledTouchdown = (jet.mode === "ACE_TOUCHDOWN" || jet.mode === "ACE_APPROACH");
+    var isLandingZone = false;
+    if (typeof getAceLandingZones === "function") {
+      var zones = getAceLandingZones(worldW, worldH);
+      for (var zi = 0; zi < zones.length; zi++) {
+        var z = zones[zi];
+        if (jet.x >= z.startX - 20 && jet.x <= z.endX + 20) {
+          isLandingZone = true;
+          break;
+        }
+      }
+    }
+
+    if (isAceControlledTouchdown && isLandingZone && jet.active && !jet.isDying) {
+      // Controlled touch-and-go landing: clamp altitude to strip, roll without crashing
+      jet.y = surfaceY - 1;
+      if (jet.mode === "ACE_APPROACH") {
+        jet.mode = "ACE_TOUCHDOWN";
+        jet.aceRollTimer = 65;
+        if (typeof window !== "undefined" && window.TacticalAudio && typeof window.TacticalAudio.playTouchdown === "function") {
+          window.TacticalAudio.playTouchdown();
+        }
+      }
+      return;
+    }
+
     if (jet.active && !jet.isDying) {
       // High-energy catastrophic crash: zero velocity and inflict fatal impact damage
       jet.speed = 0.0;

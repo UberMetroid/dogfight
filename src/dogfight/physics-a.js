@@ -57,6 +57,20 @@ function updateJetPhysics(jet, targetEnemy, incomingThreat, opposingPool, missil
   var hitLeftBoundary = (jet.x < 160 && isHeadingWest);
   var hitRightBoundary = (jet.x > worldW - 160 && isHeadingEast);
 
+  var isAceMode = (jet.mode === "ACE_APPROACH" || jet.mode === "ACE_TOUCHDOWN" || jet.mode === "ACE_SCRAMBLE");
+  if (isAceMode && typeof updateAceEmployment === "function") {
+    updateAceEmployment(jet, worldW, worldH);
+    return;
+  }
+
+  // Autonomous ACE touch-and-go divert decision when out of missiles
+  if (jet.isWinchester && (!jet.mode || jet.mode === "PURSUIT" || jet.mode === "PATROL") && Math.random() < 0.03) {
+    if (typeof orderAceTouchAndGo === "function") {
+      orderAceTouchAndGo(jet);
+      return;
+    }
+  }
+
   if ((hitLeftBoundary || hitRightBoundary) && jet.mode !== "GPWS_PULLUP") {
     jet.mode = "BOUNDARY_SLICE";
     jet.modeTimer = 36;
