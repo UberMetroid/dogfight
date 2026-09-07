@@ -110,28 +110,39 @@ html, body {
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.75), inset 0 0 16px rgba(239, 68, 68, 0.06);
 }
 
-/* Central Living Generational Campaign Era Badge */
+/* Central Living Generational Campaign Documentary Chronicle Box */
 .hud-campaign-badge {
   pointer-events: auto;
-  background: rgba(6, 10, 18, 0.88);
-  backdrop-filter: blur(8px);
+  background: rgba(6, 10, 18, 0.94);
+  backdrop-filter: blur(10px);
   border: 1px solid rgba(245, 158, 11, 0.5);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.75), inset 0 0 14px rgba(245, 158, 11, 0.08);
-  padding: 8px 18px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.85), inset 0 0 16px rgba(245, 158, 11, 0.08);
+  padding: 8px 14px 6px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 320px;
+  max-width: 600px;
+  flex: 1;
+  text-align: left;
+  margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+}
+
+.chronicle-header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 3px;
-  min-width: 280px;
-  max-width: 420px;
   text-align: center;
-  margin: 0 auto;
+  gap: 2px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+  padding-bottom: 4px;
 }
 
 .campaign-era-tag {
   font-family: var(--font-mono);
-  font-size: 0.64rem;
+  font-size: 0.65rem;
   font-weight: 800;
   letter-spacing: 0.14em;
   color: #fbbf24;
@@ -150,11 +161,125 @@ html, body {
 
 .campaign-era-doctrine {
   font-family: var(--font-mono);
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   font-weight: 600;
   letter-spacing: 0.05em;
   color: #94a3b8;
   text-transform: uppercase;
+}
+
+/* Technology Invented Section */
+.chronicle-tech-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-left: 3px solid #38bdf8;
+  padding: 4px 8px;
+}
+
+.chronicle-tech-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tech-badge {
+  font-family: var(--font-mono);
+  font-size: 0.54rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #0c4a6e;
+  background: #38bdf8;
+  padding: 1px 4px;
+  border-radius: 2px;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.tech-name {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #e0f2fe;
+  letter-spacing: 0.03em;
+  line-height: 1.25;
+}
+
+.chronicle-tech-impact {
+  font-family: var(--font-mono);
+  font-size: 0.60rem;
+  font-weight: 500;
+  color: #cbd5e1;
+  line-height: 1.35;
+}
+
+/* Live Battlespace Chronicle Narrative Section */
+.chronicle-live-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: rgba(6, 78, 59, 0.18);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-left: 3px solid #10b981;
+  padding: 4px 8px;
+}
+
+.chronicle-live-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.live-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981;
+  animation: live-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.85); }
+}
+
+.live-label {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #34d399;
+  text-transform: uppercase;
+}
+
+.chronicle-live-ticker {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: #ecfdf5;
+  line-height: 1.35;
+  min-height: 22px;
+}
+
+/* Timeline Progress Bar */
+.chronicle-progress-bar {
+  width: 100%;
+  height: 3px;
+  background: rgba(15, 23, 42, 0.85);
+  position: relative;
+  overflow: hidden;
+  margin-top: 2px;
+}
+
+.chronicle-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #f59e0b, #38bdf8);
+  box-shadow: 0 0 6px rgba(56, 189, 248, 0.6);
+  transition: width 0.15s linear;
 }
 
 .force-header {
