@@ -101,14 +101,21 @@ function updateTacticalManeuvers(friendlyPool, opposingPool) {
     }
 
     // 3. Dynamic Target Acquisition: Fighters go after fighters
-    var bestTarget = null;
-    var minDist = 999999;
     var mySpec = (typeof AIRCRAFT_SPECS !== "undefined" && AIRCRAFT_SPECS[jet.gen]) ? AIRCRAFT_SPECS[jet.gen] : {};
     var myRadarBase = mySpec.radarBaseline || 600;
     var myCeiling = (typeof SERVICE_CEILINGS !== "undefined" && SERVICE_CEILINGS[jet.gen]) ? SERVICE_CEILINGS[jet.gen] : 60000;
     var worldW = (typeof DF !== "undefined" && DF.worldWidth) ? DF.worldWidth : 3600;
     var worldH = (typeof DF !== "undefined" && DF.worldHeight) ? DF.worldHeight : 1200;
     var myAltFt = (typeof getAltitudeFeet === "function") ? getAltitudeFeet(jet.y, worldH) : 30000;
+
+    var wingman = jet.wingmanJet;
+    var isWingmanShip = (!jet.isLead && wingman && wingman.active && !wingman.isDying);
+
+    // Multi-bandit target evaluation: primary (closest) and secondary (cooperative sorting)
+    var primaryTarget = null;
+    var secondaryTarget = null;
+    var primaryDist = 999999;
+    var secondaryDist = 999999;
 
     for (var j = 0; j < opposingPool.length; j++) {
       var opp = opposingPool[j];
@@ -126,36 +133,51 @@ function updateTacticalManeuvers(friendlyPool, opposingPool) {
 
       // AWACS / GCI Theater Vectoring: Fighters maintain situational awareness of airborne bandits
       var hasLocalLock = (d <= maxDetectionRange && oppAltFt <= myCeiling + 3000);
-      if (d < minDist) {
-        minDist = d;
-        bestTarget = opp;
+      if (d < primaryDist) {
+        primaryDist = d;
+        primaryTarget = opp;
         jet.hasOnboardLock = hasLocalLock;
       }
-    }
-    jet.targetJet = bestTarget;
 
-    var wingman = jet.wingmanJet;
-    var isWingmanShip = (!jet.isLead && wingman && wingman.active && !wingman.isDying);
+      // Check for secondary bandit (different from lead's target) to avoid target saturation
+      if (isWingmanShip && wingman.targetJet && opp !== wingman.targetJet) {
+        if (d < secondaryDist) {
+          secondaryDist = d;
+          secondaryTarget = opp;
+        }
+      }
+    }
+
+    var minDist = primaryDist;
+    // Wingman selects secondary bandit if available, else primary
+    if (isWingmanShip && secondaryTarget) {
+      jet.targetJet = secondaryTarget;
+      minDist = Math.hypot(secondaryTarget.x - jet.x, secondaryTarget.y - jet.y);
+    } else {
+      jet.targetJet = primaryTarget;
+    }
 
     // 4. Cooperative Mutual Defensive Cover (Check-Six)
-    // If an enemy pursuer gets onto friendly wingman/lead's tail, break in to kill the threat!
+    // If an enemy pursuer gets onto friendly wingman/lead's tail, break in immediately to eliminate the threat!
+    var checkedSix = false;
     if (wingman && wingman.active && !wingman.isDying && jet.mode !== "BREAK" && jet.mode !== "GPWS_PULLUP") {
       for (var oj2 = 0; oj2 < opposingPool.length; oj2++) {
         var enemyPursuer = opposingPool[oj2];
         if (!enemyPursuer.active || enemyPursuer.isDying) continue;
         if (enemyPursuer.targetJet === wingman) {
           var distToWm = Math.hypot(wingman.x - enemyPursuer.x, wingman.y - enemyPursuer.y);
-          var tailAngle = wingman.angle + Math.PI;
-          var bearingToE = Math.atan2(enemyPursuer.y - wingman.y, enemyPursuer.x - wingman.x);
-          var angleOffTail = Math.abs(bearingToE - tailAngle);
-          while (angleOffTail > Math.PI) angleOffTail = Math.abs(angleOffTail - Math.PI * 2);
-          if (distToWm < 320 && angleOffTail < 0.9) {
+          // Threat is pursuing partner within 550px
+          if (distToWm < 550) {
             jet.targetJet = enemyPursuer;
             jet.mode = "COVER";
             jet.modeTimer = 45;
             jet.throttleSetting = 1.5;
             jet.afterburner = true;
-            if (Math.random() < 0.03) {
+            var cdx = enemyPursuer.x - jet.x;
+            var cdy = enemyPursuer.y - jet.y;
+            jet.targetAngle = Math.atan2(cdy, cdx);
+            checkedSix = true;
+            if (Math.random() < 0.03 && typeof dfRadio === "function") {
               dfRadio(jet.callsign + ": DEFENSIVE COVER! BREAKING INTO THREAT ON " + wingman.callsign + "'S SIX!");
             }
             break;
@@ -164,21 +186,27 @@ function updateTacticalManeuvers(friendlyPool, opposingPool) {
       }
     }
 
-    if (jet.mode === "COVER") {
+    if (checkedSix || jet.mode === "COVER") {
       if (jet.targetJet) {
-        var cdx = jet.targetJet.x - jet.x;
-        var cdy = jet.targetJet.y - jet.y;
-        jet.targetAngle = Math.atan2(cdy, cdx);
+        var cdx2 = jet.targetJet.x - jet.x;
+        var cdy2 = jet.targetJet.y - jet.y;
+        jet.targetAngle = Math.atan2(cdy2, cdx2);
       }
       continue;
     }
 
-    // 5. Normal Wingman Formation Flight vs Tactical Split / Bracket
+    // 5. Normal Wingman Formation Flight vs Active Combat (Fluid Two / Pincer / Secondary Sort)
     if (isWingmanShip) {
       var isAirportOp = (jet.mode === "TAKEOFF" || jet.mode === "ACE_APPROACH" || jet.mode === "ACE_TOUCHDOWN" || jet.mode === "ACE_SCRAMBLE");
       
-      // When far from hostiles, Wingman holds normal station in tactical formation on Lead
-      if (minDist > 420 && !isAirportOp) {
+      var isLeadInCombat = Boolean(wingman && (wingman.mode === "PURSUIT" || wingman.mode === "ENGAGED" || wingman.mode === "MERGE_PITCHBACK" || wingman.mode === "BREAK_9G" || wingman.mode === "INTERCEPT_BOMBER" || wingman.mode === "ESCORT_BOMBER" || wingman.hasOnboardLock));
+      var isHostileInCombatReach = (minDist <= 850);
+      var isAlreadyEngaged = (jet.mode === "PURSUIT" || jet.mode === "PINCER" || jet.mode === "COVER" || jet.mode === "MERGE_PITCHBACK");
+
+      // Wingman holds formation ONLY during departure / cruise when no hostiles in combat reach and lead is not engaged
+      var shouldHoldFormation = !isAirportOp && !isHostileInCombatReach && !isLeadInCombat && (!isAlreadyEngaged || minDist > 1100);
+
+      if (shouldHoldFormation) {
         jet.mode = "FORMATION";
         var st = getWingmanStation(jet, wingman);
         var sdx = st.x - jet.x;
@@ -207,36 +235,23 @@ function updateTacticalManeuvers(friendlyPool, opposingPool) {
         continue;
       }
 
-      // Close-in combat: Fluid Two / Shooter-Cover / Bracket
-      if (minDist <= 420 && !isAirportOp) {
-        // Find secondary target so element does not fixate on single bandit if multiple exist
-        var secTarget = null;
-        var secDist = 999999;
-        for (var tk = 0; tk < opposingPool.length; tk++) {
-          var cand = opposingPool[tk];
-          if (!cand || !cand.active || cand.isDying || cand.mode === "ACE_TOUCHDOWN") continue;
-          if (wingman.targetJet === cand) continue; // Leave Lead's target to Lead
-          var candD = Math.hypot(cand.x - jet.x, cand.y - jet.y);
-          if (candD < secDist) {
-            secDist = candD;
-            secTarget = cand;
-          }
-        }
-
-        if (secTarget) {
-          jet.targetJet = secTarget;
+      // ACTIVE COMBAT ASSISTANCE: Wingman fights aggressively alongside Flight Lead!
+      if (!isAirportOp && jet.targetJet) {
+        if (secondaryTarget && secondaryTarget === jet.targetJet) {
+          // Engaging sorted secondary bandit: direct high-G lead pursuit
           jet.mode = "PURSUIT";
           jet.throttleSetting = 1.5;
           jet.afterburner = true;
-          var tdx = secTarget.x - jet.x;
-          var tdy = secTarget.y - jet.y;
-          jet.targetAngle = Math.atan2(tdy, tdx);
-          if (Math.random() < 0.02) {
-            dfRadio(jet.callsign + ": TWO SORTED SECONDARY BANDIT (" + secTarget.callsign + ")! COMMITTING!");
+          var leadTimeSec = Math.min(minDist / 14.0, 16.0);
+          var lx = secondaryTarget.x + Math.cos(secondaryTarget.angle) * secondaryTarget.speed * leadTimeSec;
+          var ly = secondaryTarget.y + Math.sin(secondaryTarget.angle) * secondaryTarget.speed * leadTimeSec;
+          jet.targetAngle = Math.atan2(ly - jet.y, lx - jet.x);
+          if (Math.random() < 0.02 && typeof dfRadio === "function") {
+            dfRadio(jet.callsign + ": TWO COMMITTED ON SORTED BANDIT (" + secondaryTarget.callsign + ")!");
           }
           continue;
-        } else if (jet.targetJet) {
-          // Single hostile: execute bracket pincer maneuver
+        } else {
+          // Single bandit remaining: execute bracket pincer maneuver
           jet.mode = "PINCER";
           jet.modeTimer = 35;
           var pSign = (jet.y > wingman.y) ? 0.65 : -0.65;
@@ -244,7 +259,7 @@ function updateTacticalManeuvers(friendlyPool, opposingPool) {
           jet.targetAngle = directBearing + pSign;
           jet.throttleSetting = 1.45;
           jet.afterburner = true;
-          if (Math.random() < 0.02) {
+          if (Math.random() < 0.02 && typeof dfRadio === "function") {
             dfRadio(jet.callsign + ": BRACKET PINCER! DUAL-AXIS FLANKING RUN ON " + jet.targetJet.callsign + "!");
           }
           continue;

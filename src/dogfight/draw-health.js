@@ -180,6 +180,10 @@ function drawInWorldTacticalStatus(ctx, jet, colors, frameCount) {
     ctx.font = "bold 6.5px monospace";
     ctx.fillStyle = isBlue ? "#7dd3fc" : "#fca5a5";
     ctx.fillText("FORMATION // TWO", jx, jy + (isDamaged ? -34 : -26));
+  } else if (!jet.isLead && jet.mode === "PURSUIT") {
+    ctx.font = "bold 6.5px monospace";
+    ctx.fillStyle = isBlue ? "#38bdf8" : "#f43f5e";
+    ctx.fillText("OFFENSIVE // TWO", jx, jy + (isDamaged ? -34 : -26));
   } else if (jet.mode === "COVER") {
     ctx.font = "bold 6.5px monospace";
     ctx.fillStyle = "#f59e0b";
