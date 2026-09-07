@@ -116,11 +116,15 @@ function updateJetPhysicsSwarm(jet, targetEnemy, incomingThreat) {
 
     var worldW = (typeof DF !== "undefined" && DF.worldWidth) ? DF.worldWidth : 3600;
     var worldH = (typeof DF !== "undefined" && DF.worldHeight) ? DF.worldHeight : 1200;
+    var groundY1 = (typeof getSurfaceElevationY === "function") ? getSurfaceElevationY(jet.drone1.worldX, worldW, worldH) : (worldH - 65.0);
+    var groundY2 = (typeof getSurfaceElevationY === "function") ? getSurfaceElevationY(jet.drone2.worldX, worldW, worldH) : (worldH - 65.0);
+    var groundY3 = (typeof getSurfaceElevationY === "function") ? getSurfaceElevationY(jet.drone3.worldX, worldW, worldH) : (worldH - 65.0);
+
     jet.drone1.worldX = Math.min(Math.max(nextW1.x, 65.0), worldW - 65.0);
-    jet.drone1.worldY = Math.min(Math.max(nextW1.y, 65.0), worldH - 65.0);
+    jet.drone1.worldY = Math.min(Math.max(nextW1.y, 65.0), groundY1 - 8.0);
     jet.drone2.worldX = Math.min(Math.max(nextW2.x, 65.0), worldW - 65.0);
-    jet.drone2.worldY = Math.min(Math.max(nextW2.y, 65.0), worldH - 65.0);
+    jet.drone2.worldY = Math.min(Math.max(nextW2.y, 65.0), groundY2 - 8.0);
     jet.drone3.worldX = Math.min(Math.max(nextW3.x, 65.0), worldW - 65.0);
-    jet.drone3.worldY = Math.min(Math.max(nextW3.y, 65.0), worldH - 65.0);
+    jet.drone3.worldY = Math.min(Math.max(nextW3.y, 65.0), groundY3 - 8.0);
   }
 }

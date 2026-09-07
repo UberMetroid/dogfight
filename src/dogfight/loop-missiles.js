@@ -138,7 +138,29 @@ function dfStepMissiles() {
     DF.ctx.fillRect(Math.floor(misX) - 2, Math.floor(misY) - 1, 5, 3);
 
     var isDetonated = false;
-    if (tgtX !== null && Math.hypot(tgtX - misX, tgtY - misY) < 22 && misLife > 0) {
+
+    // Surface collision (terrain or ocean water impact)
+    var worldW = (typeof DF !== "undefined" && DF.worldWidth) ? DF.worldWidth : 3600;
+    var worldH = (typeof DF !== "undefined" && DF.worldHeight) ? DF.worldHeight : 1200;
+    var surfY = (typeof getSurfaceElevationY === "function") ? getSurfaceElevationY(misX, worldW, worldH) : (worldH - 150);
+    if (misY >= surfY) {
+      isDetonated = true;
+      var coastRatio = (typeof MultiDomainSystem !== "undefined" && MultiDomainSystem.coastRatio) ? MultiDomainSystem.coastRatio : 0.38;
+      var isOcean = misX >= (worldW * coastRatio);
+      if (isOcean && typeof spawnWaterSplash === "function") {
+        spawnWaterSplash(misX, surfY, curSpeed * 0.8, 4);
+        if (typeof window !== "undefined" && window.TacticalAudio && window.TacticalAudio.playSplash) {
+          window.TacticalAudio.playSplash();
+        }
+      } else if (!isOcean && typeof triggerStage3GroundImpact === "function") {
+        triggerStage3GroundImpact(misX, surfY, misVx, 4);
+        if (typeof window !== "undefined" && window.TacticalAudio && window.TacticalAudio.playExplosion) {
+          window.TacticalAudio.playExplosion();
+        }
+      }
+    }
+
+    if (!isDetonated && tgtX !== null && Math.hypot(tgtX - misX, tgtY - misY) < 22 && misLife > 0) {
       isDetonated = true;
       if (isDecoyed) {
         dfRadio("TACTICAL WARNING: MISSILE DECOYED BY COUNTERMEASURES!");

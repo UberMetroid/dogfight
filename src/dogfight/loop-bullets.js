@@ -58,6 +58,31 @@ function dfStepBullets() {
       }
     }
 
+    // Surface collision (impact with terrain or ocean water)
+    var worldW = (typeof DF !== "undefined" && DF.worldWidth) ? DF.worldWidth : 3600;
+    var worldH = (typeof DF !== "undefined" && DF.worldHeight) ? DF.worldHeight : 1200;
+    var surfY = (typeof getSurfaceElevationY === "function") ? getSurfaceElevationY(bx, worldW, worldH) : (worldH - 150);
+    if (by >= surfY) {
+      var coastRatio = (typeof MultiDomainSystem !== "undefined" && MultiDomainSystem.coastRatio) ? MultiDomainSystem.coastRatio : 0.38;
+      var isOcean = bx >= (worldW * coastRatio);
+      if (globalVfxParticlePool && Math.random() < 0.35) {
+        var spIdx = globalVfxParticlePool.alloc();
+        if (spIdx >= 0) {
+          var spo = spIdx * 8;
+          globalVfxParticlePool.buffer[spo] = bx;
+          globalVfxParticlePool.buffer[spo + 1] = surfY - 1;
+          globalVfxParticlePool.buffer[spo + 2] = (Math.random() - 0.5) * 1.5;
+          globalVfxParticlePool.buffer[spo + 3] = -0.5 - Math.random() * 1.5;
+          globalVfxParticlePool.buffer[spo + 4] = 8;
+          globalVfxParticlePool.buffer[spo + 5] = 8;
+          globalVfxParticlePool.buffer[spo + 6] = 1.2;
+          globalVfxParticlePool.buffer[spo + 7] = isOcean ? 8 : 1; // 8 = water droplet, 1 = spark
+        }
+      }
+      DF.bulletsPool.free(b);
+      continue;
+    }
+
     var targetPool = (bOwnerTeam === 0) ? DF.redPool : DF.bluePool;
     var shooterPool = (bOwnerTeam === 0) ? DF.bluePool : DF.redPool;
     var bulletConsumed = false;

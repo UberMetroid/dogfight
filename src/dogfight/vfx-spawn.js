@@ -209,3 +209,71 @@ function triggerStage3GroundImpact(x, groundY, impactVx, gen) {
     pool.buffer[scOff + 7] = 7; // Type 7: Scorch plume
   }
 }
+
+function spawnWaterSplash(x, waterY, impactSpeed, gen) {
+  var pool = (typeof globalVfxParticlePool !== "undefined" && globalVfxParticlePool) ? globalVfxParticlePool : null;
+  if (!pool) return;
+
+  var wX = typeof x === "number" ? x : 0;
+  var wY = typeof waterY === "number" ? waterY : 1008;
+  var spd = typeof impactSpeed === "number" ? Math.max(2.0, impactSpeed) : 5.0;
+  var g = typeof gen === "number" ? gen : 4;
+  var spec = (typeof AIRCRAFT_SPECS !== "undefined" && AIRCRAFT_SPECS && AIRCRAFT_SPECS[g]) ? AIRCRAFT_SPECS[g] : { mass: 1.5 };
+  var mass = typeof spec.mass === "number" ? spec.mass : 1.5;
+
+  // 1. Water foam spray droplets shooting upward into the air (Type 8)
+  var nDroplets = Math.max(24, Math.min(50, Math.round(24 * mass)));
+  for (var d = 0; d < nDroplets; d++) {
+    var dIdx = pool.alloc();
+    if (dIdx < 0) break;
+    var dOff = dIdx * 8;
+    var angle = -Math.PI * (0.20 + Math.random() * 0.60);
+    var pSpeed = (3.5 + Math.random() * 7.0) * (spd / 4.5);
+    var life = 26 + Math.floor(Math.random() * 24);
+
+    pool.buffer[dOff] = wX + (Math.random() - 0.5) * 14;
+    pool.buffer[dOff + 1] = wY - 2;
+    pool.buffer[dOff + 2] = Math.cos(angle) * pSpeed;
+    pool.buffer[dOff + 3] = Math.sin(angle) * pSpeed;
+    pool.buffer[dOff + 4] = life;
+    pool.buffer[dOff + 5] = life;
+    pool.buffer[dOff + 6] = 2.0 + Math.random() * 3.0;
+    pool.buffer[dOff + 7] = 8; // Type 8: Water spray droplet
+  }
+
+  // 2. Expanding ocean surface wave ripples (Type 9)
+  for (var r = 0; r < 3; r++) {
+    var rIdx = pool.alloc();
+    if (rIdx < 0) break;
+    var rOff = rIdx * 8;
+    var rLife = 24 + r * 10;
+    pool.buffer[rOff] = wX;
+    pool.buffer[rOff + 1] = wY;
+    pool.buffer[rOff + 2] = 0;
+    pool.buffer[rOff + 3] = 0;
+    pool.buffer[rOff + 4] = rLife;
+    pool.buffer[rOff + 5] = rLife;
+    pool.buffer[rOff + 6] = 8.0 + r * 6.0;
+    pool.buffer[rOff + 7] = 9; // Type 9: Water ripple ellipse
+  }
+
+  // 3. Sub-surface cavitation bubbles (Type 10)
+  for (var b = 0; b < 14; b++) {
+    var bIdx = pool.alloc();
+    if (bIdx < 0) break;
+    var bOff = bIdx * 8;
+    var bLife = 35 + Math.floor(Math.random() * 30);
+    pool.buffer[bOff] = wX + (Math.random() - 0.5) * 20;
+    pool.buffer[bOff + 1] = wY + 4 + Math.random() * 24;
+    pool.buffer[bOff + 2] = (Math.random() - 0.5) * 1.5;
+    pool.buffer[bOff + 3] = -0.3 - Math.random() * 0.8;
+    pool.buffer[bOff + 4] = bLife;
+    pool.buffer[bOff + 5] = bLife;
+    pool.buffer[bOff + 6] = 2.0 + Math.random() * 2.5;
+    pool.buffer[bOff + 7] = 10; // Type 10: Cavitation bubble
+  }
+}
+
+if (typeof window !== "undefined") {
+  window.spawnWaterSplash = spawnWaterSplash;
+}

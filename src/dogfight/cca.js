@@ -204,7 +204,11 @@ function updateAndDrawCcaDrones(jet, isLead, colors) {
     if (cca.x < 70) cca.x = 70;
     if (cca.x > worldW - 70) cca.x = worldW - 70;
     if (cca.y < 32) cca.y = 32;
-    if (cca.y > worldH - 32) cca.y = worldH - 32;
+    var ccaGroundY = (typeof getSurfaceElevationY === "function") ? getSurfaceElevationY(cca.x, worldW, worldH) : (worldH - 32);
+    if (cca.y > ccaGroundY - 8) {
+      cca.y = ccaGroundY - 8;
+      if (Math.sin(cca.angle) > 0) cca.angle = -0.15;
+    }
 
     // Hard clamp bounds [42px, 440px]
     var endDx = cca.x - jet.x;

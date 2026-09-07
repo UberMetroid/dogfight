@@ -32,12 +32,16 @@ function updateJetPhysicsLate(jet, targetEnemy, incomingThreat, opposingPool, mi
   var vy = Math.sin(jet.angle) * jet.speed;
 
   if (jet.damageState === "CRITICAL" || (typeof jet.hp === "number" && jet.hp < 20.0)) {
-    vy += (Math.random() - 0.5) * 1.8;
+    vy += (Math.random() - 0.5) * 1.8 + 0.45; // Gravity pulling damaged airframe down
     vx += (Math.random() - 0.5) * 1.8;
     jet.stallBuffet = Math.max(jet.stallBuffet || 0, 0.8);
+    jet.angle += 0.015; // Uncontrollable pitch down towards surface
   } else if (jet.isStalled) {
-    vy += (Math.random() - 0.5) * 1.5;
+    vy += (Math.random() - 0.5) * 1.5 + 0.30;
     vx += (Math.random() - 0.5) * 1.5;
+  }
+  if (jet.isDying) {
+    vy += 0.50; // Accelerated ballistic plunge for destroyed airframes
   }
 
   jet.x += vx;
@@ -68,35 +72,38 @@ function updateJetPhysicsLate(jet, targetEnemy, incomingThreat, opposingPool, mi
     }
   }
 
-  // Gen 7 floor clamp: y <= worldH - 65.0 px
-  if (isGen7 && jet.y > worldH - 65.0) {
-    jet.y = worldH - 65.0;
-    if (Math.sin(jet.angle) > 0) {
-      jet.targetAngle = (Math.cos(jet.angle) >= 0) ? -0.05 : (Math.PI + 0.05);
-    }
-  }
+  // Dynamic Terrain & Ocean Surface Collision (Water and Land Impact Crash)
+  var surfaceY = (typeof getSurfaceElevationY === "function")
+    ? getSurfaceElevationY(jet.x, worldW, worldH)
+    : (worldH - 150);
 
-  // Minimum Altitude Floor Invariant (h >= 800 ft clearance above MSL)
-  var mslY = (typeof getSeaLevelY === "function") ? getSeaLevelY(worldH) : (worldH - 150);
-  var minFloorY = Math.min(getYFromAltitude(800, worldH), mslY - 15.0);
-  if (!jet.isDying && (altFt <= 800 || jet.y >= minFloorY)) {
-    jet.y = Math.min(jet.y, minFloorY);
-    if (Math.sin(jet.angle) > 0) {
-      jet.angle = -0.15;
-      jet.targetAngle = -0.20;
-      jet.afterburner = true;
-    }
-  }
-
-  // Ground / Ocean Floor Impact Collision (0 ft MSL)
-  if (jet.y >= mslY && jet.active && !jet.isDying) {
-    applyAirframeDamage(jet, 100.0, null, "TERRAIN_IMPACT");
-    jet.y = mslY;
+  if (jet.y >= surfaceY) {
+    jet.y = surfaceY;
+    var impactSpeed = Math.hypot(vx, vy);
     var coastRatio = (typeof MultiDomainSystem !== "undefined" && MultiDomainSystem.coastRatio) ? MultiDomainSystem.coastRatio : 0.38;
     var isOcean = jet.x >= (worldW * coastRatio);
-    if (isOcean && global.TacticalAudio) global.TacticalAudio.playSplash();
-    else if (!isOcean && global.TacticalAudio) global.TacticalAudio.playExplosion();
-    dfRadio("CFIT ALERT: " + (jet.callsign || spec.callsign) + (isOcean ? " DITCHED IN OCEAN AT SEA LEVEL!" : " IMPACTED COASTAL TERRAIN AT 0 FT!"));
+    var crashType = isOcean ? "WATER_IMPACT" : "TERRAIN_IMPACT";
+
+    if (jet.active && !jet.isDying) {
+      // High-energy catastrophic crash: zero velocity and inflict fatal impact damage
+      jet.speed = 0.0;
+      applyAirframeDamage(jet, 999.0, null, crashType);
+    } else if (jet.isDying) {
+      // Wreckage / dying airframe slamming into the surface
+      jet.speed = 0.0;
+      jet.deathTimer = Math.min(jet.deathTimer || 0, 8);
+      if (isOcean && typeof spawnWaterSplash === "function") {
+        spawnWaterSplash(jet.x, surfaceY, impactSpeed, jet.gen || 4);
+        if (typeof window !== "undefined" && window.TacticalAudio && window.TacticalAudio.playSplash) {
+          window.TacticalAudio.playSplash();
+        }
+      } else if (!isOcean && typeof triggerStage3GroundImpact === "function") {
+        triggerStage3GroundImpact(jet.x, surfaceY, vx, jet.gen || 4);
+        if (typeof window !== "undefined" && window.TacticalAudio && window.TacticalAudio.playExplosion) {
+          window.TacticalAudio.playExplosion();
+        }
+      }
+    }
   }
 
   // Visual Damage Particle Emissions (<70%, <45%, <20% HP)

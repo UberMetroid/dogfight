@@ -23,6 +23,63 @@ function getYFromAltitude(altFt, canvasH) {
   return (1.0 - ratio) * mslY;
 }
 
+// Exact multi-domain surface elevation (mountains, airfield, ridge, ocean water)
+function getSurfaceElevationY(x, worldW, worldH) {
+  var w = (typeof worldW === "number" && worldW > 0) ? worldW : ((typeof DF !== "undefined" && DF.worldWidth) ? DF.worldWidth : 3600);
+  var h = (typeof worldH === "number" && worldH > 0) ? worldH : ((typeof DF !== "undefined" && DF.worldHeight) ? DF.worldHeight : 1200);
+  var mslY = (typeof getSeaLevelY === "function") ? getSeaLevelY(h) : Math.floor(h * 0.84);
+  var coastRatio = (typeof MultiDomainSystem !== "undefined" && MultiDomainSystem && MultiDomainSystem.coastRatio) ? MultiDomainSystem.coastRatio : 0.38;
+  var coastX = w * coastRatio;
+
+  // Ocean Domain (Water with dynamic waves)
+  if (x >= coastX) {
+    var wavePhase = (typeof MultiDomainSystem !== "undefined" && MultiDomainSystem && MultiDomainSystem.wavePhase) ? MultiDomainSystem.wavePhase : 0;
+    var waveY = Math.sin(x * 0.04 + wavePhase) * 2.5 + Math.cos(x * 0.08 - wavePhase) * 1.5;
+    return mslY + waveY;
+  }
+
+  // Land Domain (Piecewise Mountain & Airbase polygon profile)
+  // x = 0: mslY - 45
+  // x = w * 0.06: mslY - 55
+  // x = w * 0.12: mslY - 30
+  // x = w * 0.16: mslY - 14
+  // x = w * 0.32: mslY - 14 (Runway plateau)
+  // x = w * 0.35: mslY - 26 (SAM coastal ridge)
+  // x = coastX: mslY (Beach / Surf line)
+  if (x <= 0) return mslY - 45;
+  if (x <= w * 0.06) {
+    var t = x / (w * 0.06);
+    return (mslY - 45) + t * (-10);
+  }
+  if (x <= w * 0.12) {
+    var t = (x - w * 0.06) / (w * 0.06);
+    return (mslY - 55) + t * 25;
+  }
+  if (x <= w * 0.16) {
+    var t = (x - w * 0.12) / (w * 0.04);
+    return (mslY - 30) + t * 16;
+  }
+  if (x <= w * 0.32) {
+    return mslY - 14;
+  }
+  if (x <= w * 0.35) {
+    var t = (x - w * 0.32) / (w * 0.03);
+    return (mslY - 14) + t * (-12);
+  }
+  var t = (x - w * 0.35) / (coastX - w * 0.35);
+  return (mslY - 26) + t * 26;
+}
+
+// Altitude Above Ground Level (AGL) in feet
+function getAltitudeAGL(x, y, worldW, worldH) {
+  var groundY = getSurfaceElevationY(x, worldW, worldH);
+  var diffY = groundY - y;
+  if (diffY <= 0) return 0;
+  var h = (typeof worldH === "number" && worldH > 0) ? worldH : 1200;
+  var mslY = Math.floor(h * 0.84);
+  return (diffY / mslY) * 100000.0;
+}
+
 function getBarometricDensity(altFt) {
   var rho0 = 0.002377; // slug/ft^3 sea level standard air density
   var h = (typeof altFt === "number" && altFt > 0) ? altFt : 0;
@@ -195,4 +252,9 @@ function evaluateMissileSeekerDegradation(misType, tgtJet, dist) {
 
   // Gen 1-4: Non-Stealth Baseline Invariant (0% stealth degradation)
   return { degraded: false, lostLock: false, trackLossRate: 0, lossRate: 0, reason: "NON_STEALTH_BASELINE" };
+}
+
+if (typeof window !== "undefined") {
+  window.getSurfaceElevationY = getSurfaceElevationY;
+  window.getAltitudeAGL = getAltitudeAGL;
 }

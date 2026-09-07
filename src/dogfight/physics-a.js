@@ -39,7 +39,7 @@ function updateJetPhysics(jet, targetEnemy, incomingThreat, opposingPool, missil
   if (typeof jet.modeTimer === "number" && jet.modeTimer > 0) jet.modeTimer--;
   if (typeof jet.pitchbackTimer === "number" && jet.pitchbackTimer > 0) jet.pitchbackTimer--;
 
-  // Autonomous AI GPWS dynamic recovery calculation (sink rate > 2500 ft/min or alt < 5000 ft or hRec)
+  // Autonomous AI GPWS dynamic recovery calculation (sink rate > 2500 ft/min or alt < 3500 ft AGL or hRec)
   var vySim = Math.sin(jet.angle) * jet.speed;
   var vyFps = vySim * 110.0;
   var isDescending = (vySim > 0.0);
@@ -48,7 +48,8 @@ function updateJetPhysics(jet, targetEnemy, incomingThreat, opposingPool, missil
   var hRec = (isDescending && nMaxG > 1.0) ? (vyFps * vyFps) / (2.0 * gAccel * (nMaxG - 1.0)) : 0.0;
   var hMargin = isDescending ? (vyFps * 0.4 + 1000.0) : 800.0;
 
-  var gpwsTrigger = isDescending && altFt > 0 && (altFt <= (hRec + hMargin) || altFt < 5000.0 || sinkRateFpm > 2500.0);
+  var altAgl = (typeof getAltitudeAGL === "function") ? getAltitudeAGL(jet.x, jet.y, worldW, worldH) : altFt;
+  var gpwsTrigger = isDescending && altAgl > 0 && (altAgl <= (hRec + hMargin) || altAgl < 3500.0 || sinkRateFpm > 2500.0);
 
   // Boundary Detection & High-G Turnback Reaction (x < 160 or x > worldW - 160)
   var isHeadingWest = (Math.cos(jet.angle) < 0.1);
@@ -71,7 +72,7 @@ function updateJetPhysics(jet, targetEnemy, incomingThreat, opposingPool, missil
     jet.throttleSetting = 1.5;
     jet.afterburner = true;
     if (Math.random() < 0.04) {
-      dfRadio((jet.callsign || spec.callsign) + ": GPWS PULL UP! RECOVERY PITCH ENGAGED (" + Math.round(altFt) + " FT)");
+      dfRadio((jet.callsign || spec.callsign) + ": GPWS PULL UP! RECOVERY PITCH ENGAGED (" + Math.round(altAgl) + " FT AGL)");
     }
   } else if (jet.isStalled) {
     jet.mode = "STALL_RECOVERY";
@@ -110,14 +111,15 @@ function updateJetPhysics(jet, targetEnemy, incomingThreat, opposingPool, missil
     }
   }
 
-  // Low-altitude ground-effect leveling invariant (preserves 360-deg horizontal heading):
-  if (jet.mode !== "BREAK" && jet.mode !== "GPWS_PULLUP") {
+  // Low-altitude aerodynamic leveling (only for intact airframes; critical/stalled airframes plunge naturally):
+  var isHealthyFlight = (!jet.isDying && (!jet.hp || jet.hp >= 20.0) && !jet.isStalled);
+  if (isHealthyFlight && jet.mode !== "BREAK" && jet.mode !== "GPWS_PULLUP") {
     var isFacingRight = Math.cos(jet.angle) >= 0;
-    if (altFt <= 2000) {
-      if (Math.sin(jet.targetAngle) > -0.10) {
-        jet.targetAngle = isFacingRight ? -0.15 : (jet.targetAngle < 0 ? -Math.PI + 0.15 : Math.PI - 0.15);
+    if (altAgl <= 1500) {
+      if (Math.sin(jet.targetAngle) > -0.08) {
+        jet.targetAngle = isFacingRight ? -0.12 : (jet.targetAngle < 0 ? -Math.PI + 0.12 : Math.PI - 0.12);
       }
-    } else if (altFt <= 5000) {
+    } else if (altAgl <= 3500) {
       if (Math.sin(jet.targetAngle) > 0.0) {
         jet.targetAngle = isFacingRight ? -0.05 : (jet.targetAngle < 0 ? -Math.PI + 0.05 : Math.PI - 0.05);
       }

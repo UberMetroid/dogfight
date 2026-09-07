@@ -69,15 +69,24 @@ function updateAndDrawWreckage(ctx, dt, height) {
       }
     }
 
-    // Ground Impact Trigger at terrain footer (wy >= h - 2, 0 ft)
-    if (wy >= h - 2) {
-      triggerStage3GroundImpact(wx, h - 2, wvx, wGen);
+    // Surface Impact Trigger (Dynamic Terrain elevation or dynamic ocean wave)
+    var worldW = (typeof DF !== "undefined" && DF.worldWidth) ? DF.worldWidth : 3600;
+    var surfY = (typeof getSurfaceElevationY === "function") ? getSurfaceElevationY(wx, worldW, h) : (h - 2);
+    if (wy >= surfY) {
+      var coastRatio = (typeof MultiDomainSystem !== "undefined" && MultiDomainSystem.coastRatio) ? MultiDomainSystem.coastRatio : 0.38;
+      var isOcean = wx >= (worldW * coastRatio);
+      if (isOcean && typeof spawnWaterSplash === "function") {
+        spawnWaterSplash(wx, surfY, Math.hypot(wvx, wvy), wGen);
+      } else if (!isOcean && typeof triggerStage3GroundImpact === "function") {
+        triggerStage3GroundImpact(wx, surfY, wvx, wGen);
+      }
       pool.free(i);
       continue;
     }
 
     // Out of bounds / Expired
-    if (wLife <= 0 || wx < -300 || wx > 2500) {
+    var maxArenaX = worldW + 300;
+    if (wLife <= 0 || wx < -300 || wx > maxArenaX) {
       pool.free(i);
       continue;
     }

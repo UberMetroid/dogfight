@@ -31,11 +31,36 @@ function applyAirframeDamage(targetJet, damageAmount, attacker, weaponName) {
       }
     }
     var tCallsign = targetJet.callsign || ("GEN " + (targetJet.gen || 4));
-    triggerTacticalRadio("SPLASH ONE! " + tCallsign + " DOWNED!");
-    if (typeof spawnStage1Fireball === "function") {
-      var pvx = Math.cos(targetJet.angle || 0) * (targetJet.speed || 0);
-      var pvy = Math.sin(targetJet.angle || 0) * (targetJet.speed || 0);
-      spawnStage1Fireball(targetJet.x, targetJet.y, pvx, pvy, 48, targetJet.gen || 4);
+    var isOceanCrash = (weaponName === "WATER_IMPACT");
+    var isTerrainCrash = (weaponName === "TERRAIN_IMPACT");
+
+    var pvx = Math.cos(targetJet.angle || 0) * (targetJet.speed || 0);
+    var pvy = Math.sin(targetJet.angle || 0) * (targetJet.speed || 0);
+
+    if (isOceanCrash) {
+      triggerTacticalRadio("MAYDAY! " + tCallsign + " DITCHED IN OCEAN! SPLASHDOWN AT SEA LEVEL!");
+      if (typeof spawnWaterSplash === "function") {
+        spawnWaterSplash(targetJet.x, targetJet.y, Math.hypot(pvx, pvy), targetJet.gen || 4);
+      }
+      if (typeof window !== "undefined" && window.TacticalAudio && window.TacticalAudio.playSplash) {
+        window.TacticalAudio.playSplash();
+      }
+    } else if (isTerrainCrash) {
+      triggerTacticalRadio("CFIT ALERT! " + tCallsign + " IMPACTED TERRAIN! COMPLETE AIRFRAME LOSS!");
+      if (typeof spawnStage1Fireball === "function") {
+        spawnStage1Fireball(targetJet.x, targetJet.y, pvx * 0.4, -1.0, 48, targetJet.gen || 4);
+      }
+      if (typeof triggerStage3GroundImpact === "function") {
+        triggerStage3GroundImpact(targetJet.x, targetJet.y, pvx, targetJet.gen || 4);
+      }
+      if (typeof window !== "undefined" && window.TacticalAudio && window.TacticalAudio.playExplosion) {
+        window.TacticalAudio.playExplosion();
+      }
+    } else {
+      triggerTacticalRadio("SPLASH ONE! " + tCallsign + " DOWNED!");
+      if (typeof spawnStage1Fireball === "function") {
+        spawnStage1Fireball(targetJet.x, targetJet.y, pvx, pvy, 48, targetJet.gen || 4);
+      }
     }
     if (typeof spawnStage2Wreckage === "function") spawnStage2Wreckage(targetJet);
     return true;
