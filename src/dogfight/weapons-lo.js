@@ -88,8 +88,20 @@ function evaluateKineticWeapons(jet, targetEnemy, colors) {
     var maxGunDist = jet.isAce ? 250 : 220;
 
     if ((da < 0.785 || daLeadGuns < gunTolerance) && dist >= 20 && dist <= maxGunDist && jet.gunCooldown <= 0 && isKineticReachValid) {
-      jet.gunCooldown = 3;
-      if (typeof window !== "undefined" && window.TacticalAudio) window.TacticalAudio.playCannonBurst();
+      var isEast = (jet.team === "red");
+      var gGen = jet.gen || 1;
+      jet.gunCooldown = (isEast && gGen === 1) ? 5 : 3; // 37mm has heavier, slower cycle rate
+      if (typeof window !== "undefined" && window.TacticalAudio) {
+        if (isEast && (gGen === 1 || gGen === 4 || gGen === 5)) {
+          if (typeof window.TacticalAudio.playHeavyCannonBurst === "function") {
+            window.TacticalAudio.playHeavyCannonBurst();
+          } else {
+            window.TacticalAudio.playCannonBurst();
+          }
+        } else {
+          window.TacticalAudio.playCannonBurst();
+        }
+      }
       var bIdx = DF.bulletsPool.alloc();
       if (bIdx >= 0) {
         var bo = bIdx * 6;
@@ -101,7 +113,13 @@ function evaluateKineticWeapons(jet, targetEnemy, colors) {
         DF.bulletsPool.buffer[bo + 5] = (shooterTeamCode === 0 ? 100 : 200) + (jet.slotIdx || 0);
       }
       if ((jet.gen === 1 || jet.isWinchester) && Math.random() < 0.20) {
-        dfRadio(jet.callsign + (jet.isAce ? ": [ACE] " : ": ") + "GUNS! 20MM BURST ON TARGET");
+        var gunRadioMsg = "";
+        if (!isEast) {
+          gunRadioMsg = (gGen === 1) ? "GUNS! 6x .50 CAL BROWNING TRACERS ON TARGET" : "GUNS! 20MM M61 VULCAN BURST";
+        } else {
+          gunRadioMsg = (gGen === 1) ? "GUNS! 37MM N-37 & 23MM HEAVY EXPLOSIVE SHELLS" : (gGen <= 3 ? "GUNS! 23MM GSh-23L BURST" : "GUNS! 30MM GSh-30-1 HEAVY AUTOCANNON");
+        }
+        dfRadio(jet.callsign + (jet.isAce ? ": [ACE] " : ": ") + gunRadioMsg);
       }
     }
 
@@ -136,39 +154,80 @@ function evaluateKineticWeapons(jet, targetEnemy, colors) {
       var misSpeed = jet.speed + 3.0;
       var misType = 0;
 
-      if (jet.gen === 2) {
-        var targetBearing = Math.atan2(targetEnemy.y - jet.y, targetEnemy.x - jet.x);
-        var aspectDiff = Math.abs(targetEnemy.angle - targetBearing);
-        while (aspectDiff > Math.PI) aspectDiff = Math.abs(aspectDiff - Math.PI * 2);
-        if (aspectDiff > 1.10 || Math.abs(deltaH) > 35000) {
-          allowLaunch = false;
-        } else {
-          misType = 1;
-          dfRadio(jet.callsign + ": FOX-2! AIM-9B HEATSEEKER AWAY");
+      if (jet.team === "blue") {
+        // Western (USA / NATO) Missile Arsenal
+        if (jet.gen === 2) {
+          var targetBearing = Math.atan2(targetEnemy.y - jet.y, targetEnemy.x - jet.x);
+          var aspectDiff = Math.abs(targetEnemy.angle - targetBearing);
+          while (aspectDiff > Math.PI) aspectDiff = Math.abs(aspectDiff - Math.PI * 2);
+          if (aspectDiff > 1.10 || Math.abs(deltaH) > 35000) {
+            allowLaunch = false;
+          } else {
+            misType = 1;
+            dfRadio(jet.callsign + ": FOX-2! AIM-9B SIDEWINDER AWAY");
+          }
+        } else if (jet.gen === 3) {
+          misType = 3;
+          misSpeed = jet.speed + 3.5;
+          dfRadio(jet.callsign + ": FOX-1! AIM-7 SPARROW AWAY (BVR RADAR LOCK)");
+        } else if (jet.gen === 4) {
+          misType = 4;
+          if (jet.variant === "F16" || (jet.callsign && jet.callsign.indexOf("VIPER") !== -1)) {
+            misSpeed = jet.speed + 3.6;
+            dfRadio(jet.callsign + ": FOX-3! AIM-120 AMRAAM AWAY");
+          } else if (dist > 240) {
+            misSpeed = jet.speed + 4.2;
+            dfRadio(jet.callsign + ": FOX-3! AIM-54 PHOENIX AWAY (MACH 5)");
+          } else {
+            misSpeed = jet.speed + 3.4;
+            dfRadio(jet.callsign + ": FOX-2! AIM-9L SIDEWINDER ALL-ASPECT LOCK");
+          }
+        } else if (jet.gen === 5) {
+          misType = 5;
+          misSpeed = jet.speed + 3.8;
+          dfRadio(jet.callsign + ": FOX-3! AIM-120D AMRAAM AWAY (STEALTH INTERNAL RELEASE)");
+        } else if (jet.gen === 6) {
+          misType = 6;
+          misSpeed = jet.speed + 4.6;
+          dfRadio(jet.callsign + ": FOX-3! AIM-260 JATM AWAY (CCA EXTENDED RADAR LOCK, " + Math.round(dist * 0.08) + " NM)");
         }
-      } else if (jet.gen === 3) {
-        misType = 3;
-        misSpeed = jet.speed + 3.5;
-        dfRadio(jet.callsign + ": FOX-1! AIM-7 SPARROW AWAY (BVR RADAR LOCK)");
-      } else if (jet.gen === 4) {
-        misType = 4;
-        if (jet.variant === "F16" || (jet.callsign && jet.callsign.indexOf("VIPER") !== -1)) {
-          misSpeed = jet.speed + 3.4;
-          dfRadio(jet.callsign + ": FOX-2! AIM-9L ALL-ASPECT LOCK AWAY");
-        } else if (dist > 240) {
-          misSpeed = jet.speed + 4.2;
-          dfRadio(jet.callsign + ": FOX-3! AIM-54 PHOENIX AWAY (MACH 5)");
-        } else {
-          dfRadio(jet.callsign + ": FOX-2! AIM-9L SIDEWINDER AWAY");
+      } else {
+        // Eastern (USSR / Russia / China) Missile Arsenal
+        if (jet.gen === 2) {
+          var targetBearingR = Math.atan2(targetEnemy.y - jet.y, targetEnemy.x - jet.x);
+          var aspectDiffR = Math.abs(targetEnemy.angle - targetBearingR);
+          while (aspectDiffR > Math.PI) aspectDiffR = Math.abs(aspectDiffR - Math.PI * 2);
+          if (aspectDiffR > 1.10 || Math.abs(deltaH) > 35000) {
+            allowLaunch = false;
+          } else {
+            misType = 1;
+            dfRadio(jet.callsign + ": FOX-2! K-13 / R-3S ATOLL AWAY (IR HEATSEEKER)");
+          }
+        } else if (jet.gen === 3) {
+          misType = 3;
+          misSpeed = jet.speed + 3.5;
+          dfRadio(jet.callsign + ": FOX-1! R-23R APEX AWAY (BVR RADAR LOCK)");
+        } else if (jet.gen === 4) {
+          misType = 4;
+          if (dist > 260) {
+            misSpeed = jet.speed + 4.0;
+            dfRadio(jet.callsign + ": FOX-1! R-27ER ALAMO AWAY (EXTENDED RANGE SARH)");
+          } else if (dist < 180) {
+            misSpeed = jet.speed + 3.6;
+            dfRadio(jet.callsign + ": FOX-2! R-73 ARCHER AWAY (HIGH OFF-BORESIGHT HMS)");
+          } else {
+            misSpeed = jet.speed + 3.7;
+            dfRadio(jet.callsign + ": FOX-3! R-77 ADDER AWAY (ACTIVE RADAR)");
+          }
+        } else if (jet.gen === 5) {
+          misType = 5;
+          misSpeed = jet.speed + 4.0;
+          dfRadio(jet.callsign + ": FOX-3! R-77-1 ADDER AWAY (STEALTH INTERNAL RELEASE)");
+        } else if (jet.gen === 6) {
+          misType = 6;
+          misSpeed = jet.speed + 4.6;
+          dfRadio(jet.callsign + ": FOX-3! PL-15 / R-37M AWAY (CCA COLLABORATIVE RADAR MESH)");
         }
-      } else if (jet.gen === 5) {
-        misType = 5;
-        misSpeed = jet.speed + 3.8;
-        dfRadio(jet.callsign + ": FOX-3! AIM-120D AMRAAM AWAY (STEALTH INTERNAL RELEASE)");
-      } else if (jet.gen === 6) {
-        misType = 6;
-        misSpeed = jet.speed + 4.6;
-        dfRadio(jet.callsign + ": FOX-3! AIM-260 JATM AWAY (CCA EXTENDED RADAR LOCK, " + Math.round(dist * 0.08) + " NM)");
       }
 
       if (allowLaunch) {

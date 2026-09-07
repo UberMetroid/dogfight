@@ -12,52 +12,52 @@
     1: {
       eraNum: 1,
       eraLabel: "ERA I // 1950",
-      title: "KOREAN CANYON DOGFIGHT",
-      doctrine: "TRANSONIC GUNFIGHTERS // B-47 IRON BOMB RIPPLE",
-      techInventedName: "Axial Turbojets & Swept Wings (Mach 0.95)",
-      techInventedImpact: "Replaced piston propellers to break past transonic limits. High closing speeds forced close-in visual dogfights (.50 cal / 37mm cannons) and B-47 iron bomb carpet strikes.",
-      blueAircraft: "F-86 SABRE",
-      redAircraft: "MiG-15 FAGOT",
-      keyWeapons: "6x .50 Cal M3 Browning / 37mm Nudelman Cannon / B-47 1,000 lb Bombs",
+      title: "KOREAN CANYON TRANSONIC GUNFIGHT",
+      doctrine: "WEST: 6x .50 CAL BROWNING // EAST: 37MM N-37 & 23MM // B-47 VS Tu-16 IRON BOMBS",
+      techInventedName: "Axial Turbojets, Swept Wings (Mach 0.95) & High-Rate Autocannons",
+      techInventedImpact: "Replaced piston propellers to break past transonic limits. High closing speeds forced close-in visual dogfights between Western fast-rate .50 caliber Browning tracers and Eastern heavy 37mm/23mm explosive shells.",
+      blueAircraft: "F-86 SABRE (USA)",
+      redAircraft: "MiG-15 FAGOT (USSR)",
+      keyWeapons: "WEST: 6x .50 Cal M3 Browning & B-47 1,000 lb Ripple ⚔️ EAST: 37mm N-37 / 23mm NR-23 & Tu-16 FAB-500",
       flightArena: "Mid-Troposphere (22,000 ft MSL) // Thick Air Dogfighting",
       missilesEnabled: false
     },
     2: {
       eraNum: 2,
       eraLabel: "ERA II // 1960",
-      title: "COLD WAR SUPERSONIC DASH",
-      doctrine: "AIM-9B HEATSEEKERS // ☢ THERMONUCLEAR NUKE DETERRENCE",
-      techInventedName: "Afterburners (Mach 2) & Infrared Sidewinders",
-      techInventedImpact: "Afterburning turbojets doubled speeds to Mach 2+. Infrared seekers locking onto exhaust plumes replaced cannons, shifting warfare to supersonic slashing attacks and B-58 nuclear deterrence.",
-      blueAircraft: "F-104 STARFIGHTER",
-      redAircraft: "MiG-21 FISHBED",
-      keyWeapons: "AIM-9B Rear-Aspect Sidewinder / ☢ B-58 Hustler 9MT Thermonuclear Nuke",
+      title: "COLD WAR SUPERSONIC INTERCEPT & NUKES",
+      doctrine: "WEST: AIM-9B SIDEWINDER // EAST: K-13 ATOLL // ☢ B-58 (9MT) VS Tu-95 (15MT)",
+      techInventedName: "Afterburners (Mach 2), Infrared Heatseekers & Megaton Deterrence",
+      techInventedImpact: "Afterburning turbojets doubled speeds to Mach 2+. Western AIM-9B Sidewinders and Soviet K-13 Atoll heatseekers locked onto jet exhausts, while Mach 2 B-58 Hustlers and Tu-95 Bears stood nuclear deterrence alert.",
+      blueAircraft: "F-104 STARFIGHTER / F-4 (USA)",
+      redAircraft: "MiG-21 FISHBED (USSR)",
+      keyWeapons: "WEST: AIM-9B Sidewinder & B-58 (B53 9MT Nuke) ⚔️ EAST: K-13 Atoll & Tu-95V Bear (RDS-37 15MT Nuke)",
       flightArena: "High Troposphere (36,000 ft MSL) // Mach 2 Straight-Line Intercepts",
       missilesEnabled: true
     },
     3: {
       eraNum: 3,
       eraLabel: "ERA III // 1972",
-      title: "VIETNAM ALL-WEATHER RADAR",
-      doctrine: "AIM-7 SPARROW BVR // CHAFF & FLARES // CLUSTER DISPENSERS",
+      title: "VIETNAM ALL-WEATHER BVR RADAR",
+      doctrine: "WEST: AIM-7 SPARROW (SARH) // EAST: R-23 APEX // CHAFF/FLARES // CLUSTER STRIKES",
       techInventedName: "Pulse-Doppler Radar, SARH BVR Missiles & Chaff/Flares",
-      techInventedImpact: "Pulse-Doppler radars enabled head-on beyond-visual-range (BVR) missile locks. In response, burning magnesium flares and radar-reflecting chaff were invented to decoy homing seekers.",
-      blueAircraft: "F-4 PHANTOM II",
-      redAircraft: "MiG-23 FLOGGER",
-      keyWeapons: "AIM-7 Sparrow (SARH) / CBU-87 Cluster Dispensers / Chaff & Flare Dispensers",
+      techInventedImpact: "Pulse-Doppler radars enabled head-on beyond-visual-range (BVR) missile locks with Western AIM-7 Sparrows and Soviet R-23 Apex missiles. Magnesium flares and metallized chaff were invented to decoy homing seekers.",
+      blueAircraft: "F-4 PHANTOM II (USA)",
+      redAircraft: "MiG-23 FLOGGER (USSR)",
+      keyWeapons: "WEST: AIM-7 Sparrow SARH & F-111 CBU-87 ⚔️ EAST: R-23R Apex SARH & Tu-22M Backfire RBK-500",
       flightArena: "Stratospheric Transition (42,000 ft MSL) // Radar Cone Intercepts",
       missilesEnabled: true
     },
     4: {
       eraNum: 4,
       eraLabel: "ERA IV // 1991",
-      title: "DESERT STORM AIR SUPERIORITY",
-      doctrine: "AIM-54 PHOENIX (MACH 5) // 9G RATE FIGHT // B-1B JDAM ROTARY",
-      techInventedName: "Fly-by-Wire 9G Agility, Active Radar (Mach 5) & GPS JDAMs",
-      techInventedImpact: "Computers stabilize relaxed airframes for instantaneous 9G nose pointing. Active-radar Mach 5 Phoenix missiles guide themselves, while GPS satellites turn dumb gravity bombs into surgical JDAM strikes.",
-      blueAircraft: "F-16 VIPER / F-14 TOMCAT",
-      redAircraft: "Su-27 FLANKER",
-      keyWeapons: "AIM-54 Phoenix / AIM-9L All-Aspect / CADC Swing Wings / B-1B JDAM Salvo",
+      title: "DESERT STORM FOURTH-GEN AIR SUPERIORITY",
+      doctrine: "WEST: AIM-54 (M5) & AMRAAM // EAST: R-27 ALAMO & R-73 ARCHER // B-1B VS Tu-160",
+      techInventedName: "Fly-by-Wire 9G Agility, High-Off-Boresight Helmets & GPS JDAMs",
+      techInventedImpact: "Digital FBW stabilized relaxed airframes for 9G turns. The West fielded Mach 5 Phoenix and AMRAAMs; the East fielded helmet-slaved R-73 Archers and long-range R-27 Alamos, alongside B-1B and Tu-160 supersonic bombers.",
+      blueAircraft: "F-14 TOMCAT / F-16 VIPER (USA)",
+      redAircraft: "Su-27 FLANKER / MiG-29 (USSR)",
+      keyWeapons: "WEST: AIM-54 Phoenix & AIM-120 & B-1B JDAM ⚔️ EAST: R-27 Alamo & R-73 Archer & Tu-160 KAB-1500",
       flightArena: "Tactical BVR Arena (48,000 ft MSL) // Boyd E-M 9G Dogfights",
       missilesEnabled: true
     },
@@ -65,25 +65,25 @@
       eraNum: 5,
       eraLabel: "ERA V // 2010",
       title: "STEALTH SUPERCRUISE SUPREMACY",
-      doctrine: "0.0001 RCS INVISIBILITY // AESA SENSORS // B-2 BUNKER BUSTERS",
+      doctrine: "WEST: F-22 RAPTOR (0.0001 RCS) // EAST: Su-57 FELON // B-2 MOP VS PAK DA",
       techInventedName: "VLO Radar Stealth (0.0001 RCS), Internal Weapon Bays & AESA",
-      techInventedImpact: "Faceted radar-absorbent geometry renders airframes invisible to early warning radar. Fighters supercruise at Mach 1.6+ without afterburners, and B-2 spirits deliver 30,000 lb bunker busters undetected.",
-      blueAircraft: "F-22 RAPTOR",
-      redAircraft: "Su-57 FELON",
-      keyWeapons: "Internal Bay AIM-120D AMRAAMs / GBU-57 MOP (30,000 lb Bunker Buster)",
+      techInventedImpact: "Radar-absorbent shaping rendered airframes invisible to early warning radars. Western F-22 Raptors and Eastern Su-57 Felons supercruise at Mach 1.6+ without afterburners, delivering internal missiles and heavy bunker busters.",
+      blueAircraft: "F-22 RAPTOR (USA)",
+      redAircraft: "Su-57 FELON (RUSSIA)",
+      keyWeapons: "WEST: Internal AIM-120D & B-2 Spirit GBU-57 MOP ⚔️ EAST: Internal R-77-1 Adder & PAK DA FAB-9000",
       flightArena: "Stratospheric Supercruise (60,000 ft MSL) // Mach 1.6+ Without Afterburner",
       missilesEnabled: true
     },
     6: {
       eraNum: 6,
       eraLabel: "ERA VI // 2030",
-      title: "AUTONOMOUS DRONE SWARM & MESH",
-      doctrine: "LOYAL WINGMEN CCAs // LASER CIWS // HYPERSONIC CRUISE",
+      title: "AUTONOMOUS DRONE SWARM & HYPERSONICS",
+      doctrine: "WEST: NGAD + CCAs // EAST: H-20 + CCA RED // LASER CIWS // HYPERSONIC CRUISE",
       techInventedName: "Collaborative Combat AI Swarms, Laser CIWS & Hypersonic Scramjets",
-      techInventedImpact: "Uncrewed autonomous wingmen create a distributed sensor mesh and draw fire. Solid-state lasers intercept incoming missiles at light speed, and Mach 5+ HACM cruise missiles strike fortified positions.",
-      blueAircraft: "NGAD + CCAs",
-      redAircraft: "H-20 + CCA SWARM",
-      keyWeapons: "Distributed CCA Radar Mesh / Laser CIWS Defense / HACM Hypersonic Glide Darts",
+      techInventedImpact: "Uncrewed autonomous wingmen create a distributed sensor mesh and draw fire. Solid-state lasers intercept incoming missiles at light speed, and Western HACM and Eastern hypersonic glide darts strike defended airbases.",
+      blueAircraft: "NGAD + CCAs (USA/NATO)",
+      redAircraft: "H-20 + CCA SWARM (PLAAF/VKS)",
+      keyWeapons: "WEST: NGAD Loyal Wingmen & B-21 HACM ⚔️ EAST: H-20 CCA Swarm & Hypersonic Glide Darts",
       flightArena: "Extreme High Altitude (70,000 ft MSL) // Unmanned Sensor Grid",
       missilesEnabled: true
     },
@@ -91,12 +91,12 @@
       eraNum: 7,
       eraLabel: "ERA VII // 2050",
       title: "NEAR-SPACE & ORBITAL SUPREMACY",
-      doctrine: "QUANTUM SWARMS // 🛰️ ORBITAL SATELLITE LASER BEAM (DEW)",
+      doctrine: "WEST: HELIOS ORBITAL LASER // EAST: PERESVET-O PARTICLE BEAM // QUANTUM SWARMS",
       techInventedName: "Orbital Directed-Energy Lasers, Quantum Radar & Plasma Shields",
-      techInventedImpact: "Warfare ascends to near-space (98,000 ft) where aerodynamics yield to reaction thrusters. Quantum radars defeat all stealth, and space-based satellites fire coherent optical beams to vaporize bases from orbit.",
-      blueAircraft: "SWARM ALPHA",
-      redAircraft: "SWARM RED",
-      keyWeapons: "Coherent Tri-Lasers / Quantum Phase Shift / HELIOS Orbital Laser Cannon",
+      techInventedImpact: "Warfare ascends to near-space (98,000 ft). Quantum radars defeat all stealth, and space-based orbital platforms (Western HELIOS Laser and Eastern PERESVET-O Particle Beam) vaporize ground bases from orbit.",
+      blueAircraft: "SWARM ALPHA (USA/ALLIED)",
+      redAircraft: "SWARM RED (OPPOSING)",
+      keyWeapons: "WEST: HELIOS Orbital Laser Satellite (DEW) ⚔️ EAST: PERESVET-O Orbital Particle Beam Platform",
       flightArena: "Near-Space Exosphere (92,000 - 98,000 ft MSL) // Sub-Orbital Arena",
       missilesEnabled: true
     }
@@ -412,6 +412,7 @@
       var tagEl = document.getElementById("campaign-era-tag");
       var tagDockEl = document.getElementById("campaign-era-tag-dock");
       var titleEl = document.getElementById("campaign-era-title");
+      var titleDockEl = document.getElementById("campaign-era-title-dock");
       var docEl = document.getElementById("campaign-era-doctrine");
       var techNameEl = document.getElementById("campaign-tech-name");
       var techImpactEl = document.getElementById("campaign-tech-impact");
@@ -420,6 +421,7 @@
       if (tagEl && tagEl.textContent !== data.eraLabel) tagEl.textContent = data.eraLabel;
       if (tagDockEl && tagDockEl.textContent !== data.eraLabel) tagDockEl.textContent = data.eraLabel;
       if (titleEl && titleEl.textContent !== data.title) titleEl.textContent = data.title;
+      if (titleDockEl && titleDockEl.textContent !== data.title) titleDockEl.textContent = data.title;
       if (docEl && docEl.textContent !== data.doctrine) docEl.textContent = data.doctrine;
       if (techNameEl && techNameEl.textContent !== data.techInventedName) techNameEl.textContent = data.techInventedName;
       if (techImpactEl && techImpactEl.textContent !== data.techInventedImpact) techImpactEl.textContent = data.techInventedImpact;

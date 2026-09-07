@@ -147,60 +147,57 @@ function drawInWorldTacticalStatus(ctx, jet, colors, frameCount) {
   var jx = Math.floor(jet.x);
   var jy = Math.floor(jet.y);
   var isDamaged = (typeof jet.hp === "number" && jet.hp < 99.9 && jet.hp > 0.0);
-  var baseOffsetY = isDamaged ? -24 : -18;
+  var isBlue = (jet.team === "blue" || jet.isHero || jet.isBlue);
+  var teamColor = isBlue ? "rgba(56, 189, 248, 0.95)" : "rgba(244, 63, 94, 0.95)";
+  var roleTag = jet.isLead ? "LEAD" : "WING";
+  var callsignText = (jet.callsign ? jet.callsign : (isBlue ? "BLUE" : "RED")) + " [" + roleTag + "]";
 
-  // 1. Ace Insignia (★ ACE [kills])
+  // 1. Aircraft Callsign & Tactical Role Badge
+  ctx.save();
+  ctx.font = "bold 7px monospace";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "bottom";
+  ctx.fillStyle = teamColor;
+  ctx.shadowColor = "rgba(0, 0, 0, 0.9)";
+  ctx.shadowBlur = 3;
+  ctx.fillText(callsignText, jx, jy + (isDamaged ? -26 : -18));
+
+  // 2. Tactical State or Maneuver Tag
   if (jet.isAce) {
-    ctx.save();
-    ctx.font = "bold 8px monospace";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "bottom";
-
-    // Subtle gold glow
+    ctx.font = "bold 7.5px monospace";
     ctx.fillStyle = "#fbbf24";
     ctx.shadowColor = "#f59e0b";
-    ctx.shadowBlur = 5;
-    var aceText = "★ ACE (" + (jet.kills || 5) + ")";
-    ctx.fillText(aceText, jx, jy + baseOffsetY);
+    ctx.shadowBlur = 4;
+    ctx.fillText("★ ACE (" + (jet.kills || 5) + ")", jx, jy + (isDamaged ? -34 : -26));
 
-    // Tiny gold star glint near the wingtip
+    // Gold star glint near the wingtip
     var tGlance = (frameCount || 0) * 0.08;
     if (Math.sin(tGlance) > 0.6) {
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(jx - 12 + Math.cos(jet.angle) * 10, jy + Math.sin(jet.angle) * 10, 2, 2);
     }
-    ctx.restore();
   } else if (jet.mode === "FORMATION") {
-    ctx.save();
     ctx.font = "bold 6.5px monospace";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "bottom";
-    ctx.fillStyle = (jet.team === "blue") ? "rgba(56, 189, 248, 0.9)" : "rgba(244, 63, 94, 0.9)";
-    ctx.shadowColor = "rgba(0,0,0,0.85)";
-    ctx.shadowBlur = 3;
-    ctx.fillText("FORMATION // TWO", jx, jy + (isDamaged ? -24 : -16));
-    ctx.restore();
+    ctx.fillStyle = isBlue ? "#7dd3fc" : "#fca5a5";
+    ctx.fillText("FORMATION // TWO", jx, jy + (isDamaged ? -34 : -26));
   } else if (jet.mode === "COVER") {
-    ctx.save();
-    ctx.font = "bold 7px monospace";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "bottom";
+    ctx.font = "bold 6.5px monospace";
     ctx.fillStyle = "#f59e0b";
-    ctx.shadowColor = "rgba(0,0,0,0.85)";
-    ctx.shadowBlur = 3;
-    ctx.fillText("MUTUAL DEFENSE", jx, jy + (isDamaged ? -24 : -16));
-    ctx.restore();
+    ctx.fillText("MUTUAL COVER", jx, jy + (isDamaged ? -34 : -26));
   } else if (jet.mode === "PINCER") {
-    ctx.save();
-    ctx.font = "bold 7px monospace";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "bottom";
+    ctx.font = "bold 6.5px monospace";
     ctx.fillStyle = "#c084fc";
-    ctx.shadowColor = "rgba(0,0,0,0.85)";
-    ctx.shadowBlur = 3;
-    ctx.fillText("BRACKET PINCER", jx, jy + (isDamaged ? -24 : -16));
-    ctx.restore();
+    ctx.fillText("BRACKET PINCER", jx, jy + (isDamaged ? -34 : -26));
+  } else if (jet.mode === "INTERCEPT_BOMBER") {
+    ctx.font = "bold 6.5px monospace";
+    ctx.fillStyle = "#ef4444";
+    ctx.fillText("INTERCEPT BOMBER", jx, jy + (isDamaged ? -34 : -26));
+  } else if (jet.isBingoFuel) {
+    ctx.font = "bold 6.5px monospace";
+    ctx.fillStyle = "#fbbf24";
+    ctx.fillText("RTB // BINGO FUEL", jx, jy + (isDamaged ? -34 : -26));
   }
+  ctx.restore();
 
   // 2. Missile Ammo Pips & Winchester Alert (for Gen 2-6 with missile capacity)
   if (typeof jet.missileCapacity === "number" && jet.missileCapacity > 0 && jet.gen >= 2 && jet.gen <= 6) {

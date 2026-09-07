@@ -25,10 +25,11 @@ function dfStepBullets() {
 
     // Draw high-visibility velocity-aligned tracer line strokes
     DF.ctx.save();
-    var bFaction = (bOwnerTeam === 1) ? FACTION_COLORS.red : FACTION_COLORS.blue;
+    var isEast = (bOwnerTeam === 1);
+    var bFaction = isEast ? FACTION_COLORS.red : FACTION_COLORS.blue;
     var tracerColor = bFaction ? (bFaction.tracer || bFaction.accent) : (bOwnerTeam === 0 ? "#38bdf8" : "#f43f5e");
     DF.ctx.strokeStyle = tracerColor;
-    DF.ctx.lineWidth = 2.2;
+    DF.ctx.lineWidth = isEast ? 3.2 : 2.0; // Eastern heavy autocannons (37mm/30mm) have wider shell tracers
     DF.ctx.beginPath();
     DF.ctx.moveTo(bx - bvx * 0.75, by - bvy * 0.75);
     DF.ctx.lineTo(bx, by);
@@ -36,7 +37,7 @@ function dfStepBullets() {
 
     // Incandescent white tracer core
     DF.ctx.strokeStyle = "#ffffff";
-    DF.ctx.lineWidth = 1.2;
+    DF.ctx.lineWidth = isEast ? 1.6 : 1.0;
     DF.ctx.beginPath();
     DF.ctx.moveTo(bx - bvx * 0.35, by - bvy * 0.35);
     DF.ctx.lineTo(bx, by);

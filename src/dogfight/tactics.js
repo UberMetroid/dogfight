@@ -3,37 +3,43 @@
 // Logline: Pool vs pool targeting, normal wingman formation station-keeping, and mutual defense.
 //
 
-// Tactical Formation Station Coordinates for Wingman relative to Flight Lead
+// Tactical Formation Station Coordinates for Wingman relative to Flight Lead (2D Side-View)
 function getWingmanStation(wingman, lead) {
   var gen = (wingman && wingman.gen) ? wingman.gen : 1;
   var isBlue = (wingman && wingman.team === "blue");
-  var sideSign = isBlue ? 1 : -1;
 
-  var trailDist, spreadDist, altOffset;
+  // Trail distance behind lead along flight path
+  var trailDist, stepUp;
   if (gen <= 2) {
-    // Gen 1-2 Korea / Early Jet: Fighting Wing Echelon (35-45 deg off Lead)
-    trailDist = 60;
-    spreadDist = 52;
-    altOffset = isBlue ? -14 : 14;
+    // Gen 1-2 Korea / Early Jet: Fighting Wing (48px trail, stepped up 10px / ~1000 ft clear of jet wash)
+    trailDist = 48;
+    stepUp = -10;
   } else if (gen <= 4) {
-    // Gen 3-4 Vietnam & Desert Storm: Tactical Combat Spread (Fluid Two / Line-Abreast)
-    trailDist = 36;
-    spreadDist = 110;
-    altOffset = isBlue ? -18 : 18;
+    // Gen 3-4 Tactical Combat Spread: 65px trail, stepped up 14px (~1400 ft)
+    trailDist = 65;
+    stepUp = -14;
   } else {
-    // Gen 5-7 Stealth Dispersed Sensor Grid / Loyal Wingman
-    trailDist = 30;
-    spreadDist = 145;
-    altOffset = isBlue ? -22 : 22;
+    // Gen 5-7 Dispersed Sensor Grid: 80px trail, stepped up 18px (~1800 ft)
+    trailDist = 80;
+    stepUp = -18;
   }
 
   var cosL = Math.cos(lead.angle);
   var sinL = Math.sin(lead.angle);
 
-  var stX = lead.x - cosL * trailDist - sinL * (spreadDist * sideSign);
-  var stY = lead.y - sinL * trailDist + cosL * (spreadDist * sideSign) + altOffset;
+  // Position strictly trailing behind lead along flight path with altitude step-up
+  var stX = lead.x - cosL * trailDist;
+  var stY = lead.y - sinL * trailDist + stepUp;
 
-  return { x: stX, y: stY, trailDist: trailDist, spreadDist: spreadDist };
+  // Ground and terrain clearance safety: never command wingman below terrain or sea
+  var worldH = (typeof DF !== "undefined" && DF.worldHeight) ? DF.worldHeight : 1200;
+  var mslY = (typeof getSeaLevelY === "function") ? getSeaLevelY(worldH) : Math.floor(worldH * 0.84);
+  if (stY > mslY - 25) stY = mslY - 25;
+  if (lead.y > mslY - 120 && stY > lead.y - 8) {
+    stY = lead.y - 8;
+  }
+
+  return { x: stX, y: stY, trailDist: trailDist, stepUp: stepUp };
 }
 
 if (typeof global !== "undefined") global.getWingmanStation = getWingmanStation;

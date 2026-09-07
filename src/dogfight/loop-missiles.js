@@ -69,7 +69,8 @@ function dfStepMissiles() {
       while (hConeDiff > Math.PI) hConeDiff = Math.abs(hConeDiff - Math.PI * 2);
       if (hConeDiff > 0.55) {
         tgtX = null; tgtY = null; isDecoyed = true;
-        dfRadio("TACTICAL WARNING: AIM-7 LOST RADAR LOCK (TRACK CONE EXCEEDED)");
+        var misName = (misOwnerTeam === 0) ? "AIM-7" : "R-23 APEX";
+        dfRadio("TACTICAL WARNING: " + misName + " LOST RADAR LOCK (TRACK CONE EXCEEDED)");
       }
     }
 

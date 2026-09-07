@@ -96,8 +96,8 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  min-width: 320px;
-  max-width: 440px;
+  min-width: 340px;
+  max-width: 480px;
 }
 
 .hud-force-box.force-blue {
@@ -110,51 +110,14 @@ html, body {
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.75), inset 0 0 16px rgba(239, 68, 68, 0.06);
 }
 
-/* Ultra-Slim Center-Top Era Strip (Leaves 100% Sky Open for Dogfighting) */
-.hud-top-era-strip {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(6, 10, 18, 0.75);
-  backdrop-filter: blur(6px);
-  border: 1px solid rgba(245, 158, 11, 0.4);
-  border-radius: 4px;
-  padding: 3px 12px;
-  height: 22px;
-  box-sizing: border-box;
-  margin: 0 auto;
-  pointer-events: auto;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
-}
-
-.era-strip-tag {
+/* Unobstructed Center Sky: Top strip removed for 100% open dogfighting view */
+.dock-era-title {
   font-family: var(--font-mono);
   font-size: 0.65rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  color: #fbbf24;
-  text-transform: uppercase;
-}
-
-.era-strip-sep {
-  color: rgba(148, 163, 184, 0.4);
-  font-size: 0.60rem;
-}
-
-.era-strip-title {
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   color: #f8fafc;
   text-transform: uppercase;
-}
-
-.era-strip-countdown {
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  font-weight: 800;
-  color: #38bdf8;
 }
 
 /* Lower-Third Cinematic Documentary Chronicle Dock (Over Water) */
@@ -446,14 +409,20 @@ html, body {
 
 .force-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  gap: 5px;
   border-bottom: 1px solid rgba(148, 163, 184, 0.15);
   padding-bottom: 5px;
 }
 
 .force-title-group {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.title-left {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -461,9 +430,31 @@ html, body {
 
 .force-title {
   font-family: var(--font-mono);
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 800;
   letter-spacing: 0.08em;
+}
+
+.force-element-badge {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 1px 6px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.badge-blue {
+  color: #7dd3fc;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+}
+
+.badge-red {
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
 }
 
 .force-blue .force-title {
@@ -478,10 +469,11 @@ html, body {
 
 .force-stats {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
   font-family: var(--font-mono);
-  font-size: 0.68rem;
+  font-size: 0.65rem;
 }
 
 .stat-item {

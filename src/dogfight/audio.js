@@ -52,7 +52,7 @@
       if (!enabled) return;
       var c = initContext();
       if (!c) return;
-      // Synthesize 6 rapid gun pulses for 20mm Vulcan burst
+      // Synthesize 5 rapid gun pulses for Western 20mm Vulcan / .50 Cal burst
       var now = c.currentTime;
       for (var i = 0; i < 5; i++) {
         var t = now + i * 0.018;
@@ -67,6 +67,28 @@
         gain.connect(c.destination);
         osc.start(t);
         osc.stop(t + 0.016);
+      }
+    },
+
+    playHeavyCannonBurst: function () {
+      if (!enabled) return;
+      var c = initContext();
+      if (!c) return;
+      // Synthesize 3 deep thumping pulses for Eastern 37mm N-37 / 30mm GSh-30 explosive shells
+      var now = c.currentTime;
+      for (var i = 0; i < 3; i++) {
+        var t = now + i * 0.045;
+        var osc = c.createOscillator();
+        var gain = c.createGain();
+        osc.type = "sawtooth";
+        osc.frequency.setValueAtTime(85, t);
+        osc.frequency.exponentialRampToValueAtTime(28, t + 0.038);
+        gain.gain.setValueAtTime(0.22, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.038);
+        osc.connect(gain);
+        gain.connect(c.destination);
+        osc.start(t);
+        osc.stop(t + 0.040);
       }
     },
 

@@ -391,8 +391,23 @@
       }
 
       // 2. Left Flank (Blue Options & Stats)
+      var sBlueElement = document.getElementById("stat-blue-element");
+      if (sBlueElement && DF && DF.bluePool) {
+        var bActiveList = [];
+        for (var bsi = 0; bsi < DF.bluePool.length; bsi++) {
+          if (DF.bluePool[bsi].active && !DF.bluePool[bsi].isDying) bActiveList.push(DF.bluePool[bsi]);
+        }
+        if (bActiveList.length >= 2) {
+          sBlueElement.textContent = (bActiveList[0].callsign || "1-1") + " & " + (bActiveList[1].callsign || "1-2");
+        } else if (bActiveList.length === 1) {
+          sBlueElement.textContent = (bActiveList[0].callsign || "1-1") + " [SOLO]";
+        } else {
+          sBlueElement.textContent = "SCRAMBLING";
+        }
+      }
+
       var sBlueSorties = document.getElementById("stat-blue-sorties");
-      if (sBlueSorties) sBlueSorties.textContent = this.blueAirframes + (this.blueAirframes === 1 ? " SORTIE" : " SORTIES");
+      if (sBlueSorties) sBlueSorties.textContent = this.blueAirframes + (this.blueAirframes === 1 ? " AIRFRAME" : " AIRFRAMES (2-SHIP)");
 
       var sBlueFuel = document.getElementById("stat-blue-fuel");
       if (sBlueFuel) {
@@ -426,8 +441,23 @@
       if (sBlueStance) sBlueStance.textContent = this.blueStance;
 
       // 3. Right Flank (Red Options & Stats)
+      var sRedElement = document.getElementById("stat-red-element");
+      if (sRedElement && DF && DF.redPool) {
+        var rActiveList = [];
+        for (var rsi = 0; rsi < DF.redPool.length; rsi++) {
+          if (DF.redPool[rsi].active && !DF.redPool[rsi].isDying) rActiveList.push(DF.redPool[rsi]);
+        }
+        if (rActiveList.length >= 2) {
+          sRedElement.textContent = (rActiveList[0].callsign || "1-1") + " & " + (rActiveList[1].callsign || "1-2");
+        } else if (rActiveList.length === 1) {
+          sRedElement.textContent = (rActiveList[0].callsign || "1-1") + " [SOLO]";
+        } else {
+          sRedElement.textContent = "SCRAMBLING";
+        }
+      }
+
       var sRedSorties = document.getElementById("stat-red-sorties");
-      if (sRedSorties) sRedSorties.textContent = this.redAirframes + (this.redAirframes === 1 ? " BANDIT" : " BANDITS");
+      if (sRedSorties) sRedSorties.textContent = this.redAirframes + (this.redAirframes === 1 ? " BANDIT" : " BANDITS (2-SHIP)");
 
       var sRedFuel = document.getElementById("stat-red-fuel");
       if (sRedFuel) {
