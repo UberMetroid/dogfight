@@ -1,15 +1,74 @@
 // # Weapons gens 1-5
 //
 // Logline: Guns and missiles.
-//
 function evaluateKineticWeapons(jet, targetEnemy, colors) {
+    var shooterTeamCode = (jet.team === "blue") ? 0 : 1;
+
+    // Direct engagement against incoming hostile Strategic Bomber
+    if (jet.mode === "INTERCEPT_BOMBER" || !targetEnemy) {
+      if (typeof StrategicBomberSystem !== "undefined" && StrategicBomberSystem.activeBomber) {
+        var actB = StrategicBomberSystem.activeBomber;
+        if (actB.team !== jet.team && actB.state !== "SPLASHED") {
+          var sbX = actB.x;
+          var sbY = actB.y;
+          var sbDist = Math.hypot(sbX - jet.x, sbY - jet.y);
+          var sbBearing = Math.atan2(sbY - jet.y, sbX - jet.x);
+          var sbDa = Math.abs(jet.angle - sbBearing);
+          while (sbDa > Math.PI) sbDa = Math.abs(sbDa - Math.PI * 2);
+
+          // 20mm Cannon on bomber
+          if (sbDa < 0.85 && sbDist >= 20 && sbDist <= 280 && jet.gunCooldown <= 0) {
+            jet.gunCooldown = 3;
+            if (typeof window !== "undefined" && window.TacticalAudio) window.TacticalAudio.playCannonBurst();
+            var bIdxB = DF.bulletsPool.alloc();
+            if (bIdxB >= 0) {
+              var boB = bIdxB * 6;
+              DF.bulletsPool.buffer[boB] = jet.x + Math.cos(jet.angle) * 20;
+              DF.bulletsPool.buffer[boB + 1] = jet.y + Math.sin(jet.angle) * 20;
+              DF.bulletsPool.buffer[boB + 2] = Math.cos(jet.angle) * 14;
+              DF.bulletsPool.buffer[boB + 3] = Math.sin(jet.angle) * 14;
+              DF.bulletsPool.buffer[boB + 4] = 18;
+              DF.bulletsPool.buffer[boB + 5] = (shooterTeamCode === 0 ? 100 : 200) + (jet.slotIdx || 0);
+            }
+            if (Math.random() < 0.20) dfRadio(jet.callsign + ": GUNS! ENGAGING ENEMY BOMBER!");
+          }
+
+          // Missiles on bomber
+          var hasMisB = (typeof jet.missilesRemaining === "number") ? (jet.missilesRemaining > 0) : true;
+          if (hasMisB && jet.gen >= 2 && sbDa < 1.05 && sbDist <= 1400 && sbDist >= 60 && jet.missileCooldown <= 0) {
+            jet.missileCooldown = 60;
+            if (typeof jet.missilesRemaining === "number") {
+              jet.missilesRemaining--;
+              if (jet.missilesRemaining === 0) jet.isWinchester = true;
+            }
+            if (typeof window !== "undefined" && window.TacticalAudio) window.TacticalAudio.playMissileLaunch();
+            var mIdxB = DF.missilesPool.alloc();
+            if (mIdxB >= 0) {
+              var moB = mIdxB * 8;
+              var misSpeedB = jet.speed + 3.8;
+              DF.missilesPool.buffer[moB] = jet.x + Math.cos(jet.angle) * 20;
+              DF.missilesPool.buffer[moB + 1] = jet.y + Math.sin(jet.angle) * 20;
+              DF.missilesPool.buffer[moB + 2] = Math.cos(jet.angle) * misSpeedB;
+              DF.missilesPool.buffer[moB + 3] = Math.sin(jet.angle) * misSpeedB;
+              DF.missilesPool.buffer[moB + 4] = shooterTeamCode;
+              DF.missilesPool.buffer[moB + 5] = 4;
+              DF.missilesPool.buffer[moB + 6] = 240;
+              DF.missilesPool.buffer[moB + 7] = 0;
+            }
+            dfRadio(jet.callsign + ": FOX AWAY! ENGAGING STRATEGIC BOMBER!");
+          }
+          return;
+        }
+      }
+      if (!targetEnemy) return;
+    }
+
     var dx = targetEnemy.x - jet.x;
     var dy = targetEnemy.y - jet.y;
     var dist = Math.hypot(dx, dy);
     var bearing = Math.atan2(dy, dx);
     var da = Math.abs(jet.angle - bearing);
     while (da > Math.PI) da = Math.abs(da - Math.PI * 2);
-    var shooterTeamCode = (jet.team === "blue") ? 0 : 1;
     var worldH = (typeof DF !== "undefined" && DF.worldHeight) ? DF.worldHeight : 1200;
     var hShooter = getAltitudeFeet(jet.y, worldH);
     var hTarget = getAltitudeFeet(targetEnemy.y, worldH);

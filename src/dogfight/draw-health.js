@@ -63,7 +63,7 @@ function drawThrustScaledExhaust(ctx, jet, colors, now) {
   if (!ctx || !jet || jet.gen === 7 || !jet.active || jet.isDying) return;
 
   var isAB = Boolean(jet.afterburner);
-  var spd = typeof jet.speed === "number" ? jet.speed : 4.0;
+  var spd = (typeof jet.speed === "number" && isFinite(jet.speed)) ? jet.speed : 4.0;
   var speedRatio = Math.min(1.0, Math.max(0.0, (spd - 2.0) / 5.6));
 
   // Dynamic dimension scaling:
@@ -71,7 +71,9 @@ function drawThrustScaledExhaust(ctx, jet, colors, now) {
   // Afterburner sprint: 20-40px length, 4-6px width
   var baseLen = isAB ? (18.0 + speedRatio * 22.0) : (4.0 + speedRatio * 4.0);
   var flameL = Math.max(4, Math.min(40, Math.floor(baseLen + (isAB ? (Math.random() * 2.0 - 1.0) : 0))));
+  if (!isFinite(flameL) || flameL <= 0) flameL = 8;
   var flameW = isAB ? (speedRatio > 0.7 ? 5 : 4) : 2;
+  if (!isFinite(flameW) || flameW <= 0) flameW = 3;
   var halfW = flameW * 0.5;
 
   var isRed = Boolean(jet.team === "red" || jet.isRed);

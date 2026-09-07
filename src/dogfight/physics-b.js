@@ -84,14 +84,14 @@ function updateJetPhysicsLate(jet, targetEnemy, incomingThreat, opposingPool, mi
     var isOcean = jet.x >= (worldW * coastRatio);
     var crashType = isOcean ? "WATER_IMPACT" : "TERRAIN_IMPACT";
 
-    // Agile Combat Employment (ACE) Touchdown & Ground Roll Exemption
-    var isAceControlledTouchdown = (jet.mode === "ACE_TOUCHDOWN" || jet.mode === "ACE_APPROACH");
+    // Agile Combat Employment (ACE) Touchdown & Ground Roll Exemption (includes TAKEOFF)
+    var isAceControlledTouchdown = (jet.mode === "ACE_TOUCHDOWN" || jet.mode === "ACE_APPROACH" || jet.mode === "TAKEOFF");
     var isLandingZone = false;
     if (typeof getAceLandingZones === "function") {
       var zones = getAceLandingZones(worldW, worldH);
       for (var zi = 0; zi < zones.length; zi++) {
         var z = zones[zi];
-        if (jet.x >= z.startX - 20 && jet.x <= z.endX + 20) {
+        if (jet.x >= z.startX - 35 && jet.x <= z.endX + 35) {
           isLandingZone = true;
           break;
         }
@@ -99,7 +99,7 @@ function updateJetPhysicsLate(jet, targetEnemy, incomingThreat, opposingPool, mi
     }
 
     if (isAceControlledTouchdown && isLandingZone && jet.active && !jet.isDying) {
-      // Controlled touch-and-go landing: clamp altitude to strip, roll without crashing
+      // Controlled touch-and-go landing or runway takeoff roll: clamp altitude to strip, roll without crashing
       jet.y = surfaceY - 1;
       if (jet.mode === "ACE_APPROACH") {
         jet.mode = "ACE_TOUCHDOWN";

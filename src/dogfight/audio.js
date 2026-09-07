@@ -260,6 +260,108 @@
         osc.start(now + i * 0.04);
         osc.stop(now + i * 0.04 + 0.16);
       });
+    },
+
+    playAirRaidSiren: function () {
+      if (!enabled) return;
+      var c = initContext();
+      if (!c) return;
+      var osc = c.createOscillator();
+      var gain = c.createGain();
+      osc.type = "triangle";
+      var now = c.currentTime;
+      osc.frequency.setValueAtTime(480, now);
+      osc.frequency.linearRampToValueAtTime(780, now + 0.9);
+      osc.frequency.linearRampToValueAtTime(480, now + 1.8);
+      osc.frequency.linearRampToValueAtTime(780, now + 2.7);
+      osc.frequency.linearRampToValueAtTime(420, now + 3.5);
+      gain.gain.setValueAtTime(0.14, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 3.6);
+      osc.connect(gain);
+      gain.connect(c.destination);
+      osc.start(now);
+      osc.stop(now + 3.65);
+    },
+
+    playNukeDetonation: function () {
+      if (!enabled) return;
+      var c = initContext();
+      if (!c) return;
+      var now = c.currentTime;
+
+      // Stage 1: Ultra-low sub-bass tectonic pulse (24-55Hz)
+      var osc = c.createOscillator();
+      var oscGain = c.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(55, now);
+      osc.frequency.exponentialRampToValueAtTime(22, now + 3.0);
+      oscGain.gain.setValueAtTime(0.35, now);
+      oscGain.gain.exponentialRampToValueAtTime(0.001, now + 3.2);
+      osc.connect(oscGain);
+      oscGain.connect(c.destination);
+      osc.start(now);
+      osc.stop(now + 3.25);
+
+      // Stage 2: Heavy brown/white noise atmospheric shockwave blast
+      var bufferSize = Math.floor(c.sampleRate * 2.8);
+      var noiseBuffer = c.createBuffer(1, bufferSize, c.sampleRate);
+      var output = noiseBuffer.getChannelData(0);
+      var lastOut = 0.0;
+      for (var i = 0; i < bufferSize; i++) {
+        var white = Math.random() * 2 - 1;
+        output[i] = (lastOut + (0.02 * white)) / 1.02; // Brown noise filter
+        lastOut = output[i];
+        output[i] *= 3.5;
+      }
+      var noise = c.createBufferSource();
+      noise.buffer = noiseBuffer;
+      var filter = c.createBiquadFilter();
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(320, now);
+      filter.frequency.exponentialRampToValueAtTime(60, now + 2.5);
+      var nGain = c.createGain();
+      nGain.gain.setValueAtTime(0.40, now);
+      nGain.gain.exponentialRampToValueAtTime(0.001, now + 2.8);
+      noise.connect(filter);
+      filter.connect(nGain);
+      nGain.connect(c.destination);
+      noise.start(now);
+    },
+
+    playBombWhistle: function () {
+      if (!enabled) return;
+      var c = initContext();
+      if (!c) return;
+      var osc = c.createOscillator();
+      var gain = c.createGain();
+      osc.type = "sine";
+      var now = c.currentTime;
+      osc.frequency.setValueAtTime(1400, now);
+      osc.frequency.exponentialRampToValueAtTime(320, now + 1.2);
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.25);
+      osc.connect(gain);
+      gain.connect(c.destination);
+      osc.start(now);
+      osc.stop(now + 1.28);
+    },
+
+    playTakeoffBurner: function () {
+      if (!enabled) return;
+      var c = initContext();
+      if (!c) return;
+      var now = c.currentTime;
+      var osc = c.createOscillator();
+      var gain = c.createGain();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(60, now);
+      osc.frequency.linearRampToValueAtTime(140, now + 0.6);
+      gain.gain.setValueAtTime(0.05, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
+      osc.connect(gain);
+      gain.connect(c.destination);
+      osc.start(now);
+      osc.stop(now + 0.72);
     }
   };
 

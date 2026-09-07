@@ -36,54 +36,73 @@ function dfStepSim() {
     }
   }
 
-  // Wipeout Patrol Cruise Transition & Screen-Edge Scramble Timers
+  // 1B. Strategic Bomber & Air Dominance Evaluation
+  if (typeof StrategicBomberSystem !== "undefined") {
+    StrategicBomberSystem.updateDominance(blueActiveCount, redActiveCount);
+  }
+
+  // Wipeout Patrol Cruise Transition & Air Dominance Scramble Flow
+  var bomberActive = (typeof StrategicBomberSystem !== "undefined" && StrategicBomberSystem.activeBomber);
+
   if (redActiveCount === 0 && blueActiveCount > 0) {
-    // Blue Force Wins Round -> Patrol Cruise
+    // Blue Force Wins Round -> Escort Bomber or Patrol Cruise
     for (var bpc = 0; bpc < DF.bluePool.length; bpc++) {
       var bpJet = DF.bluePool[bpc];
       if (bpJet.active && !bpJet.isDying) {
-        bpJet.mode = "PATROL";
-        bpJet.afterburner = false;
+        if (bomberActive && StrategicBomberSystem.activeBomber.team === "blue") {
+          bpJet.mode = "ESCORT_BOMBER";
+        } else if (bpJet.mode !== "ACE_APPROACH" && bpJet.mode !== "ACE_TOUCHDOWN" && bpJet.mode !== "TAKEOFF") {
+          bpJet.mode = "PATROL";
+          bpJet.afterburner = false;
+        }
         bpJet.targetJet = null;
-        if (Math.abs(Math.sin(bpJet.angle)) > 0.15) {
+        if (Math.abs(Math.sin(bpJet.angle)) > 0.15 && bpJet.mode === "PATROL") {
           bpJet.targetAngle = (Math.cos(bpJet.angle) >= 0) ? 0.0 : Math.PI;
         }
       }
     }
-    DF.redIngressTimer++;
-    if (DF.redIngressTimer >= 90) { // 3.0s tactical ingress delay
-      DF.redIngressTimer = 0;
-      scrambleWave("red");
-      for (var bsc = 0; bsc < DF.bluePool.length; bsc++) {
-        var bsJet = DF.bluePool[bsc];
-        if (bsJet.active && !bsJet.isDying) {
-          bsJet.missilesRemaining = bsJet.missileCapacity;
-          bsJet.isWinchester = (bsJet.missilesRemaining === 0 && bsJet.gen < 7);
+    if (!bomberActive && StrategicBomberSystem.dominanceTimer > 85) {
+      DF.redIngressTimer++;
+      if (DF.redIngressTimer >= 120) {
+        DF.redIngressTimer = 0;
+        scrambleWave("red");
+        for (var bsc = 0; bsc < DF.bluePool.length; bsc++) {
+          var bsJet = DF.bluePool[bsc];
+          if (bsJet.active && !bsJet.isDying) {
+            bsJet.missilesRemaining = bsJet.missileCapacity;
+            bsJet.isWinchester = (bsJet.missilesRemaining === 0 && bsJet.gen < 7);
+          }
         }
       }
     }
   } else if (blueActiveCount === 0 && redActiveCount > 0) {
-    // Red Force Wins Round -> Patrol Cruise
+    // Red Force Wins Round -> Escort Bomber or Patrol Cruise
     for (var rpc = 0; rpc < DF.redPool.length; rpc++) {
       var rpJet = DF.redPool[rpc];
       if (rpJet.active && !rpJet.isDying) {
-        rpJet.mode = "PATROL";
-        rpJet.afterburner = false;
+        if (bomberActive && StrategicBomberSystem.activeBomber.team === "red") {
+          rpJet.mode = "ESCORT_BOMBER";
+        } else if (rpJet.mode !== "ACE_APPROACH" && rpJet.mode !== "ACE_TOUCHDOWN" && rpJet.mode !== "TAKEOFF") {
+          rpJet.mode = "PATROL";
+          rpJet.afterburner = false;
+        }
         rpJet.targetJet = null;
-        if (Math.abs(Math.sin(rpJet.angle)) > 0.15) {
+        if (Math.abs(Math.sin(rpJet.angle)) > 0.15 && rpJet.mode === "PATROL") {
           rpJet.targetAngle = (Math.cos(rpJet.angle) >= 0) ? 0.0 : Math.PI;
         }
       }
     }
-    DF.blueIngressTimer++;
-    if (DF.blueIngressTimer >= 90) {
-      DF.blueIngressTimer = 0;
-      scrambleWave("blue");
-      for (var rsc = 0; rsc < DF.redPool.length; rsc++) {
-        var rsJet = DF.redPool[rsc];
-        if (rsJet.active && !rsJet.isDying) {
-          rsJet.missilesRemaining = rsJet.missileCapacity;
-          rsJet.isWinchester = (rsJet.missilesRemaining === 0 && rsJet.gen < 7);
+    if (!bomberActive && StrategicBomberSystem.dominanceTimer > 85) {
+      DF.blueIngressTimer++;
+      if (DF.blueIngressTimer >= 120) {
+        DF.blueIngressTimer = 0;
+        scrambleWave("blue");
+        for (var rsc = 0; rsc < DF.redPool.length; rsc++) {
+          var rsJet = DF.redPool[rsc];
+          if (rsJet.active && !rsJet.isDying) {
+            rsJet.missilesRemaining = rsJet.missileCapacity;
+            rsJet.isWinchester = (rsJet.missilesRemaining === 0 && rsJet.gen < 7);
+          }
         }
       }
     }

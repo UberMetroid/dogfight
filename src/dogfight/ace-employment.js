@@ -520,6 +520,59 @@
       var hostilePool = isBlueBattery ? DF.redPool : DF.bluePool;
       var hostileTeamCode = isBlueBattery ? 1 : 0;
 
+      // Check if battery's team is under post-bombing blackout
+      if (typeof StrategicBomberSystem !== "undefined" && StrategicBomberSystem.farpBlackout && StrategicBomberSystem.farpBlackout[bat.team] > 0) {
+        bat.isBlackout = true;
+        if (Math.random() < 0.20 && typeof globalVfxParticlePool !== "undefined" && globalVfxParticlePool) {
+          var spIdx = globalVfxParticlePool.alloc();
+          if (spIdx >= 0) {
+            var spo = spIdx * 8;
+            globalVfxParticlePool.buffer[spo] = bat.x + (Math.random() - 0.5) * 16;
+            globalVfxParticlePool.buffer[spo + 1] = bat.y - 4;
+            globalVfxParticlePool.buffer[spo + 2] = (Math.random() - 0.5) * 1.5;
+            globalVfxParticlePool.buffer[spo + 3] = -1.2 - Math.random() * 1.5;
+            globalVfxParticlePool.buffer[spo + 4] = 30;
+            globalVfxParticlePool.buffer[spo + 5] = 30;
+            globalVfxParticlePool.buffer[spo + 6] = 2.0;
+            globalVfxParticlePool.buffer[spo + 7] = 0; // Smoke
+          }
+        }
+        continue;
+      }
+      bat.isBlackout = false;
+
+      // Point Defense SAM fire against incoming hostile Strategic Bomber
+      if (typeof StrategicBomberSystem !== "undefined" && StrategicBomberSystem.activeBomber) {
+        var strB = StrategicBomberSystem.activeBomber;
+        if (strB.team !== bat.team && strB.state !== "SPLASHED") {
+          var dBomber = Math.hypot(strB.x - bat.x, strB.y - bat.y);
+          if (dBomber <= bat.samRange && bat.samCooldown <= 0) {
+            bat.samCooldown = 130;
+            bat.turretAngle = Math.atan2(strB.y - bat.y, strB.x - bat.x);
+            if (typeof window !== "undefined" && window.TacticalAudio && typeof window.TacticalAudio.playSamLaunch === "function") {
+              window.TacticalAudio.playSamLaunch();
+            }
+            if (DF.missilesPool) {
+              var sIdx = DF.missilesPool.alloc();
+              if (sIdx >= 0) {
+                var so = sIdx * 8;
+                DF.missilesPool.buffer[so] = bat.x;
+                DF.missilesPool.buffer[so + 1] = bat.y - 12;
+                DF.missilesPool.buffer[so + 2] = Math.cos(bat.turretAngle) * 7.5;
+                DF.missilesPool.buffer[so + 3] = Math.sin(bat.turretAngle) * 7.5;
+                DF.missilesPool.buffer[so + 4] = isBlueBattery ? 0 : 1;
+                DF.missilesPool.buffer[so + 5] = 4;
+                DF.missilesPool.buffer[so + 6] = 240;
+                DF.missilesPool.buffer[so + 7] = 0;
+              }
+            }
+            if (typeof dfRadio === "function" && Math.random() < 0.35) {
+              dfRadio(bat.shortName + ": SAM SALVO AWAY ON INGRESSING STRATEGIC BOMBER!");
+            }
+          }
+        }
+      }
+
       // ----------------------------------------------------------------------
       // POINT DEFENSE: Intercept incoming threat missiles heading for base/airplanes
       // ----------------------------------------------------------------------
@@ -704,6 +757,21 @@
       var hasHostileNear = Boolean(bat.targetJet);
 
       ctx.save();
+
+      // Post-strike defense blackout state
+      if (bat.isBlackout) {
+        ctx.fillStyle = "rgba(239, 68, 68, 0.85)";
+        ctx.font = "bold 7px ui-monospace, monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("[" + bat.shortName + " // ⚡ OFFLINE // POST-STRIKE BLACKOUT]", bx, by - 24);
+        ctx.fillStyle = "#0f172a";
+        ctx.strokeStyle = "rgba(239, 68, 68, 0.5)";
+        ctx.lineWidth = 1;
+        ctx.fillRect(bx - 10, by - 4, 20, 5);
+        ctx.strokeRect(bx - 10, by - 4, 20, 5);
+        ctx.restore();
+        continue;
+      }
 
       // ----------------------------------------------------------------------
       // A. Tactical Air Defense Umbrella Arc (Shield Bubble above Strip)

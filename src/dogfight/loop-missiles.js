@@ -162,6 +162,37 @@ function dfStepMissiles() {
       }
     }
 
+    // Proximity Damage check against hostile Strategic Bomber
+    if (!isDetonated && typeof StrategicBomberSystem !== "undefined" && StrategicBomberSystem.activeBomber) {
+      var sBomb = StrategicBomberSystem.activeBomber;
+      var misHostileTeam = (misOwnerTeam === 0 ? "red" : "blue");
+      if (sBomb.team === misHostileTeam && sBomb.state !== "SPLASHED") {
+        var distSB = Math.hypot(sBomb.x - misX, sBomb.y - misY);
+        if (distSB < 34 && misLife > 0) {
+          isDetonated = true;
+          var sbDmg = 85.0 + Math.random() * 25.0;
+          StrategicBomberSystem.applyDamage(sbDmg, launcherJet);
+          if (DF.explosionsPool) {
+            for (var me = 0; me < 8; me++) {
+              var meIdx = DF.explosionsPool.alloc();
+              if (meIdx >= 0) {
+                var meo = meIdx * 6;
+                DF.explosionsPool.buffer[meo] = misX;
+                DF.explosionsPool.buffer[meo + 1] = misY;
+                DF.explosionsPool.buffer[meo + 2] = (Math.random() - 0.5) * 6;
+                DF.explosionsPool.buffer[meo + 3] = (Math.random() - 0.5) * 6;
+                DF.explosionsPool.buffer[meo + 4] = 3;
+                DF.explosionsPool.buffer[meo + 5] = 1.8;
+              }
+            }
+          }
+          if (typeof window !== "undefined" && window.TacticalAudio && typeof window.TacticalAudio.playExplosion === "function") {
+            window.TacticalAudio.playExplosion();
+          }
+        }
+      }
+    }
+
     if (!isDetonated && tgtX !== null && Math.hypot(tgtX - misX, tgtY - misY) < 22 && misLife > 0) {
       isDetonated = true;
       if (isDecoyed) {

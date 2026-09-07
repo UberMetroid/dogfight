@@ -57,24 +57,103 @@ function updateJetPhysics(jet, targetEnemy, incomingThreat, opposingPool, missil
   var hitLeftBoundary = (jet.x < 160 && isHeadingWest);
   var hitRightBoundary = (jet.x > worldW - 160 && isHeadingEast);
 
-  var isAceMode = (jet.mode === "ACE_APPROACH" || jet.mode === "ACE_TOUCHDOWN" || jet.mode === "ACE_SCRAMBLE");
-  if (isAceMode && typeof updateAceEmployment === "function") {
-    updateAceEmployment(jet, worldW, worldH);
-  } else {
-    // Autonomous ACE touch-and-go divert decision when out of missiles or critically damaged
-    var needsAceRearm = jet.isWinchester || (jet.hp < 45.0 && jet.damageState !== "NOMINAL");
-    if (needsAceRearm && (!jet.mode || jet.mode === "PURSUIT" || jet.mode === "PATROL" || jet.mode === "EXTEND") && Math.random() < 0.035) {
-      if (typeof orderAceTouchAndGo === "function") {
-        orderAceTouchAndGo(jet);
-      }
+  // --------------------------------------------------------------------------
+  // RUNWAY TAKEOFF DYNAMICS (Ground roll, spool-up, VR rotation, gear retraction)
+  // --------------------------------------------------------------------------
+  if (jet.mode === "TAKEOFF") {
+    jet.takeoffRoll = (jet.takeoffRoll || 0) + 1;
+    jet.throttleSetting = 1.5;
+    jet.afterburner = true;
+
+    var mslY = (typeof getSeaLevelY === "function") ? getSeaLevelY(worldH) : Math.floor(worldH * 0.84);
+    var isBlueJet = (jet.team === "blue");
+    var rwyY = isBlueJet ? (mslY - 14) : (mslY - 10);
+
+    // Staggered pause on runway threshold
+    if (jet.takeoffRoll < 0) {
+      jet.y = rwyY - 1;
+      jet.speed = 0.0;
+      jet.angle = isBlueJet ? 0.0 : Math.PI;
+      jet.targetAngle = jet.angle;
+      updateJetPhysicsLate(jet, targetEnemy, incomingThreat, opposingPool, missilesPoolRef);
+      return;
     }
 
-    if (jet.mode === "ACE_APPROACH" || jet.mode === "ACE_TOUCHDOWN" || jet.mode === "ACE_SCRAMBLE") {
-      isAceMode = true;
-      if (typeof updateAceEmployment === "function") {
-        updateAceEmployment(jet, worldW, worldH);
+    // Ground acceleration roll
+    if (jet.takeoffRoll < 42) {
+      jet.y = rwyY - 1;
+      jet.targetAngle = isBlueJet ? 0.0 : Math.PI;
+      jet.angle = jet.targetAngle;
+      jet.speed = Math.min((jet.baseSpeed || 4.8) * 1.25, (jet.speed || 1.8) + 0.065);
+      if (Math.random() < 0.35 && typeof spawnAceTireSmoke === "function") {
+        spawnAceTireSmoke(jet.x, rwyY);
       }
     } else {
+      // Rotation VR & afterburner climb-out
+      jet.targetAngle = isBlueJet ? -0.38 : (-Math.PI + 0.38);
+      jet.angle = jet.targetAngle;
+      jet.speed = Math.min((jet.baseSpeed || 4.8) * 1.35, (jet.speed || 1.8) + 0.04);
+      if (jet.y <= rwyY - 90 || jet.takeoffRoll >= 115) {
+        var hasActiveBomber = (typeof StrategicBomberSystem !== "undefined" && StrategicBomberSystem.activeBomber && StrategicBomberSystem.activeBomber.state !== "SPLASHED");
+        if (hasActiveBomber && StrategicBomberSystem.activeBomber.team !== jet.team) {
+          jet.mode = "INTERCEPT_BOMBER";
+        } else if (hasActiveBomber && StrategicBomberSystem.activeBomber.team === jet.team) {
+          jet.mode = "ESCORT_BOMBER";
+        } else {
+          jet.mode = (targetEnemy && targetEnemy.active ? "PURSUIT" : "PATROL");
+        }
+        if (typeof window !== "undefined" && window.TacticalAudio && typeof window.TacticalAudio.playTakeoffBurner === "function") {
+          window.TacticalAudio.playTakeoffBurner();
+        }
+        if (typeof dfRadio === "function" && Math.random() < 0.30) {
+          dfRadio(jet.callsign + ": AIRBORNE // GEAR RETRACTED // CLIMBING INTO COMBAT SECTOR");
+        }
+      }
+    }
+    updateJetPhysicsLate(jet, targetEnemy, incomingThreat, opposingPool, missilesPoolRef);
+    return;
+  }
+
+  // Interceptor targeting incoming hostile Strategic Bomber
+  if (jet.mode === "INTERCEPT_BOMBER") {
+    jet.throttleSetting = 1.6;
+    jet.afterburner = true;
+    var strBomber = (typeof StrategicBomberSystem !== "undefined") ? StrategicBomberSystem.activeBomber : null;
+    if (strBomber && strBomber.state !== "SPLASHED" && strBomber.team !== jet.team) {
+      var dbx = strBomber.x - jet.x;
+      var dby = strBomber.y - jet.y;
+      jet.targetAngle = Math.atan2(dby, dbx);
+    } else {
+      jet.mode = (targetEnemy && targetEnemy.active) ? "PURSUIT" : "PATROL";
+    }
+  } else if (jet.mode === "ESCORT_BOMBER") {
+    jet.throttleSetting = 1.3;
+    var friendBomber = (typeof StrategicBomberSystem !== "undefined") ? StrategicBomberSystem.activeBomber : null;
+    if (friendBomber && friendBomber.state !== "SPLASHED" && friendBomber.team === jet.team) {
+      if (targetEnemy && targetEnemy.active && !targetEnemy.isDying) {
+        jet.targetAngle = Math.atan2(targetEnemy.y - jet.y, targetEnemy.x - jet.x);
+      } else {
+        jet.targetAngle = friendBomber.angle;
+      }
+    } else {
+      jet.mode = "PATROL";
+    }
+  }
+
+  // Autonomous ACE touch-and-go divert decision when out of missiles or critically damaged
+  var needsAceRearm = jet.isWinchester || (jet.hp < 45.0 && jet.damageState !== "NOMINAL");
+  if (needsAceRearm && (!jet.mode || jet.mode === "PURSUIT" || jet.mode === "PATROL" || jet.mode === "EXTEND") && Math.random() < 0.035) {
+    if (typeof orderAceTouchAndGo === "function") {
+      orderAceTouchAndGo(jet);
+    }
+  }
+
+  var isAceMode = (jet.mode === "ACE_APPROACH" || jet.mode === "ACE_TOUCHDOWN" || jet.mode === "ACE_SCRAMBLE");
+  if (isAceMode) {
+    if (typeof updateAceEmployment === "function") {
+      updateAceEmployment(jet, worldW, worldH);
+    }
+  } else {
       var threatBat = null;
       if ((hitLeftBoundary || hitRightBoundary) && jet.mode !== "GPWS_PULLUP") {
         jet.mode = "BOUNDARY_SLICE";
@@ -155,7 +234,6 @@ function updateJetPhysics(jet, targetEnemy, incomingThreat, opposingPool, missil
         }
       }
     }
-  }
 
   // Low-altitude aerodynamic leveling (only for intact airframes; critical/stalled airframes plunge naturally):
   var isHealthyFlight = (!jet.isDying && (!jet.hp || jet.hp >= 20.0) && !jet.isStalled);

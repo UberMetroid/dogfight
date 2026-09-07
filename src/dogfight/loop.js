@@ -51,6 +51,10 @@ function updateDogfight(now) {
     // 1. Update Dynamic Tactical Camera (auto-zooms and frames weapon systems in flight)
     if (DF.camera && typeof DF.camera.update === "function") {
       DF.camera.update(DF.width, DF.height);
+      if (typeof StrategicBomberSystem !== "undefined" && StrategicBomberSystem.screenShake > 0.1) {
+        DF.camera.x += (Math.random() - 0.5) * StrategicBomberSystem.screenShake * 2.0;
+        DF.camera.y += (Math.random() - 0.5) * StrategicBomberSystem.screenShake * 2.0;
+      }
     }
 
     // 2. Step Simulation with Time Warp / Pause (runs in world coordinates)
@@ -89,6 +93,14 @@ function updateDogfight(now) {
     // 6. Draw Aircraft, Formations, Contrails (World space)
     dfDrawAircraft(now, colors);
 
+    // 6B. Draw Strategic Bombers & Generational Bomb Payloads (World space)
+    if (typeof drawStrategicBombers === "function") {
+      drawStrategicBombers(DF.ctx, now, colors);
+    }
+    if (typeof drawBombExplosions === "function") {
+      drawBombExplosions(DF.ctx, now, colors);
+    }
+
     // 7. Draw Interactive Reticle on Tracked Aircraft (World space)
     if (typeof InteractiveController !== "undefined" && InteractiveController.drawTrackedReticle) {
       InteractiveController.drawTrackedReticle(DF.ctx);
@@ -100,6 +112,11 @@ function updateDogfight(now) {
 
     // End World Space Transform
     DF.ctx.restore();
+
+    // 8B. Draw Strategic Bomber Screen Overlays (Fullscreen Nuke Flash & Air Dominance Banner)
+    if (typeof drawStrategicBomberScreenOverlay === "function") {
+      drawStrategicBomberScreenOverlay(DF.ctx, DF.width, DF.height, now);
+    }
 
     // 9. Draw Screen-Space Tactical Camera HUD (Scale Ruler in NM, Zoom Indicator)
     if (DF.camera && typeof DF.camera.drawTacticalHud === "function") {

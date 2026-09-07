@@ -89,6 +89,20 @@ function dfStepBullets() {
     var shooterPool = (bOwnerTeam === 0) ? DF.bluePool : DF.redPool;
     var bulletConsumed = false;
 
+    // Proximity Damage check against hostile Strategic Bomber
+    if (typeof StrategicBomberSystem !== "undefined" && StrategicBomberSystem.activeBomber) {
+      var strB = StrategicBomberSystem.activeBomber;
+      var hostileTeamName = (bOwnerTeam === 0 ? "red" : "blue");
+      if (strB.team === hostileTeamName && strB.state !== "SPLASHED") {
+        if (Math.hypot(strB.x - bx, strB.y - by) < 32) {
+          var shooterJetB = (shooterSlot >= 0 && shooterSlot < shooterPool.length) ? shooterPool[shooterSlot] : shooterPool[0];
+          StrategicBomberSystem.applyDamage(14.0 + Math.random() * 6.0, shooterJetB);
+          DF.bulletsPool.free(b);
+          continue;
+        }
+      }
+    }
+
     for (var ti = 0; ti < targetPool.length; ti++) {
       var tJet = targetPool[ti];
       if (!tJet.active || tJet.isDying) continue;
