@@ -106,9 +106,9 @@ function createJet(x, y, angle, gen, slotIdx, team) {
       detectedThreats: []
     },
     wingSweep: (chosenGen === 4 ? 0.25 : 0.0),
-    ccaDeployed: false,
-    cca1: { x: 0, y: 0, angle: 0, speed: 6.0, active: false, laserCooldown: 0 },
-    cca2: { x: 0, y: 0, angle: 0, speed: 6.0, active: false, laserCooldown: 0 },
+    ccaDeployed: (chosenGen === 6),
+    cca1: { x: x + Math.cos(angle) * 55 - Math.sin(angle) * 65, y: y + Math.sin(angle) * 55 + Math.cos(angle) * 65, angle: angle, speed: 6.0, active: (chosenGen === 6), laserCooldown: 0 },
+    cca2: { x: x + Math.cos(angle) * 55 + Math.sin(angle) * 65, y: y + Math.sin(angle) * 55 - Math.cos(angle) * 65, angle: angle, speed: 6.0, active: (chosenGen === 6), laserCooldown: 0 },
     drone1: { x: 16, y: 0, targetX: 16, targetY: 0, worldX: x + Math.cos(angle) * 16, worldY: y + Math.sin(angle) * 16 },
     drone2: { x: -6, y: -14, targetX: -6, targetY: -14, worldX: x + Math.cos(angle) * -6 - Math.sin(angle) * -14, worldY: y + Math.sin(angle) * -6 + Math.cos(angle) * -14 },
     drone3: { x: -6, y: 14, targetX: -6, targetY: 14, worldX: x + Math.cos(angle) * -6 - Math.sin(angle) * 14, worldY: y + Math.sin(angle) * -6 + Math.cos(angle) * 14 },

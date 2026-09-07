@@ -43,6 +43,21 @@ function scrambleWave(team, gen) {
       jet.speed = (specG.baseSpeed || 4.8) * 1.15;
       jet.baseSpeed = specG.baseSpeed || 4.8;
       setupJetCallsignAndVariant(jet, gg, team, idx);
+      if (gg === 6) {
+        jet.ccaDeployed = true;
+        if (!jet.cca1) jet.cca1 = { x: jet.x, y: jet.y, angle: jet.angle, speed: jet.speed, active: true, laserCooldown: 0 };
+        if (!jet.cca2) jet.cca2 = { x: jet.x, y: jet.y, angle: jet.angle, speed: jet.speed, active: true, laserCooldown: 0 };
+        jet.cca1.active = true;
+        jet.cca2.active = true;
+        jet.cca1.x = jet.x + Math.cos(jet.angle) * 55 - Math.sin(jet.angle) * 65;
+        jet.cca1.y = jet.y + Math.sin(jet.angle) * 55 + Math.cos(jet.angle) * 65;
+        jet.cca1.angle = jet.angle;
+        jet.cca1.speed = jet.speed;
+        jet.cca2.x = jet.x + Math.cos(jet.angle) * 55 + Math.sin(jet.angle) * 65;
+        jet.cca2.y = jet.y + Math.sin(jet.angle) * 55 - Math.cos(jet.angle) * 65;
+        jet.cca2.angle = jet.angle;
+        jet.cca2.speed = jet.speed;
+      }
       if (jet.contrail) jet.contrail.clear();
       if (jet.wingVapor) jet.wingVapor.clear();
     }

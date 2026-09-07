@@ -122,8 +122,24 @@ function syncFleetToActiveGenerations(blueMask, redMask, canvasW, canvasH) {
     bJet.triLaserCooldown = 0;
     bJet.superLaserCooldown = bg === 7 ? (60 + Math.floor(Math.random() * 60)) : 0;
     bJet.superLaserPulse = 0;
-    bJet.shieldPulse = 0;
-    bJet.ccaDeployed = false;
+    bJet.ccaDeployed = (bg === 6);
+    if (bg === 6) {
+      if (!bJet.cca1) bJet.cca1 = { x: bJet.x, y: bJet.y, angle: bJet.angle, speed: bJet.speed, active: true, laserCooldown: 0 };
+      if (!bJet.cca2) bJet.cca2 = { x: bJet.x, y: bJet.y, angle: bJet.angle, speed: bJet.speed, active: true, laserCooldown: 0 };
+      bJet.cca1.active = true;
+      bJet.cca2.active = true;
+      bJet.cca1.x = bJet.x + Math.cos(bJet.angle) * 55 - Math.sin(bJet.angle) * 65;
+      bJet.cca1.y = bJet.y + Math.sin(bJet.angle) * 55 + Math.cos(bJet.angle) * 65;
+      bJet.cca1.angle = bJet.angle;
+      bJet.cca1.speed = bJet.speed;
+      bJet.cca2.x = bJet.x + Math.cos(bJet.angle) * 55 + Math.sin(bJet.angle) * 65;
+      bJet.cca2.y = bJet.y + Math.sin(bJet.angle) * 55 - Math.cos(bJet.angle) * 65;
+      bJet.cca2.angle = bJet.angle;
+      bJet.cca2.speed = bJet.speed;
+    } else {
+      if (bJet.cca1) bJet.cca1.active = false;
+      if (bJet.cca2) bJet.cca2.active = false;
+    }
     setupJetCallsignAndVariant(bJet, bg, "blue", bIdx);
     if (bJet.contrail) bJet.contrail.clear();
     if (bJet.wingVapor) bJet.wingVapor.clear();
@@ -180,8 +196,24 @@ function syncFleetToActiveGenerations(blueMask, redMask, canvasW, canvasH) {
     rJet.triLaserCooldown = 0;
     rJet.superLaserCooldown = rg === 7 ? (60 + Math.floor(Math.random() * 60)) : 0;
     rJet.superLaserPulse = 0;
-    rJet.shieldPulse = 0;
-    rJet.ccaDeployed = false;
+    rJet.ccaDeployed = (rg === 6);
+    if (rg === 6) {
+      if (!rJet.cca1) rJet.cca1 = { x: rJet.x, y: rJet.y, angle: rJet.angle, speed: rJet.speed, active: true, laserCooldown: 0 };
+      if (!rJet.cca2) rJet.cca2 = { x: rJet.x, y: rJet.y, angle: rJet.angle, speed: rJet.speed, active: true, laserCooldown: 0 };
+      rJet.cca1.active = true;
+      rJet.cca2.active = true;
+      rJet.cca1.x = rJet.x + Math.cos(rJet.angle) * 55 - Math.sin(rJet.angle) * 65;
+      rJet.cca1.y = rJet.y + Math.sin(rJet.angle) * 55 + Math.cos(rJet.angle) * 65;
+      rJet.cca1.angle = rJet.angle;
+      rJet.cca1.speed = rJet.speed;
+      rJet.cca2.x = rJet.x + Math.cos(rJet.angle) * 55 + Math.sin(rJet.angle) * 65;
+      rJet.cca2.y = rJet.y + Math.sin(rJet.angle) * 55 - Math.cos(rJet.angle) * 65;
+      rJet.cca2.angle = rJet.angle;
+      rJet.cca2.speed = rJet.speed;
+    } else {
+      if (rJet.cca1) rJet.cca1.active = false;
+      if (rJet.cca2) rJet.cca2.active = false;
+    }
     setupJetCallsignAndVariant(rJet, rg, "red", rIdx);
     if (rJet.contrail) rJet.contrail.clear();
     if (rJet.wingVapor) rJet.wingVapor.clear();

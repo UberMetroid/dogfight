@@ -116,7 +116,7 @@ function calculateAspectAngle(emitterPos, emitterHeading, targetPos) {
   return da * (180.0 / Math.PI);
 }
 
-function calculateRadarDetectionRange(emitterGen, targetRcs, emitterPower, aspectAngle, bayOpen) {
+function calculateRadarDetectionRange(emitterGen, targetRcs, emitterPower, aspectAngle, bayOpen, hasActiveCca) {
   var gen = (typeof emitterGen === "number") ? emitterGen : 4;
   var specE = (typeof AIRCRAFT_SPECS !== "undefined" && AIRCRAFT_SPECS && AIRCRAFT_SPECS[gen]) ? AIRCRAFT_SPECS[gen] : { radarBaseline: 1100 };
   var power = (typeof emitterPower === "number" && emitterPower > 0) ? emitterPower : 1.0;
@@ -127,7 +127,7 @@ function calculateRadarDetectionRange(emitterGen, targetRcs, emitterPower, aspec
   else if (gen === 3) r0 = 850;
   else if (gen === 4) r0 = 1100;
   else if (gen === 5) r0 = 1300;
-  else if (gen === 6) r0 = 1500;
+  else if (gen === 6) r0 = (hasActiveCca ? 2250 : 1600); // Extended radar reach (+50%) via forward CCA multi-static aperture
   else if (gen === 7) r0 = 1800;
 
   var sigma = (typeof targetRcs === "number" && targetRcs >= 0) ? targetRcs : 1.0;
@@ -184,17 +184,33 @@ function canAcquireTargetLock(shooter, target, dist, deltaAltFt) {
     return (aspectDiff <= 0.75);
   }
 
+  // Forward CCA distributed sensor picket line calculation for Gen 6
+  var effectiveSensorDist = d;
+  var hasActiveCca = false;
+  if (shooter.gen === 6) {
+    if (shooter.cca1 && shooter.cca1.active) {
+      hasActiveCca = true;
+      var d1 = Math.hypot(target.x - shooter.cca1.x, target.y - shooter.cca1.y);
+      if (d1 < effectiveSensorDist) effectiveSensorDist = d1;
+    }
+    if (shooter.cca2 && shooter.cca2.active) {
+      hasActiveCca = true;
+      var d2 = Math.hypot(target.x - shooter.cca2.x, target.y - shooter.cca2.y);
+      if (d2 < effectiveSensorDist) effectiveSensorDist = d2;
+    }
+  }
+
   // Radar / sensors equipped (Gen 3+)
   var targetAspectDeg = calculateAspectAngle({ x: shooter.x, y: shooter.y }, target.angle, { x: target.x, y: target.y });
   var isBayOpen = (typeof target.bayDoorTimer === "number" && target.bayDoorTimer > 0);
   var effectiveRcs = isBayOpen ? (specT.rcsBloom || 1.2) : (target.rcs || specT.rcsClean || 1.0);
-  var maxRange = calculateRadarDetectionRange(shooter.gen, effectiveRcs, 1.0, targetAspectDeg, isBayOpen);
+  var maxRange = calculateRadarDetectionRange(shooter.gen, effectiveRcs, 1.0, targetAspectDeg, isBayOpen, hasActiveCca);
 
   if (Math.abs(dh) > 35000 && shooter.gen <= 4) {
     return false;
   }
 
-  return (d <= maxRange);
+  return (effectiveSensorDist <= maxRange);
 }
 
 function evaluateMissileSeekerDegradation(misType, tgtJet, dist) {

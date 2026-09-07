@@ -74,6 +74,11 @@
               // Lookahead lead point in flight direction
               var lead = Math.min(180, (j.speed || 4.8) * 14.0);
               points.push({ x: j.x + Math.cos(j.angle) * lead, y: j.y + Math.sin(j.angle) * lead });
+              // Include active Gen 6 CCA loyal wingmen in camera framing
+              if (j.gen === 6) {
+                if (j.cca1 && j.cca1.active) points.push({ x: j.cca1.x, y: j.cca1.y });
+                if (j.cca2 && j.cca2.active) points.push({ x: j.cca2.x, y: j.cca2.y });
+              }
             } else if ((j.deathTimer || 0) < 25) {
               // Frame dying aircraft briefly during splash/impact explosion
               points.push({ x: j.x, y: j.y });

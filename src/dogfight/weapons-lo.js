@@ -42,12 +42,13 @@ function evaluateKineticWeapons(jet, targetEnemy, colors) {
       }
     }
 
-    // Missiles (Gen 2-5: extended envelopes up to 1200-1500 px, 240 ticks lifespan)
+    // Missiles (Gen 2-6: extended envelopes up to 1400-2200 px, 240 ticks lifespan)
     var targetAspectDeg = calculateAspectAngle({ x: jet.x, y: jet.y }, targetEnemy.angle, { x: targetEnemy.x, y: targetEnemy.y });
     var isBayOpen = (targetEnemy.bayDoorTimer > 0);
     var specT = AIRCRAFT_SPECS[targetEnemy.gen] || AIRCRAFT_SPECS[4];
     var targetRcsEffective = isBayOpen ? (specT.rcsBloom || 1.2) : (targetEnemy.rcs || specT.rcsClean || specT.rcs || 1.0);
-    var maxRadarRange = calculateRadarDetectionRange(jet.gen, targetRcsEffective, 1.0, targetAspectDeg, isBayOpen);
+    var hasActiveCca = (jet.gen === 6 && ((jet.cca1 && jet.cca1.active) || (jet.cca2 && jet.cca2.active)));
+    var maxRadarRange = calculateRadarDetectionRange(jet.gen, targetRcsEffective, 1.0, targetAspectDeg, isBayOpen, hasActiveCca);
 
     var canAcquireLock = canAcquireTargetLock(jet, targetEnemy, dist, deltaH);
     if (jet.sensors) {
@@ -65,7 +66,8 @@ function evaluateKineticWeapons(jet, targetEnemy, colors) {
     var daLeadMis = Math.abs(jet.angle - leadBearingMis);
     while (daLeadMis > Math.PI) daLeadMis = Math.abs(daLeadMis - Math.PI * 2);
 
-    if (jet.gen >= 2 && (da < 1.10 || daLeadMis < 1.10) && dist <= 1400 && dist >= 50 && jet.missileCooldown <= 0 && jet.speed > DF.V_CORNER * 0.6 && canAcquireLock) {
+    var maxLaunchDist = (jet.gen === 6 && hasActiveCca) ? 2200 : 1400;
+    if (jet.gen >= 2 && (da < 1.10 || daLeadMis < 1.10) && dist <= maxLaunchDist && dist >= 50 && jet.missileCooldown <= 0 && jet.speed > DF.V_CORNER * 0.6 && canAcquireLock) {
       var allowLaunch = true;
       var misSpeed = jet.speed + 3.0;
       var misType = 0;
@@ -99,6 +101,10 @@ function evaluateKineticWeapons(jet, targetEnemy, colors) {
         misType = 5;
         misSpeed = jet.speed + 3.8;
         dfRadio(jet.callsign + ": FOX-3! AIM-120D AMRAAM AWAY (STEALTH INTERNAL RELEASE)");
+      } else if (jet.gen === 6) {
+        misType = 6;
+        misSpeed = jet.speed + 4.6;
+        dfRadio(jet.callsign + ": FOX-3! AIM-260 JATM AWAY (CCA EXTENDED RADAR LOCK, " + Math.round(dist * 0.08) + " NM)");
       }
 
       if (allowLaunch) {

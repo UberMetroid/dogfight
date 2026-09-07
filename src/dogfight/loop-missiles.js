@@ -32,8 +32,8 @@ function dfStepMissiles() {
     var tgtX = null;
     var tgtY = null;
     var isDecoyed = false;
-    var isRadarMissile = (misType === 3 || misType === 4 || misType === 5);
-    var isIrMissile = (misType === 1 || misType === 2 || misType === 6);
+    var isRadarMissile = (misType === 3 || misType === 4 || misType === 5 || misType === 6);
+    var isIrMissile = (misType === 1 || misType === 2);
 
     if (isIrMissile && DF.flaresPool.activeCount > 0 && Math.random() < 0.75) {
       tgtX = DF.flaresPool.buffer[0];
@@ -94,7 +94,7 @@ function dfStepMissiles() {
     }
 
     var curSpeed = Math.hypot(misVx, misVy);
-    var maxMSpeed = (misType === 4) ? 12.5 : 11.5;
+    var maxMSpeed = (misType === 6) ? 14.5 : ((misType === 4) ? 12.5 : 11.5);
     var nextSpeed = Math.min(curSpeed + 0.08, maxMSpeed);
 
     if (tgtX !== null && !isDecoyed) {
@@ -178,6 +178,7 @@ function dfStepMissiles() {
           else if (misType === 3) { mDamage = 75.0 + Math.random() * 10.0; wName = "AIM_7"; }
           else if (misType === 4) { mDamage = 85.0 + Math.random() * 15.0; wName = "AIM_9L"; }
           else if (misType === 5) { mDamage = 90.0 + Math.random() * 10.0; wName = "AIM_120D"; }
+          else if (misType === 6) { mDamage = 98.0 + Math.random() * 12.0; wName = "AIM_260_JATM"; }
 
           var mLethal = applyAirframeDamage(tgtJet, mDamage, launcherJet, wName);
           if (mLethal) {
