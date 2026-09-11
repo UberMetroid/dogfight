@@ -114,6 +114,15 @@ function updateJetPhysicsLate(jet, targetEnemy, incomingThreat, opposingPool, mi
     if (jet.active && !jet.isDying) {
       // High-energy catastrophic crash: zero velocity and inflict fatal impact damage
       jet.speed = 0.0;
+      if (typeof window !== "undefined" && window.__dfDebug) {
+        console.log("[df-crash] TERRAIN", JSON.stringify({
+          callsign: jet.callsign, gen: jet.gen, team: jet.team, mode: jet.mode,
+          x: Math.round(jet.x), y: Math.round(jet.y), speed: Math.round(jet.speed*100)/100,
+          angle: Math.round(jet.angle*100)/100, surfaceY: Math.round(surfaceY),
+          crashType: crashType, impactSpeed: Math.round(impactSpeed*100)/100,
+          isOcean: isOcean, frame: window.__dfFrame || 0
+        }));
+      }
       applyAirframeDamage(jet, 999.0, null, crashType);
     } else if (jet.isDying) {
       // Wreckage / dying airframe slamming into the surface

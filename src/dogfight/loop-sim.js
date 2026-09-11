@@ -222,6 +222,14 @@ function dfStepSim() {
         Math.sin(colJet1.angle) * colJet1.speed - Math.sin(colJet2.angle) * colJet2.speed
       );
       if (pDist < 6.0 && relSpeed < 4.0) {
+        if (typeof window !== "undefined" && window.__dfDebug) {
+          console.log("[df-crash] MID-AIR COLLISION", JSON.stringify({
+            a: colJet1.callsign, aMode: colJet1.mode, aAngle: Math.round(colJet1.angle*100)/100,
+            b: colJet2.callsign, bMode: colJet2.mode, bAngle: Math.round(colJet2.angle*100)/100,
+            pDist: Math.round(pDist*10)/10, relSpeed: Math.round(relSpeed*100)/100,
+            frame: window.__dfFrame || 0
+          }));
+        }
         applyAirframeDamage(colJet1, 100.0, colJet2, "COLLISION");
         applyAirframeDamage(colJet2, 100.0, colJet1, "COLLISION");
         dfRadio("TACTICAL ALERT: MID-AIR COLLISION -> " + colJet1.callsign + " & " + colJet2.callsign + " MUTUAL DESTRUCTION!");
