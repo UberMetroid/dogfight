@@ -129,10 +129,6 @@ function dfStepSim() {
     updateFarpDefenses(DF.worldWidth || 3600, DF.worldHeight || 1200);
   }
 
-  // 2C. Day/night & weather ticks (per-frame effects)
-  if (typeof tickDayNight === "function") tickDayNight();
-  if (typeof tickWeather === "function") tickWeather();
-
   // 3. Physics & Weapon Simulation for all active aircraft
   var allJets = DF.allJets || [];
   for (var aji = 0; aji < allJets.length; aji++) {

@@ -40,8 +40,6 @@
   <script defer src="src/dogfight/weapons-lo.js?v=3.0"></script>
   <script defer src="src/dogfight/weapons-hi.js?v=3.0"></script>
   <script defer src="src/dogfight/campaign.js?v=3.0"></script>
-  <script defer src="src/dogfight/daynight.js?v=3.0"></script>
-  <script defer src="src/dogfight/weather.js?v=3.0"></script>
   <script defer src="src/dogfight/landscape.js?v=3.0"></script>
   <script defer src="src/dogfight/audio.js?v=3.0"></script>
   <script defer src="src/dogfight/camera.js?v=3.0"></script>
@@ -124,17 +122,6 @@
         </div>
       </div>
     </header>
-
-    <!-- Tactical time / weather controls (lower-left) -->
-    <div class="wx-controls">
-      <button type="button" id="daynight-btn" class="wx-btn" title="Advance time 1 hour (manual)">--:-- DAY</button>
-      <span id="daynight-readout" class="wx-readout">TIME --:-- DAY</span>
-      <button type="button" id="weather-btn" class="wx-btn" title="Cycle weather state (manual)">☀ CLEAR</button>
-      <span id="weather-readout" class="wx-readout">☀ CLEAR // NEXT: 120s</span>
-    </div>
-
-    <!-- Camera debug readout (lower-right) -->
-    <div id="cam-debug" class="cam-debug">cam x=--- y=--- scale=--- jets 0</div>
   </div>
 
   <!-- Tactical Application Lifecycle Logic -->

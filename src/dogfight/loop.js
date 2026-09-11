@@ -89,11 +89,6 @@ function updateDogfight(now) {
     // 6. Draw Aircraft, Formations, Contrails (World space)
     dfDrawAircraft(now, colors);
 
-    // 6B. Weather overlay (cloud bands, rain, fog)
-    if (typeof drawWeatherOverlay === "function") {
-      drawWeatherOverlay(DF.ctx, DF.width, DF.height, worldW, worldH, now);
-    }
-
     // 7. Draw Interactive Reticle on Tracked Aircraft (World space)
     if (typeof InteractiveController !== "undefined" && InteractiveController.drawTrackedReticle) {
       InteractiveController.drawTrackedReticle(DF.ctx);
@@ -105,11 +100,6 @@ function updateDogfight(now) {
 
     // End World Space Transform
     DF.ctx.restore();
-
-    // 8B. Day/night dimming overlay (screen-space)
-    if (typeof drawDayNightOverlay === "function") {
-      drawDayNightOverlay(DF.ctx, DF.width, DF.height, now);
-    }
 
     // 9. Draw Screen-Space Tactical Camera HUD (Scale Ruler in NM, Zoom Indicator)
     if (DF.camera && typeof DF.camera.drawTacticalHud === "function") {
@@ -127,21 +117,6 @@ function updateDogfight(now) {
     }
 
     globalHudFrameCount = (globalHudFrameCount + 1) | 0;
-
-    // Update small camera debug readout (cam x / y / scale / active jet count)
-    var camDbg = document.getElementById("cam-debug");
-    if (camDbg && DF.camera) {
-      var activeCount = 0;
-      if (DF.allJets) {
-        for (var cdi = 0; cdi < DF.allJets.length; cdi++) {
-          if (DF.allJets[cdi].active && !DF.allJets[cdi].isDying) activeCount++;
-        }
-      }
-      camDbg.textContent = "cam x=" + Math.round(DF.camera.x) +
-        " y=" + Math.round(DF.camera.y) +
-        " scale=" + DF.camera.scale.toFixed(2) +
-        " jets=" + activeCount;
-    }
   } catch (err) {
     if (typeof console !== "undefined" && console.error) {
       console.error("dogfight frame", err);

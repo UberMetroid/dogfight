@@ -164,9 +164,7 @@ function initGlobalDogfight() {
     if (!hasAnyActiveGen()) globalSetAllOffline();
     else syncFleetToActiveGenerations(activeGensWest, activeGensEast);
   };
-  // Day/night + weather systems
-  if (typeof initDayNight === "function") initDayNight();
-  if (typeof initWeather === "function") initWeather();
+  // Day/night + weather systems removed
   function start() {
     if (!jetsEnabled) return;
     if (!dogfightAnimId) dogfightAnimId = requestAnimationFrame(updateDogfight);
