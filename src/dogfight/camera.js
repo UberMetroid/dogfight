@@ -148,26 +148,63 @@
         this.targetY = 700;
         this.targetScale = 0.95;
       } else {
-        // Percentile-based framing: sort X values, ignore the extremes
-        // (10th..90th percentile when there are 8+ points). This prevents
-        // jets at the world edges (x=180 and x=3456) from forcing the
-        // camera to fit the entire 3600-wide world.
-        var xs = [];
-        for (var pi = 0; pi < points.length; pi++) xs.push(points[pi].x);
-        xs.sort(function (a, b) { return a - b; });
-        var n = xs.length;
-        var minX = n > 0 ? xs[0] : 0;
-        var maxX = n > 0 ? xs[n - 1] : 0;
-        if (n >= 8) {
-          var lo = xs[Math.floor(n * 0.10)];
-          var hi = xs[Math.floor(n * 0.90)];
-          minX = lo;
-          maxX = hi;
+        // Densest-cluster centroid camera targeting.
+        // Buckets jet/missile/bullet X positions into 600-unit-wide buckets,
+        // picks the bucket with the most points, and centers the camera on
+        // that bucket's centroid. With jets at both world edges, this avoids
+        // the broken midpoint-of-extremes which lands on empty ocean.
+        var BUCKET_W = 600;
+        var worldMaxX = 3600;
+        var bucketCount = Math.ceil(worldMaxX / BUCKET_W) + 1;  // 7 buckets
+        var bucketCounts = new Array(bucketCount).fill(0);
+        var bucketSumX = new Array(bucketCount).fill(0);
+        for (var bi = 0; bi < points.length; bi++) {
+          var px = points[bi].x;
+          if (px < 0) px = 0;
+          if (px > worldMaxX) px = worldMaxX;
+          var b = Math.floor(px / BUCKET_W);
+          if (b < 0) b = 0;
+          if (b >= bucketCount) b = bucketCount - 1;
+          bucketCounts[b]++;
+          bucketSumX[b] += px;
+        }
+        // Find densest bucket (tie-break: prefer bucket closer to current camera x)
+        var bestBucket = 0;
+        var bestCount = -1;
+        for (var bc = 0; bc < bucketCount; bc++) {
+          if (bucketCounts[bc] > bestCount) {
+            bestCount = bucketCounts[bc];
+            bestBucket = bc;
+          } else if (bucketCounts[bc] === bestCount && bestCount > 0) {
+            var centroidB = bucketSumX[bc] / bucketCounts[bc];
+            var centroidCur = bucketSumX[bestBucket] / bucketCounts[bestBucket];
+            if (Math.abs(centroidB - this.x) < Math.abs(centroidCur - this.x)) {
+              bestBucket = bc;
+            }
+          }
         }
         var minY = Infinity, maxY = -Infinity;
         for (var py = 0; py < points.length; py++) {
           if (points[py].y < minY) minY = points[py].y;
           if (points[py].y > maxY) maxY = points[py].y;
+        }
+        // Span for scale: use the densest bucket's own extent (so the camera
+        // frames that cluster, not the whole world)
+        var spanX;
+        if (bestCount > 0) {
+          var bMinX = bestBucket * BUCKET_W;
+          var bMaxX = bMinX + BUCKET_W;
+          // Extend the span to include all points in the densest bucket's column
+          for (var spi = 0; spi < points.length; spi++) {
+            var spx = points[spi].x;
+            if (spx >= bMinX && spx <= bMaxX) {
+              if (spx < bMinX) bMinX = spx;  // (won't happen given the >=)
+              if (spx > bMaxX) bMaxX = spx;  // (won't happen given the <=)
+            }
+          }
+          spanX = bMaxX - bMinX;
+        } else {
+          spanX = 0;
         }
 
         // Vertical: keep ground at bottom, but allow sky to occupy more screen
@@ -176,9 +213,8 @@
         var verticalSpan = Math.max(280, floorY - targetMinY);
         var requiredScaleY = (viewportH - topMargin) / verticalSpan;
 
-        // Horizontal: tight cap on the box width so camera never fits the whole world
-        var spanX = maxX - minX;
-        var padX = Math.max(140, spanX * 0.15);
+        // Horizontal: scale based on the densest-cluster span, capped at 1800
+        var padX = Math.max(140, spanX * 0.20);
         var rawBoxW = spanX + padX * 2;
         var maxFW = this.maxFrameWidth || 1800;
         var boxW = Math.max(800, Math.min(maxFW, rawBoxW));
@@ -187,8 +223,12 @@
         var desiredScale = Math.min(requiredScaleX, requiredScaleY);
         this.targetScale = Math.max(this.minScale, Math.min(this.maxScale, desiredScale));
 
-        // Center on the percentile midpoint of the action
-        this.targetX = (minX + maxX) * 0.5;
+        // Center on the densest-cluster centroid
+        if (bestCount > 0) {
+          this.targetX = bucketSumX[bestBucket] / bucketCounts[bestBucket];
+        } else {
+          this.targetX = 180;  // empty fallback
+        }
 
         // Y anchor: bottom-anchored so the ground is always visible
         this.targetY = floorY - (viewportH * 0.5) / this.targetScale;
