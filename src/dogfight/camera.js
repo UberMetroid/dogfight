@@ -233,8 +233,14 @@
         // Y anchor: bottom-anchored so the ground is always visible
         this.targetY = floorY - (viewportH * 0.5) / this.targetScale;
 
-        this.bounds.minX = minX;
-        this.bounds.maxX = maxX;
+        // Compute minX/maxX for the bounds report (not used by auto-zoom itself)
+        var boundsMinX = Infinity, boundsMaxX = -Infinity;
+        for (var bpi = 0; bpi < points.length; bpi++) {
+          if (points[bpi].x < boundsMinX) boundsMinX = points[bpi].x;
+          if (points[bpi].x > boundsMaxX) boundsMaxX = points[bpi].x;
+        }
+        this.bounds.minX = boundsMinX;
+        this.bounds.maxX = boundsMaxX;
         this.bounds.minY = minY;
         this.bounds.maxY = maxY;
       }
