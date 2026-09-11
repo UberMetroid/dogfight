@@ -41,7 +41,10 @@ function updateDogfight(now) {
   if (now && DF.lastTime && (now - DF.lastTime < 33)) return;
   DF.lastTime = now;
   // Frame counter exposed to diagnostic logs (gate: window.__dfDebug === true).
-  if (typeof window !== "undefined") window.__dfFrame = (window.__dfFrame || 0) + 1;
+  if (typeof window !== "undefined") {
+    window.__dfFrame = (window.__dfFrame || 0) + 1;
+    window.__dfDebug = true;  // TEMP: auto-enable crash diagnostics
+  }
   try {
     DF.ctx.clearRect(0, 0, DF.width, DF.height);
     if (!hasAnyActiveGen()) return;
