@@ -38,7 +38,7 @@ if (typeof window !== "undefined") {
 // we cap to POOL_SIZE_PER_SIDE by trimming the highest-gen entries.
 function buildActiveGenList(mask, side) {
   var list = [];
-  for (var g = 1; g <= 6; g++) {
+  for (var g = 1; g <= 7; g++) {
     if (mask[g]) {
       var teamList = (typeof AIRCRAFT_SPECS !== "undefined" && AIRCRAFT_SPECS[g] && AIRCRAFT_SPECS[g][side]) ? AIRCRAFT_SPECS[g][side] : null;
       var n = teamList ? teamList.length : 1;
@@ -82,7 +82,7 @@ function syncFleetToActiveGenerations(maskA, maskB, canvasW, canvasH) {
 
   // Update global masks
   if (typeof activeGensWest !== "undefined" && typeof activeGensEast !== "undefined") {
-    for (var ag = 1; ag <= 6; ag++) {
+    for (var ag = 1; ag <= 7; ag++) {
       if (typeof wMask[ag] !== "undefined") activeGensWest[ag] = Boolean(wMask[ag]);
       if (typeof eMask[ag] !== "undefined") activeGensEast[ag] = Boolean(eMask[ag]);
     }

@@ -86,6 +86,19 @@
       keyWeapons: "WEST: AIM-260 JATM (CCA-Linked) + 20mm DEW Laser CIWS ⚔️ EAST: Internal R-77M Adder-M & R-74M2",
       flightArena: "Extreme High Altitude (70,000 ft MSL) // Distributed Sensor Grid",
       missilesEnabled: true
+    },
+    7: {
+      eraNum: 7,
+      eraLabel: "ERA VII // 2040",
+      title: "AUTONOMOUS QUANTUM SWARM MESH",
+      doctrine: "WEST: CCA SWARM ALPHA // EAST: CCA SWARM CHARLIE // OMNIDIRECTIONAL KINETIC PULSE",
+      techInventedName: "Autonomous Distributed Micro-Drone Mesh & Quantum-Phase-Shift Seekers",
+      techInventedImpact: "Each 'airframe' is a 3-drone autonomous swarm (drone1/drone2/drone3) flying in adaptive formation. Quad-axis kinematic pulses can engage from any bearing, with 0ms shared OODA. Quantum-phase-shift seekers phase through 85% of inbound missile lock envelopes, projected outward to mid-2020s estimates.",
+      westAircraft: "CCA SWARM ALPHA (USA)",
+      eastAircraft: "CCA SWARM CHARLIE (RUSSIA)",
+      keyWeapons: "OMNIDIRECTIONAL KINETIC PULSE CANNON / SWARM SATURATION / SINGULARITY BEAM",
+      flightArena: "Near-Space Ceiling (90,000 ft MSL) // 15G+ Hyper-Turn Mesh",
+      missilesEnabled: true
     }
   };
 
@@ -123,14 +136,14 @@
 
     // Set active era and synchronize fleet
     setEra: function (eraNum, forceReset) {
-      if (eraNum < 1 || eraNum > 6) eraNum = 1;
+      if (eraNum < 1 || eraNum > 7) eraNum = 1;
       this.currentEra = eraNum;
       this.eraTimer = 0;
       var data = this.getEraData(this.currentEra);
 
       // 1. Update active generation masks
       if (typeof activeGensWest !== "undefined" && typeof activeGensEast !== "undefined") {
-        for (var g = 1; g <= 6; g++) {
+        for (var g = 1; g <= 7; g++) {
           activeGensWest[g] = (g === this.currentEra);
           activeGensEast[g] = (g === this.currentEra);
         }
@@ -163,7 +176,7 @@
 
     // Advance to next generational era
     advanceEra: function (reason) {
-      var nextEra = (this.currentEra % 6) + 1;
+      var nextEra = (this.currentEra % 7) + 1;
       var nextData = this.getEraData(nextEra);
       this.escalationCount++;
 

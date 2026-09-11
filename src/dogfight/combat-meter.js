@@ -14,7 +14,8 @@
     3: "F-4 PHANTOM II",
     4: "F-14 / F-15 / F-16 / F/A-18",
     5: "F-22 RAPTOR / F-35",
-    6: "NGAD 6TH-GEN + CCA"
+    6: "NGAD 6TH-GEN + CCA",
+    7: "QUANTUM SWARM"
   };
 
   var RED_GEN_NAMES = {
@@ -23,7 +24,8 @@
     3: "MiG-21J / MiG-23 / MiG-25",
     4: "Su-27 / MiG-29 / MiG-31",
     5: "Su-57 FELON",
-    6: "Su-57M FELON-M"
+    6: "Su-57M FELON-M",
+    7: "HOSTILE SWARM"
   };
 
   var CombatMeter = {

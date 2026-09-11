@@ -169,9 +169,9 @@
       westGen = parseInt(westGen, 10) || 4;
       eastGen = parseInt(eastGen, 10) || 4;
       if (westGen < 1) westGen = 1;
-      if (westGen > 6) westGen = 6;
+      if (westGen > 7) westGen = 7;
       if (eastGen < 1) eastGen = 1;
-      if (eastGen > 6) eastGen = 6;
+      if (eastGen > 7) eastGen = 7;
 
       // Reset all jets in pools
       for (var i = 0; i < DF.allJets.length; i++) {
@@ -180,7 +180,7 @@
       }
 
       // Activate Gen in respective team masks
-      for (var g = 1; g <= 6; g++) {
+      for (var g = 1; g <= 7; g++) {
         activeGensWest[g] = (g === westGen);
         activeGensEast[g] = (g === eastGen);
       }

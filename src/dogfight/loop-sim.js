@@ -207,6 +207,9 @@ function dfStepSim() {
     }
 
     updateJetPhysics(airframe, airframe.targetJet, threatMissile, isWestAirframe ? eastPool : westPool, missilesPool);
+    if (airframe.gen === 7 && typeof updateJetPhysicsSwarm === "function") {
+      updateJetPhysicsSwarm(airframe, airframe.targetJet, threatMissile);
+    }
     evaluateJetWeapons(airframe, airframe.targetJet, getThemeColors());
   }
 

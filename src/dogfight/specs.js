@@ -5,9 +5,9 @@
 //          Gen 6 East is Su-57M (Russia has no operational 6th-gen).
 //          Gen 7 swarm / strategic bombers / orbital weapons are out.
 //
-var SERVICE_CEILINGS = { 1: 45000, 2: 55000, 3: 58000, 4: 60000, 5: 65000, 6: 75000 };
-var CRUISE_ALTITUDES = { 1: 22000, 2: 36000, 3: 42000, 4: 48000, 5: 60000, 6: 70000 };
-var RESPAWN_CEILINGS = { 1: 25000, 2: 36000, 3: 42000, 4: 48000, 5: 60000, 6: 70000 };
+var SERVICE_CEILINGS = { 1: 45000, 2: 55000, 3: 58000, 4: 60000, 5: 65000, 6: 75000, 7: 100000 };
+var CRUISE_ALTITUDES = { 1: 22000, 2: 36000, 3: 42000, 4: 48000, 5: 60000, 6: 70000, 7: 90000 };
+var RESPAWN_CEILINGS = { 1: 25000, 2: 36000, 3: 42000, 4: 48000, 5: 60000, 6: 70000, 7: 90000 };
 var V_CORNER = 4.8;
 
 var AIRCRAFT_SPECS = {
@@ -74,11 +74,19 @@ var AIRCRAFT_SPECS = {
     east: [
       { id: "su57m",      callsign: "FELON-M",   name: "Su-57M FELON-M",    year: 2030, mass: 1.95, baseSpeed: 6.40, maxSpeed: 8.00, thrustDry: 0.058, thrustAB: 0.135, cd0: 0.0014, kInduced: 0.70, maxTurnRate: 0.205, rcs: 0.05000, rcsClean: 0.05000, rcsBloom: 1.20, radarBaseline: 1500, sensorReach: 1500, oodaLatencyFrames: 1,  hasFlares: true,  hasChaff: true,  missileCapacity: 6, primaryMissile: "R-77M ADDER-M (INTERNAL) / R-74M2" }
     ]
+  },
+  7: {
+    west: [
+      { id: "swarm_alpha", callsign: "SWARM",    name: "CCA SWARM ALPHA",  year: 2040, mass: 0.40, baseSpeed: 7.00, maxSpeed: 9.20, thrustDry: 0.080, thrustAB: 0.160, cd0: 0.0012, kInduced: 0.50, maxTurnRate: 0.380, rcs: 0.00001, rcsClean: 0.00001, rcsBloom: 0.60, radarBaseline: 1800, sensorReach: 1800, oodaLatencyFrames: 0,  hasFlares: false, hasChaff: false, missileCapacity: 8, primaryMissile: "OMNIDIRECTIONAL KINETIC PULSE / SWARM SATURATION", isSwarm: true }
+    ],
+    east: [
+      { id: "swarm_charlie", callsign: "SWARM", name: "CCA SWARM CHARLIE", year: 2040, mass: 0.40, baseSpeed: 7.00, maxSpeed: 9.20, thrustDry: 0.080, thrustAB: 0.160, cd0: 0.0012, kInduced: 0.50, maxTurnRate: 0.380, rcs: 0.00001, rcsClean: 0.00001, rcsBloom: 0.60, radarBaseline: 1800, sensorReach: 1800, oodaLatencyFrames: 0,  hasFlares: false, hasChaff: false, missileCapacity: 8, primaryMissile: "OMNIDIRECTIONAL KINETIC PULSE / SWARM SATURATION", isSwarm: true }
+    ]
   }
 };
 
 // Backwards-compatible derived fields: AIRCRAFT_SPECS[gen].hudName (first jet on each side)
-for (var genI = 1; genI <= 6; genI++) {
+for (var genI = 1; genI <= 7; genI++) {
   var entry = AIRCRAFT_SPECS[genI];
   if (entry && entry.west && entry.west[0]) {
     entry.hudName = entry.west[0].name;
@@ -150,6 +158,14 @@ var WEAPONS_BY_GEN = {
     ],
     east: [
       { gunName: "1x 30mm GSh-30-1 (Internal Bay)",     caliber: "30mm", isHeavy: true, missileName: "R-77M ADDER-M (INTERNAL) / R-74M2" }
+    ]
+  },
+  7: {
+    west: [
+      { gunName: "Omnidirectional Kinetic Pulse Cannon", caliber: "Energy Pulse", isHeavy: false, missileName: "Swarm Saturation / Singularity Beam" }
+    ],
+    east: [
+      { gunName: "Omnidirectional Kinetic Pulse Cannon", caliber: "Energy Pulse", isHeavy: false, missileName: "Swarm Saturation / Singularity Beam" }
     ]
   }
 };

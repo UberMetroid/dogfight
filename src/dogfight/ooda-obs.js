@@ -187,6 +187,8 @@ function oodaOrientTactics(jet, obs, altFt, sCeiling) {
         ori.recommendedEvasion = "BREAK_MANUAL";
       } else if (jet.gen === 6) {
         ori.recommendedEvasion = "DEW_CIWS";
+      } else if (jet.gen === 7) {
+        ori.recommendedEvasion = "QUANTUM_SHIFT";
       } else {
         ori.recommendedEvasion = "BREAK_9G";
       }
@@ -206,6 +208,8 @@ function oodaOrientTactics(jet, obs, altFt, sCeiling) {
       ori.recommendedEvasion = "BREAK_MANUAL";
     } else if (jet.gen === 6) {
       ori.recommendedEvasion = "CCA_PINCER";
+    } else if (jet.gen === 7) {
+      ori.recommendedEvasion = "QUANTUM_SHIFT";
     } else {
       ori.recommendedEvasion = "BREAK_9G";
     }

@@ -48,8 +48,9 @@ function updateJetPhysicsLate(jet, targetEnemy, incomingThreat, opposingPool, mi
   jet.y += vy;
 
   // Boundary Containment (Zero Bouncing: smooth aerodynamic turnback without angle snapping)
-  var minArenaX = 75.0;
-  var maxArenaX = worldW - 75.0;
+  var isGen7 = (jet.gen === 7);
+  var minArenaX = isGen7 ? 85.0 : 75.0;
+  var maxArenaX = isGen7 ? (worldW - 85.0) : (worldW - 75.0);
   if (jet.x < minArenaX) {
     jet.x = minArenaX;
     jet.targetAngle = 0.0; // Smoothly steer East towards combat zone
@@ -63,7 +64,7 @@ function updateJetPhysicsLate(jet, targetEnemy, incomingThreat, opposingPool, mi
   }
 
   // Near-space ceiling (100k ft) header clamp (min visible ceiling y >= 32.0 px)
-  var minCeilingY = 32.0;
+  var minCeilingY = isGen7 ? 65.0 : 32.0;
   if (jet.y < minCeilingY) {
     jet.y = minCeilingY;
     if (Math.sin(jet.angle) < 0) {

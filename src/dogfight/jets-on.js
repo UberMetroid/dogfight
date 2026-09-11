@@ -22,8 +22,8 @@ function setJetsEnabled(val) {
 }
 
 // Independent Generation Masks for West and East
-var activeGensWest = { 1: false, 2: false, 3: false, 4: true, 5: false, 6: false };
-var activeGensEast = { 1: false, 2: false, 3: false, 4: true, 5: false, 6: false };
+var activeGensWest = { 1: false, 2: false, 3: false, 4: true, 5: false, 6: false, 7: false };
+var activeGensEast = { 1: false, 2: false, 3: false, 4: true, 5: false, 6: false, 7: false };
 
 // Backwards-compat aliases for the few internal reads that still use the old names.
 // New code MUST use activeGensWest / activeGensEast.
@@ -31,10 +31,10 @@ var activeGensBlue = activeGensWest;
 var activeGensRed  = activeGensEast;
 
 // Unified mask for legacy modules
-var activeGens = { 1: false, 2: false, 3: false, 4: true, 5: false, 6: false };
+var activeGens = { 1: false, 2: false, 3: false, 4: true, 5: false, 6: false, 7: false };
 
 function syncMergedActiveGens() {
-  for (var g = 1; g <= 6; g++) {
+  for (var g = 1; g <= 7; g++) {
     activeGens[g] = Boolean(activeGensWest[g] || activeGensEast[g]);
   }
 }
@@ -60,7 +60,7 @@ function loadActiveGens() {
 loadActiveGens();
 
 function hasAnyActiveGen() {
-  for (var k = 1; k <= 6; k++) {
+  for (var k = 1; k <= 7; k++) {
     if (activeGensWest[k] || activeGensEast[k]) return true;
   }
   return false;
@@ -78,12 +78,11 @@ function saveActiveGens() {
 function getRandomActiveGen(team, preferred) {
   var mask = (team === "east") ? activeGensEast : activeGensWest;
   var available = [];
-  for (var g = 1; g <= 6; g++) {
+  for (var g = 1; g <= 7; g++) {
     if (mask[g]) available.push(g);
   }
   if (available.length === 0) {
-    // Fallback to merged
-    for (var m = 1; m <= 6; m++) if (activeGens[m]) available.push(m);
+    for (var m = 1; m <= 7; m++) if (activeGens[m]) available.push(m);
   }
   if (available.length === 0) return 4;
   if (preferred && mask[preferred]) return preferred;
@@ -97,7 +96,7 @@ function updateGenSelectorUI() {
     var team = btn.getAttribute("data-team") || "west";
     var gAttr = btn.getAttribute("data-gen") || (btn.dataset && btn.dataset.gen);
     var gNum = parseInt(gAttr, 10);
-    if (gNum >= 1 && gNum <= 6) {
+    if (gNum >= 1 && gNum <= 7) {
       var isAct = (team === "east") ? Boolean(activeGensEast[gNum]) : Boolean(activeGensWest[gNum]);
       btn.classList.toggle("active", isAct);
       btn.setAttribute("aria-pressed", isAct ? "true" : "false");
@@ -111,7 +110,7 @@ function toggleGeneration(team, genNum) {
     team = "both";
   }
   genNum = parseInt(genNum, 10);
-  if (genNum < 1 || genNum > 6) return;
+  if (genNum < 1 || genNum > 7) return;
 
   if (team === "west") {
     activeGensWest[genNum] = !activeGensWest[genNum];
@@ -167,7 +166,7 @@ if (typeof document !== "undefined" && !window._genSelectorDelegated) {
     var team = btn.getAttribute("data-team") || "west";
     var gAttr = btn.getAttribute("data-gen") || (btn.dataset && btn.dataset.gen);
     var gNum = parseInt(gAttr, 10);
-    if (gNum >= 1 && gNum <= 6) {
+    if (gNum >= 1 && gNum <= 7) {
       e.preventDefault();
       e.stopPropagation();
       toggleGeneration(team, gNum);

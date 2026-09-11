@@ -18,16 +18,15 @@
 
   function initDayNight() {
     DF.daynight = {
-      timeOfDay: 0.45, // start mid-morning so the sim begins in daylight
+      timeOfDay: 0.5, // start at NOON so the page begins in full daylight
       cyclePeriod: CYCLE_PERIOD_FRAMES,
       phase: "day",
       lightLevel: 1.0,
       // Effect multipliers
-      irEffectiveness: 0.85,    // 0.4..1.0 (better at night)
-      visualMissileAcc: 0.85,   // 0.4..1.0 (better in day)
-      gunAccuracy: 1.0,         // 0.5..1.0 (tracers hard to see at night)
-      radarEffectiveness: 1.0,  // (radar is largely unaffected by sunlight)
-      // Sun/moon screen position (interpolated each tick)
+      irEffectiveness: 0.85,
+      visualMissileAcc: 0.85,
+      gunAccuracy: 1.0,
+      radarEffectiveness: 1.0,
       sunX: 0, sunY: 0, sunAlpha: 0,
       moonX: 0, moonY: 0, moonAlpha: 0,
       starAlpha: 0
@@ -158,9 +157,10 @@
       ctx.restore();
     }
 
-    // Night dimming overlay (multiplicative). At day: alpha 0; at night: alpha 0.45.
+    // Night dimming overlay (tint, not blackout). At day: alpha 0; at midnight: alpha 0.28.
+    // Kept light so engine exhaust (bright cyan/red) and missile tracers remain visible.
     if (d.lightLevel < 0.95) {
-      var nightAlpha = (1.0 - d.lightLevel) * 0.50;
+      var nightAlpha = (1.0 - d.lightLevel) * 0.28;
       ctx.save();
       ctx.fillStyle = "rgba(8, 12, 32," + nightAlpha.toFixed(3) + ")";
       ctx.fillRect(0, 0, screenW2, screenH2);

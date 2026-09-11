@@ -238,6 +238,16 @@ function evaluateMissileSeekerDegradation(misType, tgtJet, dist) {
   var gen = tgtJet.gen;
   var rcs = (typeof tgtJet.rcs === "number") ? tgtJet.rcs : 1.0;
 
+  // Gen 7: Quantum Swarm Phase Shift Motes (85% tracking failure rate across all ranges)
+  if (gen === 7 || rcs <= 0.00001) {
+    var roll7 = Math.random();
+    if (roll7 < 0.85) {
+      return { degraded: true, lostLock: true, trackLossRate: 0.85, lossRate: 0.85, reason: "GEN7_QUANTUM_PHASE_SHIFT" };
+    } else {
+      return { degraded: false, lostLock: false, trackLossRate: 0.85, lossRate: 0.85, reason: "GEN7_QUANTUM_PHASE_SHIFT_LOCK" };
+    }
+  }
+
   // Gen 6: Advanced VLO Stealth (NGAD / CCAs) (80% track loss at d > 75 px)
   if (gen === 6 || rcs <= 0.00005) {
     if (d > 75) {

@@ -212,9 +212,8 @@ function dfStepMissiles() {
         dfRadio("TACTICAL WARNING: MISSILE DECOYED BY COUNTERMEASURES!");
       } else if (tgtJet) {
         if (tgtJet.gen === 7) {
-          // Gen 7 not in sim; dead-code branch
           tgtJet.shieldPulse = 1.0;
-          dfRadio((tgtJet.callsign || "TGT") + ": SHIELD DEFLECTED MISSILE");
+          dfRadio((tgtJet.callsign || "SWARM") + ": QUANTUM SHIELD DEFLECTED MISSILE");
         } else if (tgtJet.gen === 6 && tgtJet.laserCooldown <= 0) {
           tgtJet.laserCooldown = 35;
           dfRadio((tgtJet.callsign || "NGAD") + ": LASER CIWS VAPORIZED THREAT MISSILE!");

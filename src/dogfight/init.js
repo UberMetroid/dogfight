@@ -8,7 +8,7 @@ function scrambleWave(team, gen) {
   var pool = isWest ? DF.westPool : DF.eastPool;
   var mask = isWest ? (typeof activeGensWest !== "undefined" ? activeGensWest : activeGens) : (typeof activeGensEast !== "undefined" ? activeGensEast : activeGens);
   var gens = [];
-  for (var g = 1; g <= 6; g++) if (mask[g]) gens.push(g);
+  for (var g = 1; g <= 7; g++) if (mask[g]) gens.push(g);
   if (gens.length === 0) {
     var fallbackGen = (typeof gen === "number" && gen >= 1 && gen <= 6) ? gen : 4;
     mask[fallbackGen] = true;
