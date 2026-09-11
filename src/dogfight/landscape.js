@@ -112,43 +112,14 @@
     ctx.fillStyle = oceanGrad;
     ctx.fillRect(coastX, mslY, oceanEndX - coastX, height - mslY);
 
-    // Bathymetric Depth Lines & Labels
-    var depthLayers = [
-      { ratio: 0.30, depth: "-200m", label: "CONTINENTAL SHELF & LITTORAL ACOUSTIC ZONE" },
-      { ratio: 0.65, depth: "-600m", label: "THERMOCLINE BARRIER // SONAR SHADOW REFRACTION" },
-      { ratio: 0.92, depth: "-1000m", label: "ABYSSAL SUB-SURFACE PATROL // TORPEDO & UUV CORRIDOR" }
-    ];
-
-    for (var d = 0; d < depthLayers.length; d++) {
-      var dItem = depthLayers[d];
-      var dy = mslY + (height - mslY) * dItem.ratio;
-      ctx.strokeStyle = "rgba(14, 165, 233, 0.20)";
-      ctx.setLineDash([3, 5]);
-      ctx.beginPath();
-      ctx.moveTo(coastX, dy);
-      ctx.lineTo(oceanEndX, dy);
-      ctx.stroke();
-
-      var depthLabelX = Math.max(coastX + 16, viewLeft + 24);
-      ctx.fillStyle = "rgba(56, 189, 248, 0.50)";
-      ctx.font = "8.5px ui-monospace, SFMono-Regular, monospace";
-      ctx.fillText("DEPTH: " + dItem.depth + " // " + dItem.label, depthLabelX, dy - 4);
-    }
-    ctx.setLineDash([]);
-
     // Continental Slope & Undersea Seabed Polygon extending continuously eastward
     ctx.fillStyle = "rgba(15, 23, 42, 0.95)";
     ctx.strokeStyle = "rgba(30, 41, 59, 0.9)";
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.moveTo(coastX, mslY);
-    // Shelf drops down from coast to seabed trench
-    var shelfBreakX = coastX + Math.floor(width * 0.14);
-    var shelfBreakY = mslY + Math.floor((height - mslY) * 0.40);
-    ctx.lineTo(shelfBreakX, shelfBreakY);
     var trenchBottomX = coastX + Math.floor(width * 0.28);
     ctx.lineTo(trenchBottomX, height - 12);
-    // Seabed ridges continue along bottom all the way to oceanEndX without stopping
     for (var bx = trenchBottomX; bx <= oceanEndX; bx += 40) {
       var ridgeY = height - 12 + Math.sin(bx * 0.05) * 4;
       ctx.lineTo(bx, ridgeY);
@@ -158,30 +129,6 @@
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
-
-    // Active Acoustic Sonar Ping Rings in Sub-surface Corridor
-    var sonarCenter = { x: trenchBottomX + 90, y: mslY + Math.floor((height - mslY) * 0.65) };
-    var sonarAlpha = (1.0 - sys.sonarPulseRadius / sys.sonarPulseMax) * 0.6;
-    ctx.strokeStyle = "rgba(52, 211, 153, " + sonarAlpha + ")";
-    ctx.lineWidth = 1.2;
-    ctx.setLineDash([2, 4]);
-    ctx.beginPath();
-    ctx.arc(sonarCenter.x, sonarCenter.y, sys.sonarPulseRadius, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(sonarCenter.x, sonarCenter.y, Math.max(0, sys.sonarPulseRadius * 0.5), 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    ctx.fillStyle = "rgba(52, 211, 153, " + (sonarAlpha * 0.8) + ")";
-    ctx.font = "8px ui-monospace, monospace";
-    ctx.fillText("SONAR PING (3.5 kHz) [SUB-SURFACE ACTIVE]", sonarCenter.x + 14, sonarCenter.y - 6);
-
-    // Architectural callout for continuous sub-surface domain
-    var subLabelX = Math.max(coastX + 24, viewLeft + 30);
-    ctx.fillStyle = "rgba(56, 189, 248, 0.35)";
-    ctx.font = "8px ui-monospace, monospace";
-    ctx.fillText(">> SUB-SURFACE DOMAIN // CONTINUOUS SEABED CORRIDOR // ANCHOR FOR SUBMARINES, TORPEDOES & UUVs", subLabelX, height - 8);
 
     // ------------------------------------------------------------------------
     // 3. OCEAN SURFACE (WAVES & CONTINUOUS NAVAL THEATER)
