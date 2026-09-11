@@ -43,8 +43,6 @@ function updateDogfight(now) {
   // Frame counter exposed to diagnostic logs (gate: window.__dfDebug === true).
   if (typeof window !== "undefined") {
     window.__dfFrame = (window.__dfFrame || 0) + 1;
-    // TEMP: auto-enable crash diagnostics so the user can see what's killing the jets
-    window.__dfDebug = true;
   }
   try {
     DF.ctx.clearRect(0, 0, DF.width, DF.height);

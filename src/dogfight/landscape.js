@@ -28,7 +28,6 @@
       { id: "sam-battery-1", name: "PATRIOT/S-400 SAM SITE", type: "sam", xRatio: 0.14, rangeKm: 40 }
     ],
     surfaceCombatants: [
-      { id: "cvn-78", name: "CVN-78 GERALD R. FORD", type: "carrier", xRatio: 0.22, airWingActive: true },
       { id: "ddg-51", name: "DDG-51 ARLEIGH BURKE", type: "destroyer", xRatio: 0.28, aegisRadar: true }
     ],
     subSurfaceCorridors: [
@@ -224,10 +223,6 @@
     ctx.fillStyle = "rgba(56, 189, 248, 0.8)";
     ctx.font = "8.5px ui-monospace, monospace";
     ctx.fillText("0 FT MSL // OCEAN DOMAIN (CONTINUOUS OPEN SEA SURFACE OPERATIONS)", oceanLabelX, mslY - 8);
-
-    // Render Aircraft Carrier (CVN-78 in Western blue waters)
-    var cvnX = Math.floor(width * 0.22);
-    drawAircraftCarrier(ctx, cvnX, mslY, sys.wavePhase);
 
     // Render Aegis Destroyer (DDG-51)
     var ddgX = Math.floor(width * 0.28);

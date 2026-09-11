@@ -33,13 +33,7 @@ function getSurfaceElevationY(x, worldW, worldH) {
 
   // Ocean Domain (Water with dynamic waves, islands, and naval decks)
   if (x >= coastX) {
-    // 1. CVN-78 Carrier Flight Deck (Western waters)
-    var cvnMid = w * 0.225;
-    if (x >= cvnMid - 35 && x <= cvnMid + 35) {
-      return mslY - 4;
-    }
-
-    // 2. Austere Strip Delta (Far Eastern Red Coast / FARP Delta)
+    // 1. Austere Strip Delta (Far Eastern Red Coast / FARP Delta)
     var dStart = w * 0.87;
     var dEnd = w * 0.97;
     if (x >= dStart - 20 && x <= dEnd + 20) {

@@ -25,16 +25,6 @@
         runwayHeading: 0.0 // Eastbound landing
       },
       {
-        id: "carrier",
-        name: "CVN-78 FLIGHT DECK",
-        type: "CARRIER",
-        team: "west",
-        startX: w * 0.20,
-        endX: w * 0.25,
-        surfaceY: mslY - 4,
-        runwayHeading: 0.0
-      },
-      {
         id: "delta",
         name: "FARP DELTA (AUSTERE STRIP)",
         type: "AUSTERE_STRIP",
@@ -439,25 +429,6 @@
       muzzleFlashTimer: 0,
       targetJet: null,
       type: "IADS"
-    },
-    {
-      id: "carrier_defense",
-      zoneId: "carrier",
-      name: "CVN-78 PHALANX CIWS",
-      shortName: "CVN-78 CIWS",
-      team: "west",
-      relX: 0.225,
-      surfaceOffsetY: -4,
-      ciwsRange: 220,
-      samRange: 300,
-      exclusionRange: 320,
-      ciwsCooldown: 0,
-      samCooldown: 0,
-      turretAngle: -Math.PI * 0.5,
-      radarAngle: 0,
-      muzzleFlashTimer: 0,
-      targetJet: null,
-      type: "NAVAL_CIWS"
     },
     {
       id: "delta_defense",
