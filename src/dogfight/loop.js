@@ -41,10 +41,8 @@ function updateDogfight(now) {
   if (now && DF.lastTime && (now - DF.lastTime < 33)) return;
   DF.lastTime = now;
   try {
-    if (typeof window !== "undefined" && !window.__dfDebug) { window.__dfDebug = 0; }
-    if (typeof window !== "undefined") { window.__dfDebug++; if (window.__dfDebug < 5 || window.__dfDebug % 60 === 0) console.log("[df] frame", window.__dfDebug, "DF.w="+DF.width, "DF.h="+DF.height, "allJets="+(DF.allJets?DF.allJets.length:0), "active="+(DF.allJets?DF.allJets.filter(function(j){return j.active}).length:0), "cam="+JSON.stringify({x:DF.camera.x,y:DF.camera.y,s:DF.camera.scale})); }
     DF.ctx.clearRect(0, 0, DF.width, DF.height);
-    if (!hasAnyActiveGen()) { if (typeof window !== "undefined" && window.__dfDebug < 5) console.log("[df] hasAnyActiveGen=false, returning"); return; }
+    if (!hasAnyActiveGen()) return;
     var colors = getThemeColors();
 
     var worldW = DF.worldWidth || 3600;
