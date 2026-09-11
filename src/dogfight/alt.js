@@ -23,7 +23,7 @@ function getYFromAltitude(altFt, canvasH) {
   return (1.0 - ratio) * mslY;
 }
 
-// Exact multi-domain surface elevation (mountains, airfield, ridge, ocean water)
+// Surface elevation: ocean with waves east of the coast, monotonic land ramp to the west.
 function getSurfaceElevationY(x, worldW, worldH) {
   var w = (typeof worldW === "number" && worldW > 0) ? worldW : ((typeof DF !== "undefined" && DF.worldWidth) ? DF.worldWidth : 3600);
   var h = (typeof worldH === "number" && worldH > 0) ? worldH : ((typeof DF !== "undefined" && DF.worldHeight) ? DF.worldHeight : 1200);
@@ -31,47 +31,15 @@ function getSurfaceElevationY(x, worldW, worldH) {
   var coastRatio = (typeof MultiDomainSystem !== "undefined" && MultiDomainSystem && MultiDomainSystem.coastRatio) ? MultiDomainSystem.coastRatio : 0.15;
   var coastX = w * coastRatio;
 
-  // Ocean Domain (Water with dynamic waves, islands, and naval decks)
   if (x >= coastX) {
-    // 1. Austere Strip Delta (Far Eastern Red Coast / FARP Delta)
-    var dStart = w * 0.87;
-    var dEnd = w * 0.97;
-    if (x >= dStart - 20 && x <= dEnd + 20) {
-      if (x < dStart) {
-        var tD = (x - (dStart - 20)) / 20.0;
-        return mslY - tD * 12;
-      } else if (x > dEnd) {
-        var tD = (x - dEnd) / 20.0;
-        return (mslY - 12) + tD * 12;
-      }
-      return mslY - 12;
-    }
-
     var wavePhase = (typeof MultiDomainSystem !== "undefined" && MultiDomainSystem && MultiDomainSystem.wavePhase) ? MultiDomainSystem.wavePhase : 0;
     var waveY = Math.sin(x * 0.04 + wavePhase) * 2.5 + Math.cos(x * 0.08 - wavePhase) * 1.5;
     return mslY + waveY;
   }
-
-  // Land Domain (Piecewise Mountain & Airbase polygon profile on far West edge)
-  if (x <= 0) return mslY - 45 - Math.sin(x * 0.006) * 28 - Math.cos(x * 0.012) * 12;
-  if (x <= w * 0.015) {
-    var t = x / (w * 0.015);
-    return (mslY - 45) + t * (-5);
-  }
-  if (x <= w * 0.03) {
-    var t = (x - w * 0.015) / (w * 0.015);
-    return (mslY - 50) + t * 36;
-  }
-  // Airbase Runway Plateau: w * 0.03 to w * 0.13
-  if (x <= w * 0.13) {
-    return mslY - 14;
-  }
-  if (x <= w * 0.142) {
-    var t = (x - w * 0.13) / (w * 0.012);
-    return (mslY - 14) + t * (-8);
-  }
-  var t = (x - w * 0.142) / (coastX - w * 0.142);
-  return (mslY - 22) + t * 22;
+  // Land: monotonic slope from sea level at coastX down to ~45 px below mslY at x=0.
+  // No noise term — keeps the surface always below the runway spawn altitude.
+  var landT = (coastX - Math.max(0, Math.min(coastX, x))) / coastX;
+  return mslY - 45 * landT;
 }
 
 // Altitude Above Ground Level (AGL) in feet

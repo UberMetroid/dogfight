@@ -22,16 +22,6 @@ function applyAirframeDamage(targetJet, damageAmount, attacker, weaponName) {
     targetJet.isDying = true;
     targetJet.deathTimer = 45;
     targetJet.fadeAlpha = 1.0;
-    if (typeof window !== "undefined" && window.__dfDebug) {
-      console.log("[df-kill]", JSON.stringify({
-        callsign: targetJet.callsign, gen: targetJet.gen, team: targetJet.team,
-        mode: targetJet.mode, x: Math.round(targetJet.x), y: Math.round(targetJet.y),
-        speed: Math.round((targetJet.speed||0)*100)/100,
-        angle: Math.round((targetJet.angle||0)*100)/100,
-        damage: dmg, oldHp: Math.round(oldHp*10)/10, attacker: attacker ? (attacker.callsign || ("GEN " + attacker.gen)) : null,
-        weapon: weaponName, frame: window.__dfFrame || 0
-      }));
-    }
     if (attacker && attacker !== targetJet) {
       attacker.kills = (attacker.kills || 0) + 1;
       if (attacker.kills >= 5 && !attacker.isAce) {

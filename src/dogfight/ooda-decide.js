@@ -17,15 +17,6 @@ function oodaDecideAction(jet, obs, ori, targetEnemy, altFt, sCeiling, flaresPoo
     return;
   }
 
-  // Hostile FARP defense standoff has priority to keep jets outside base weapon range
-  if (jet.mode === "EVADE_FARP" && typeof jet.modeTimer === "number" && jet.modeTimer > 0) {
-    jet.isTailChasing = false;
-    jet.zoomClimbActive = false;
-    jet.throttleSetting = 1.3;
-    jet.afterburner = true;
-    return;
-  }
-
   // Intercepting hostile bomber to protect home base has mission priority
   if (jet.mode === "INTERCEPT_BOMBER") {
     if (ori && (ori.recommendedEvasion === "BEAM_NOTCH" || ori.recommendedEvasion === "BREAK_9G")) {

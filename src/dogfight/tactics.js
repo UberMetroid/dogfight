@@ -120,8 +120,8 @@ function updateTacticalManeuvers(friendlyPool, opposingPool) {
     for (var j = 0; j < opposingPool.length; j++) {
       var opp = opposingPool[j];
       if (!opp || !opp.active || opp.isDying) continue;
-      // Grounded aircraft during touch-and-go roll are sheltered by FARP CIWS
-      if (opp.mode === "ACE_TOUCHDOWN") continue;
+      // Grounded aircraft are not valid targets
+      if (opp.mode === "TAKEOFF" && opp.y >= (typeof getSurfaceElevationY === "function" ? getSurfaceElevationY(opp.x, worldW, worldH) - 5 : worldH - 100)) continue;
 
       var d = Math.hypot(opp.x - jet.x, opp.y - jet.y);
       var oppAltFt = (typeof getAltitudeFeet === "function") ? getAltitudeFeet(opp.y, worldH) : 30000;
@@ -197,7 +197,7 @@ function updateTacticalManeuvers(friendlyPool, opposingPool) {
 
     // 5. Normal Wingman Formation Flight vs Active Combat (Fluid Two / Pincer / Secondary Sort)
     if (isWingmanShip) {
-      var isAirportOp = (jet.mode === "TAKEOFF" || jet.mode === "ACE_APPROACH" || jet.mode === "ACE_TOUCHDOWN" || jet.mode === "ACE_SCRAMBLE");
+      var isAirportOp = (jet.mode === "TAKEOFF");
       
       var isLeadInCombat = Boolean(wingman && (wingman.mode === "PURSUIT" || wingman.mode === "ENGAGED" || wingman.mode === "MERGE_PITCHBACK" || wingman.mode === "BREAK_9G" || wingman.mode === "INTERCEPT_BOMBER" || wingman.mode === "ESCORT_BOMBER" || wingman.hasOnboardLock));
       var isHostileInCombatReach = (minDist <= 850);

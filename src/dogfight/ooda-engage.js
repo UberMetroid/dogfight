@@ -4,10 +4,6 @@
 //
 function oodaDecideEngage(jet, obs, ori, targetEnemy, altFt, sCeiling, flaresPool, chaffPool) {
   if (!jet) return;
-  // If jet is in EVADE_FARP mode, preserve standoff heading away from hostile defenses
-  if (jet.mode === "EVADE_FARP" && typeof jet.modeTimer === "number" && jet.modeTimer > 0) {
-    return;
-  }
 
   // If intercepting hostile bomber to save base, vector directly toward bomber
   // (bombers removed in v3.0; INTERCEPT_BOMBER mode is no longer set, kept as dead-code no-op)

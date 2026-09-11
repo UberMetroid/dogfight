@@ -145,51 +145,32 @@ function updateJetPhysics(jet, targetEnemy, incomingThreat, opposingPool, missil
     jet.fuel = 100.0;
     jet.fuelMax = 100.0;
   }
-  var isAceMode = (jet.mode === "ACE_APPROACH" || jet.mode === "ACE_TOUCHDOWN" || jet.mode === "ACE_SCRAMBLE");
-  if (!isAceMode && jet.mode !== "FARP_TAKEOFF") {
-    // Standard cruise burn: ~0.024% per frame (~70 seconds of flight)
-    // Afterburner reheat consumes fuel at 3.5x rate (~20 seconds of sustained dogfight reheat)
-    var isBurningHot = (jet.afterburner || (typeof jet.throttleSetting === "number" && jet.throttleSetting > 1.2));
-    var burnRate = isBurningHot ? 0.082 : 0.024;
-    jet.fuel = Math.max(0, jet.fuel - burnRate);
+  // Standard cruise burn: ~0.024% per frame (~70 seconds of flight)
+  // Afterburner reheat consumes fuel at 3.5x rate (~20 seconds of sustained dogfight reheat)
+  var isBurningHot = (jet.afterburner || (typeof jet.throttleSetting === "number" && jet.throttleSetting > 1.2));
+  var burnRate = isBurningHot ? 0.082 : 0.024;
+  jet.fuel = Math.max(0, jet.fuel - burnRate);
 
-    // Bingo Fuel Alert & Autonomous RTB Divert
-    if (jet.fuel <= 24.0 && !jet.isBingoFuel) {
-      jet.isBingoFuel = true;
-      if (typeof dfRadio === "function") {
-        dfRadio("⛽ " + jet.callsign + ": BINGO FUEL (" + Math.round(jet.fuel) + "%)! DISENGAGING -> DIVERTING TO FARP FOR REFUEL!");
-      }
-      if (typeof orderAceTouchAndGo === "function") {
-        orderAceTouchAndGo(jet);
-      }
-    }
-
-    // Engine Flameout on Total Fuel Exhaustion
-    if (jet.fuel <= 0.0) {
-      jet.fuel = 0.0;
-      jet.isStalled = true;
-      jet.afterburner = false;
-      jet.throttleSetting = 0.0;
-      if (Math.random() < 0.01 && typeof dfRadio === "function") {
-        dfRadio("⚠️ MAYDAY! " + jet.callsign + ": FLAMEOUT! DUAL ENGINE COMPRESSOR STALL / ZERO FUEL GLIDE!");
-      }
+  // Bingo Fuel Alert
+  if (jet.fuel <= 24.0 && !jet.isBingoFuel) {
+    jet.isBingoFuel = true;
+    if (typeof dfRadio === "function") {
+      dfRadio("⛽ " + jet.callsign + ": BINGO FUEL (" + Math.round(jet.fuel) + "%)! DISENGAGING!");
     }
   }
 
-  // Autonomous ACE touch-and-go divert decision when Bingo Fuel or critically damaged
-  var needsAceRearm = jet.isBingoFuel || (jet.hp < 45.0 && jet.damageState !== "NOMINAL");
-  if (needsAceRearm && !isAceMode && jet.mode !== "FARP_TAKEOFF" && (!jet.aceZone)) {
-    if (typeof orderAceTouchAndGo === "function") {
-      orderAceTouchAndGo(jet);
+  // Engine Flameout on Total Fuel Exhaustion
+  if (jet.fuel <= 0.0) {
+    jet.fuel = 0.0;
+    jet.isStalled = true;
+    jet.afterburner = false;
+    jet.throttleSetting = 0.0;
+    if (Math.random() < 0.01 && typeof dfRadio === "function") {
+      dfRadio("⚠️ MAYDAY! " + jet.callsign + ": FLAMEOUT! DUAL ENGINE COMPRESSOR STALL / ZERO FUEL GLIDE!");
     }
   }
 
-  isAceMode = (jet.mode === "ACE_APPROACH" || jet.mode === "ACE_TOUCHDOWN" || jet.mode === "ACE_SCRAMBLE");
-  if (isAceMode) {
-    if (typeof updateAceEmployment === "function") {
-      updateAceEmployment(jet, worldW, worldH);
-    }
-  } else {
+  {
       var threatBat = null;
       if ((hitLeftBoundary || hitRightBoundary) && jet.mode !== "GPWS_PULLUP") {
         jet.mode = "BOUNDARY_SLICE";
@@ -198,40 +179,6 @@ function updateJetPhysics(jet, targetEnemy, incomingThreat, opposingPool, missil
         var targetArenaY = Math.min(Math.max(jet.y, 140), worldH - 180);
         jet.targetAngle = Math.atan2(targetArenaY - jet.y, targetArenaX - jet.x);
         jet.throttleSetting = 1.5;
-        jet.afterburner = true;
-      } else if (typeof isThreatenedByHostileFarp === "function" && (threatBat = isThreatenedByHostileFarp(jet, worldW, worldH))) {
-        // Hostile FARP Air Defense Threat Exclusion (Keeps hostiles outside base weapon range)
-        jet.isTailChasing = false;
-        jet.targetJet = null;
-        jet.mode = "EVADE_FARP";
-        jet.modeTimer = 60; // Sustained standoff maneuver prevents 1-frame jitter/freezing
-        var awayX = (jet.x < threatBat.x) ? -1.0 : 1.0;
-        var awayPitch = -0.15; // Smooth banking turn toward open ocean
-        jet.targetAngle = (awayX > 0) ? awayPitch : (jet.angle < 0 ? -Math.PI - awayPitch : Math.PI + awayPitch);
-        jet.throttleSetting = 1.3;
-        jet.afterburner = true;
-
-        // Deploy countermeasures if under active fire or missile launch
-        if (threatBat.samCooldown > 110 && Math.random() < 0.25) {
-          if (typeof oodaDeployFlares === "function" && DF.flaresPool) {
-            oodaDeployFlares(jet, DF.flaresPool);
-          }
-          if (typeof oodaDeployChaff === "function" && DF.chaffPool) {
-            oodaDeployChaff(jet, DF.chaffPool);
-          }
-        }
-
-        if (Math.random() < 0.015 && typeof dfRadio === "function") {
-          dfRadio(jet.callsign + ": STANDOFF PERIMETER: " + threatBat.shortName + "! TURNING BACK TO OCEAN ARENA!");
-        }
-      } else if (jet.mode === "EVADE_FARP" && typeof jet.modeTimer === "number" && jet.modeTimer > 0) {
-        jet.modeTimer--;
-        jet.isTailChasing = false;
-        jet.targetJet = null;
-        var arenaCenterX = worldW * 0.5;
-        var toCenterX = (arenaCenterX > jet.x) ? 1.0 : -1.0;
-        jet.targetAngle = (toCenterX > 0) ? -0.05 : (jet.angle < 0 ? -Math.PI + 0.05 : Math.PI - 0.05);
-        jet.throttleSetting = 1.3;
         jet.afterburner = true;
       } else if (gpwsTrigger) {
         jet.mode = "GPWS_PULLUP";
@@ -309,7 +256,7 @@ function updateJetPhysics(jet, targetEnemy, incomingThreat, opposingPool, missil
 
   // Low-altitude aerodynamic leveling (only for intact airframes; critical/stalled airframes plunge naturally):
   var isHealthyFlight = (!jet.isDying && (!jet.hp || jet.hp >= 20.0) && !jet.isStalled);
-  if (isHealthyFlight && jet.mode !== "BREAK" && jet.mode !== "GPWS_PULLUP" && !isAceMode) {
+  if (isHealthyFlight && jet.mode !== "BREAK" && jet.mode !== "GPWS_PULLUP") {
     var isFacingRight = Math.cos(jet.angle) >= 0;
     if (altAgl <= 1500) {
       if (Math.sin(jet.targetAngle) > -0.08) {

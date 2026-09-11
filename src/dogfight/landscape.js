@@ -1,13 +1,9 @@
-// # Multi-Domain Landscape Renderer (Air, Space, Land, Sea, Sub-Surface)
+// # Landscape Renderer (minimal: ocean + mountains, no defenses)
 //
-// Logline: Multi-domain vertical stratification for modern warfighting.
-// Domains:
-//  - Orbit / Near-Space (100k - 80k ft)
+// Logline: Just enough terrain for the jets to fly in.
 //  - Stratosphere & Troposphere Air Combat Arena (80k - 0 ft MSL)
-//  - Land Domain: Coastal mountains, Airbase runway, EW radar, SAM battery (West / Left)
-//  - Coastline: Continental drop-off, surf line, beach
-//  - Ocean Domain: Dynamic wave swells, Carrier Strike Group, Guided Missile Destroyer (East / Right)
-//  - Sub-Surface Domain: Bathymetry (0m down to -1000m), Thermocline layer, Sonar ping corridor
+//  - Land Domain: Coastal mountains only (West / Left)
+//  - Ocean Domain: Dynamic wave swells (East / Right)
 //
 (function (global) {
   "use strict";
@@ -20,24 +16,7 @@
     sonarPulseRadius: 0,
     sonarPulseMax: 180,
     radarSweepAngle: 0,
-    wavePhase: 0,
-
-    // Modular entity registries for user expansion
-    landAssets: [
-      { id: "airbase-1", name: "FORWARD AIR BASE ALPHA", type: "airfield", xRatio: 0.08, runwayLength: 160 },
-      { id: "sam-battery-1", name: "PATRIOT/S-400 SAM SITE", type: "sam", xRatio: 0.14, rangeKm: 40 }
-    ],
-    surfaceCombatants: [
-      { id: "ddg-51", name: "DDG-51 ARLEIGH BURKE", type: "destroyer", xRatio: 0.28, aegisRadar: true }
-    ],
-    subSurfaceCorridors: [
-      { id: "sub-trench-1", name: "CONTINENTAL TRENCH PATROL", depthM: -450, type: "ssn_patrol_zone" }
-    ],
-
-    // API methods for future weapons injection
-    registerLandAsset: function (asset) { this.landAssets.push(asset); },
-    registerSurfaceShip: function (ship) { this.surfaceCombatants.push(ship); },
-    registerSubSurfaceAsset: function (sub) { this.subSurfaceCorridors.push(sub); }
+    wavePhase: 0
   };
 
   // Helper: Get Mean Sea Level Y coordinate in canvas pixels
@@ -222,22 +201,10 @@
     var oceanLabelX = Math.max(coastX + 16, viewLeft + 24);
     ctx.fillStyle = "rgba(56, 189, 248, 0.8)";
     ctx.font = "8.5px ui-monospace, monospace";
-    ctx.fillText("0 FT MSL // OCEAN DOMAIN (CONTINUOUS OPEN SEA SURFACE OPERATIONS)", oceanLabelX, mslY - 8);
-
-    // Render Aegis Destroyer (DDG-51)
-    var ddgX = Math.floor(width * 0.28);
-    drawAegisDestroyer(ctx, ddgX, mslY, sys.wavePhase);
-
-    // Render Guided Missile Cruiser in eastern waters (CG-69)
-    var cgX = Math.floor(width * 0.76);
-    drawAegisCruiser(ctx, cgX, mslY, sys.wavePhase);
-
-    // Render Submarine Patrol Station in open ocean
-    var ssnX = Math.floor(width * 1.35);
-    drawSubmarinePatrol(ctx, ssnX, mslY, height, sys.wavePhase, now);
+    ctx.fillText("0 FT MSL // OCEAN DOMAIN", oceanLabelX, mslY - 8);
 
     // ------------------------------------------------------------------------
-    // 4. LAND DOMAIN (WEST SECTION // MOUNTAINS, RUNWAY, RADAR & SAM)
+    // 4. LAND DOMAIN (WEST SECTION // MOUNTAINS ONLY)
     // ------------------------------------------------------------------------
     // Mountainous Terrain Polygon extending continuously westward
     ctx.fillStyle = "#090e17";
@@ -255,45 +222,12 @@
     ctx.lineTo(width * 0.015, mslY - 50);
     ctx.lineTo(width * 0.025, mslY - 24);
 
-    // Airbase plateau (elevation ~14px / 1200 ft on far West edge)
-    var runwayStartX = width * 0.03;
-    var runwayEndX = width * 0.13;
-    ctx.lineTo(runwayStartX, mslY - 14);
-    ctx.lineTo(runwayEndX, mslY - 14);
-
-    // Coastal cliff peak with SAM battery
-    var samRidgeX = width * 0.142;
-    ctx.lineTo(samRidgeX, mslY - 22);
     // Coast drops down to sea level at coastX = 0.15 * width
     ctx.lineTo(coastX, mslY);
     ctx.lineTo(coastX, height);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
-
-    // Subtle topographical contour ridges
-    ctx.strokeStyle = "rgba(30, 41, 59, 0.5)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(landStartX, mslY - 20);
-    ctx.lineTo(width * 0.08, mslY - 25);
-    ctx.lineTo(width * 0.15, mslY - 6);
-    ctx.moveTo(samRidgeX - 15, mslY - 12);
-    ctx.lineTo(coastX - 6, mslY - 2);
-    ctx.stroke();
-
-    // Render Military Air Base (Runway, Lights, Tower, EW Radar)
-    drawAirBase(ctx, runwayStartX, runwayEndX, mslY - 14, now, sys.radarSweepAngle);
-
-    // Render Agile Combat Employment (ACE) Austere Airstrips & FARPs
-    if (typeof drawAceAirstrips === "function") {
-      drawAceAirstrips(ctx, width, height, now, colors);
-    }
-
-    // Render FARP & Airbase Defenses (CIWS, SHORAD, Radar, Defense Umbrellas)
-    if (typeof drawFarpDefenses === "function") {
-      drawFarpDefenses(ctx, width, height, now, colors);
-    }
 
     // Coastline Surf Breakers
     ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
@@ -307,242 +241,6 @@
   };
 
   // --------------------------------------------------------------------------
-  // SUB-DRAWERS FOR TACTICAL SURFACE & LAND ENTITIES
-  // --------------------------------------------------------------------------
-
-  function drawAirBase(ctx, startX, endX, groundY, now, radarAngle) {
-    var len = endX - startX;
-
-    // Runway Tarmac Surface
-    ctx.fillStyle = "#0c1420";
-    ctx.strokeStyle = "rgba(71, 85, 105, 0.8)";
-    ctx.lineWidth = 1;
-    ctx.fillRect(startX, groundY - 2, len, 4);
-    ctx.strokeRect(startX, groundY - 2, len, 4);
-
-    // Runway Centerline Dashes
-    ctx.strokeStyle = "rgba(245, 158, 11, 0.75)";
-    ctx.lineWidth = 1;
-    ctx.setLineDash([4, 6]);
-    ctx.beginPath();
-    ctx.moveTo(startX + 12, groundY);
-    ctx.lineTo(endX - 12, groundY);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // Green Threshold Approach Lights
-    ctx.fillStyle = "#10b981";
-    ctx.fillRect(startX + 2, groundY - 3, 3, 2);
-    ctx.fillRect(endX - 5, groundY - 3, 3, 2);
-
-    // Control Tower Silhouette
-    var towerX = startX + 28;
-    ctx.fillStyle = "rgba(148, 163, 184, 0.85)";
-    ctx.fillRect(towerX - 2, groundY - 12, 4, 10);
-    ctx.fillRect(towerX - 4, groundY - 15, 8, 4);
-    // Flashing Red Beacon
-    var beaconBlink = (Math.floor(now / 400) % 2 === 0);
-    if (beaconBlink) {
-      ctx.fillStyle = "#ef4444";
-      ctx.fillRect(towerX - 1, groundY - 17, 2, 2);
-    }
-
-    // Rotating Early Warning Air Surveillance Radar (EW Radar)
-    var radarX = endX - 24;
-    ctx.fillStyle = "rgba(148, 163, 184, 0.85)";
-    ctx.fillRect(radarX - 1, groundY - 8, 2, 6);
-    // Dish antenna
-    ctx.save();
-    ctx.translate(radarX, groundY - 9);
-    ctx.rotate(radarAngle);
-    ctx.strokeStyle = "#38bdf8";
-    ctx.lineWidth = 1.2;
-    ctx.beginPath();
-    ctx.arc(0, 0, 4, -0.6, 0.6);
-    ctx.stroke();
-    ctx.restore();
-
-    // Airbase Label
-    ctx.fillStyle = "rgba(52, 211, 153, 0.7)";
-    ctx.font = "7.5px ui-monospace, monospace";
-    ctx.fillText("BASE ALPHA // RUNWAY 09L [ACE HUB]", startX + 16, groundY - 6);
-  }
-
-  function drawSamSite(ctx, ridgeX, groundY) {
-    ctx.fillStyle = "rgba(148, 163, 184, 0.9)";
-    ctx.fillRect(ridgeX - 5, groundY - 3, 10, 3);
-    ctx.strokeStyle = "#ef4444";
-    ctx.lineWidth = 1.2;
-    ctx.beginPath();
-    ctx.moveTo(ridgeX - 2, groundY - 3);
-    ctx.lineTo(ridgeX + 4, groundY - 9);
-    ctx.stroke();
-
-    ctx.strokeStyle = "rgba(239, 68, 68, 0.25)";
-    ctx.setLineDash([2, 3]);
-    ctx.beginPath();
-    ctx.arc(ridgeX, groundY - 5, 28, -Math.PI * 0.55, -Math.PI * 0.15);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    ctx.fillStyle = "rgba(239, 68, 68, 0.65)";
-    ctx.font = "7px ui-monospace, monospace";
-    ctx.fillText("SAM BTY [ACTIVE]", ridgeX - 16, groundY - 14);
-  }
-
-  function drawAircraftCarrier(ctx, x, y, wavePhase) {
-    var bob = Math.sin(x * 0.04 + wavePhase) * 1.5;
-    var cy = y + bob;
-
-    ctx.fillStyle = "#0e1726";
-    ctx.strokeStyle = "rgba(56, 189, 248, 0.8)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(x - 38, cy + 2);
-    ctx.lineTo(x + 42, cy - 2);
-    ctx.lineTo(x + 46, cy + 3);
-    ctx.lineTo(x - 36, cy + 6);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.strokeStyle = "rgba(245, 158, 11, 0.7)";
-    ctx.lineWidth = 0.8;
-    ctx.beginPath();
-    ctx.moveTo(x - 28, cy - 1);
-    ctx.lineTo(x + 36, cy - 2);
-    ctx.stroke();
-
-    ctx.fillStyle = "rgba(148, 163, 184, 0.85)";
-    ctx.fillRect(x - 22, cy - 10, 8, 8);
-    ctx.strokeStyle = "#38bdf8";
-    ctx.beginPath();
-    ctx.moveTo(x - 18, cy - 10);
-    ctx.lineTo(x - 18, cy - 15);
-    ctx.stroke();
-
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.35)";
-    ctx.setLineDash([3, 4]);
-    ctx.beginPath();
-    ctx.moveTo(x - 38, cy + 4);
-    ctx.lineTo(x - 58, cy + 5);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    ctx.fillStyle = "rgba(56, 189, 248, 0.8)";
-    ctx.font = "7.5px ui-monospace, monospace";
-    ctx.fillText("CVN-78 STRIKE GROUP", x - 26, cy - 17);
-  }
-
-  function drawAegisDestroyer(ctx, x, y, wavePhase) {
-    var bob = Math.sin(x * 0.04 + wavePhase) * 1.5;
-    var dy = y + bob;
-
-    ctx.fillStyle = "#0c1524";
-    ctx.strokeStyle = "rgba(56, 189, 248, 0.75)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(x - 22, dy + 2);
-    ctx.lineTo(x + 24, dy - 2);
-    ctx.lineTo(x + 26, dy + 2);
-    ctx.lineTo(x - 20, dy + 4);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.fillStyle = "rgba(148, 163, 184, 0.85)";
-    ctx.fillRect(x - 6, dy - 8, 10, 6);
-    ctx.strokeStyle = "#38bdf8";
-    ctx.beginPath();
-    ctx.moveTo(x - 1, dy - 8);
-    ctx.lineTo(x - 1, dy - 13);
-    ctx.stroke();
-
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
-    ctx.beginPath();
-    ctx.moveTo(x + 24, dy);
-    ctx.lineTo(x + 28, dy + 2);
-    ctx.stroke();
-
-    ctx.fillStyle = "rgba(56, 189, 248, 0.75)";
-    ctx.font = "7px ui-monospace, monospace";
-    ctx.fillText("DDG-51 AEGIS", x - 14, dy - 15);
-  }
-
-  function drawAegisCruiser(ctx, x, y, wavePhase) {
-    var bob = Math.sin(x * 0.04 + wavePhase) * 1.5;
-    var cy = y + bob;
-
-    ctx.fillStyle = "#0b1422";
-    ctx.strokeStyle = "rgba(56, 189, 248, 0.75)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(x - 26, cy + 2);
-    ctx.lineTo(x + 28, cy - 2);
-    ctx.lineTo(x + 30, cy + 2);
-    ctx.lineTo(x - 24, cy + 5);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.fillStyle = "rgba(148, 163, 184, 0.85)";
-    ctx.fillRect(x - 8, cy - 9, 14, 7);
-    ctx.fillRect(x - 4, cy - 14, 6, 5);
-
-    // SPY radar mast
-    ctx.strokeStyle = "#38bdf8";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(x - 1, cy - 14);
-    ctx.lineTo(x - 1, cy - 19);
-    ctx.stroke();
-
-    // Wake
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.35)";
-    ctx.beginPath();
-    ctx.moveTo(x + 28, cy);
-    ctx.lineTo(x + 34, cy + 2);
-    ctx.stroke();
-
-    ctx.fillStyle = "rgba(56, 189, 248, 0.75)";
-    ctx.font = "7px ui-monospace, monospace";
-    ctx.fillText("CG-69 TICONDEROGA", x - 18, cy - 16);
-  }
-
-  function drawSubmarinePatrol(ctx, x, y, height, wavePhase, now) {
-    var bob = Math.sin(x * 0.04 + wavePhase) * 1.2;
-    var sy = y + bob;
-
-    // Periscope and snorkel wake on surface
-    ctx.strokeStyle = "rgba(56, 189, 248, 0.6)";
-    ctx.lineWidth = 1.2;
-    ctx.beginPath();
-    ctx.moveTo(x, sy - 1);
-    ctx.lineTo(x, sy - 8);
-    ctx.stroke();
-
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
-    ctx.beginPath();
-    ctx.moveTo(x - 4, sy);
-    ctx.lineTo(x + 6, sy + 1);
-    ctx.stroke();
-
-    // Submerged hull silhouette in mesopelagic layer
-    var subDepthY = y + (height - y) * 0.45;
-    ctx.fillStyle = "rgba(10, 20, 35, 0.7)";
-    ctx.strokeStyle = "rgba(14, 165, 233, 0.35)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.ellipse(x, subDepthY, 32, 6, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-
-    // Sail / conning tower
-    ctx.fillRect(x - 4, subDepthY - 10, 8, 5);
-
-    ctx.fillStyle = "rgba(52, 211, 153, 0.7)";
-    ctx.font = "7px ui-monospace, monospace";
-    ctx.fillText("SSN VIRGINIA [FAST ATTACK PATROL]", x - 28, sy - 11);
-  }
+  // (defensive/naval drawers removed in the "just jets" cleanup)
 
 })(typeof window !== "undefined" ? window : this);

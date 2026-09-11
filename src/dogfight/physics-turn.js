@@ -138,7 +138,7 @@ function updateJetPhysicsTurn(jet, targetEnemy, spec, isF16, mass, densityRatio,
     jet.wingVapor.push(vxVap, vyVap, 0.6, 0);
   }
 
-  var isGroundOrAce = (jet.mode === "ACE_TOUCHDOWN" || jet.mode === "ACE_SCRAMBLE" || jet.mode === "FARP_TAKEOFF");
+  var isGroundOrAce = (jet.mode === "TAKEOFF");
   if (!isGroundOrAce && jet.speed <= DF.V_STALL && jet.gen !== 7) {
     jet.speed = DF.V_STALL;
     if (!jet.isStalled) {

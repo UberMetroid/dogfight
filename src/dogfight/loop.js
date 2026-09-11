@@ -40,10 +40,6 @@ function updateDogfight(now) {
   if (!DF.ctx) return;
   if (now && DF.lastTime && (now - DF.lastTime < 33)) return;
   DF.lastTime = now;
-  // Frame counter exposed to diagnostic logs (gate: window.__dfDebug === true).
-  if (typeof window !== "undefined") {
-    window.__dfFrame = (window.__dfFrame || 0) + 1;
-  }
   try {
     DF.ctx.clearRect(0, 0, DF.width, DF.height);
     if (!hasAnyActiveGen()) return;

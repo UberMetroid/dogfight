@@ -236,17 +236,12 @@
           return "✨ DEFENSIVE COUNTERMEASURES: Pilot deployed burning magnesium flares & aluminum chaff to decoy missile!";
         }
 
-        // FARP touch-and-go rearm
-        if ((wJet && (wJet.mode === "ACE_APPROACH" || wJet.mode === "ACE_TOUCHDOWN")) ||
-            (eJet && (eJet.mode === "ACE_APPROACH" || eJet.mode === "ACE_TOUCHDOWN"))) {
-          var rearmingJet = (wJet && (wJet.mode === "ACE_APPROACH" || wJet.mode === "ACE_TOUCHDOWN")) ? wJet : eJet;
-          return "🛬 AUSTERE TOUCH-AND-GO: " + rearmingJet.callsign + " hot-pit turnaround on runway — rapid refueling and missile rearm!";
-        }
-
         // Takeoff rollout
-        if ((wJet && wJet.mode === "FARP_TAKEOFF") || (eJet && eJet.mode === "FARP_TAKEOFF")) {
-          var launchingJet = (wJet && wJet.mode === "FARP_TAKEOFF") ? wJet : eJet;
-          return "🛫 COMBAT SCRAMBLE: " + launchingJet.callsign + " rolling on afterburner for tactical high-altitude climb!";
+        if (wJet && wJet.mode === "TAKEOFF") {
+          return "🛫 TAKEOFF: " + wJet.callsign + " rolling on afterburner for tactical high-altitude climb!";
+        }
+        if (eJet && eJet.mode === "TAKEOFF") {
+          return "🛫 TAKEOFF: " + eJet.callsign + " rolling on afterburner for tactical high-altitude climb!";
         }
 
         // Merge or pitchback
@@ -291,11 +286,6 @@
         // Active GCI Intercept Closure
         if ((wJet && wJet.mode === "PURSUIT" && wJet.targetJet) || (eJet && eJet.mode === "PURSUIT" && eJet.targetJet)) {
           return "⚡ GCI THEATER INTERCEPT: Fighters vectoring at supersonic closing speed across ocean sector for combat merge!";
-        }
-
-        // Standoff evasion
-        if ((wJet && wJet.mode === "EVADE_FARP") || (eJet && eJet.mode === "EVADE_FARP")) {
-          return "⚠️ DEFENSE STANDOFF: Fighter reached enemy FARP air defense perimeter — turning back to ocean combat arena.";
         }
       }
 
