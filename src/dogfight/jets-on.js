@@ -47,14 +47,24 @@ function loadActiveGens() {
       var sE = localStorage.getItem("ooda-gens-east-v2") || localStorage.getItem("ooda-gens-red-v2");
       if (sW) {
         var pW = JSON.parse(sW);
-        for (var gw = 1; gw <= 6; gw++) if (typeof pW[gw] !== "undefined") activeGensWest[gw] = Boolean(pW[gw]);
+        for (var gw = 1; gw <= 7; gw++) if (typeof pW[gw] !== "undefined") activeGensWest[gw] = Boolean(pW[gw]);
       }
       if (sE) {
         var pE = JSON.parse(sE);
-        for (var ge = 1; ge <= 6; ge++) if (typeof pE[ge] !== "undefined") activeGensEast[ge] = Boolean(pE[ge]);
+        for (var ge = 1; ge <= 7; ge++) if (typeof pE[ge] !== "undefined") activeGensEast[ge] = Boolean(pE[ge]);
       }
     }
   } catch (e) {}
+  // Hard fallback: if BOTH per-side masks ended up empty (e.g. user disabled
+  // every gen in a prior session and localStorage reloaded the empty state),
+  // force Gen 4 active on both sides so jets are always visible on load.
+  var westAny = false, eastAny = false;
+  for (var gk = 1; gk <= 7; gk++) {
+    if (activeGensWest[gk]) westAny = true;
+    if (activeGensEast[gk]) eastAny = true;
+  }
+  if (!westAny) activeGensWest[4] = true;
+  if (!eastAny) activeGensEast[4] = true;
   syncMergedActiveGens();
 }
 loadActiveGens();

@@ -3,6 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="pragma" content="no-cache">
+  <meta http-equiv="expires" content="0">
   <title>Air & Sea Battlespace // West vs East // 6-Generation Fighter Dogfight</title>
   <meta name="description" content="West vs East fighter jet dogfight simulation across 6 generations of combat aircraft, based on Col. John Boyd's Energy-Maneuverability Theory and OODA Loop. Realistic physics, radar, missiles, guns, and Gen 7 CCA SWARM.">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
@@ -128,7 +131,15 @@
   <script defer>
     window.addEventListener('load', function () {
       jetsEnabled = true;
-      if (!hasAnyActiveGen()) activeGens[1] = true;
+      // Per-side fallback: if BOTH per-side masks are empty, force Gen 4 on each.
+      var westAny = false, eastAny = false;
+      for (var gk = 1; gk <= 7; gk++) {
+        if (activeGensWest[gk]) westAny = true;
+        if (activeGensEast[gk]) eastAny = true;
+      }
+      if (!westAny) activeGensWest[4] = true;
+      if (!eastAny) activeGensEast[4] = true;
+      if (typeof syncMergedActiveGens === "function") syncMergedActiveGens();
       setupGenSelector();
       initGlobalDogfight();
 

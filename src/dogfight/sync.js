@@ -14,10 +14,21 @@ var globalDogfightJetsState = {
   redPool: []
 };
 
-// Initialize pool slots with placeholder jets (gen 4 default, overridden at sync time).
+// Initialize pool slots with placeholder jets AT THE RUNWAY (gen 4 default).
+// Position is the same as syncFleetToActiveGenerations will set, so even if
+// initGlobalDogfight / syncFleetToActiveGenerations doesn't run (e.g. due to a
+// localStorage all-empty state), the default pool is still visible.
+var initialWorldH = DF.worldHeight || 1200;
+var initialMslY = (typeof getSeaLevelY === "function") ? getSeaLevelY(initialWorldH) : Math.floor(initialWorldH * 0.84);
+var initialWestRwyY = initialMslY - 14;
+var initialEastRwyY = initialMslY - 12;
 for (var dbi = 0; dbi < POOL_SIZE_PER_SIDE; dbi++) {
-  globalDogfightJetsState.westPool.push(createJet(800, getYFromAltitude(RESPAWN_CEILINGS[4] || 52000, 1200), 0, 4, dbi, "west"));
-  globalDogfightJetsState.eastPool.push(createJet(2800, getYFromAltitude(RESPAWN_CEILINGS[4] || 52000, 1200), Math.PI, 4, dbi, "east"));
+  globalDogfightJetsState.westPool.push(createJet(
+    (DF.worldWidth || 3600) * 0.04 + ((dbi % 2 === 0) ? 36 : 10),
+    initialWestRwyY - 1, 0, 4, dbi, "west"));
+  globalDogfightJetsState.eastPool.push(createJet(
+    (DF.worldWidth || 3600) * 0.96 - ((dbi % 2 === 0) ? 36 : 10),
+    initialEastRwyY - 1, Math.PI, 4, dbi, "east"));
 }
 for (var dai = 0; dai < POOL_SIZE_PER_SIDE; dai++) globalDogfightJetsState.allJets.push(globalDogfightJetsState.westPool[dai]);
 for (var dri = 0; dri < POOL_SIZE_PER_SIDE; dri++) globalDogfightJetsState.allJets.push(globalDogfightJetsState.eastPool[dri]);
