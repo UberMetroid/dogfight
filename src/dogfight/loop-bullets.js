@@ -26,7 +26,7 @@ function dfStepBullets() {
     // Draw high-visibility velocity-aligned tracer line strokes
     DF.ctx.save();
     var isEast = (bOwnerTeam === 1);
-    var bFaction = isEast ? FACTION_COLORS.red : FACTION_COLORS.blue;
+    var bFaction = isEast ? FACTION_COLORS.east : FACTION_COLORS.west;
     var tracerColor = bFaction ? (bFaction.tracer || bFaction.accent) : (bOwnerTeam === 0 ? "#38bdf8" : "#f43f5e");
     DF.ctx.strokeStyle = tracerColor;
     DF.ctx.lineWidth = isEast ? 3.2 : 2.0; // Eastern heavy autocannons (37mm/30mm) have wider shell tracers
@@ -93,7 +93,7 @@ function dfStepBullets() {
     // Proximity Damage check against hostile Strategic Bomber
     if (typeof StrategicBomberSystem !== "undefined" && StrategicBomberSystem.activeBomber) {
       var strB = StrategicBomberSystem.activeBomber;
-      var hostileTeamName = (bOwnerTeam === 0 ? "red" : "blue");
+      var hostileTeamName = (bOwnerTeam === 0 ? "east" : "west");
       if (strB.team === hostileTeamName && strB.state !== "SPLASHED") {
         if (Math.hypot(strB.x - bx, strB.y - by) < 32) {
           var shooterJetB = (shooterSlot >= 0 && shooterSlot < shooterPool.length) ? shooterPool[shooterSlot] : shooterPool[0];

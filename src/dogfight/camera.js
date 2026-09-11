@@ -108,24 +108,8 @@
         }
       }
 
-      // 4. Strategic Bomber & Active Bomb Detonations
-      if (typeof StrategicBomberSystem !== "undefined") {
-        if (StrategicBomberSystem.activeBomber) {
-          var sb = StrategicBomberSystem.activeBomber;
-          points.push({ x: sb.x, y: sb.y });
-          points.push({ x: sb.x + Math.cos(sb.angle) * 120, y: sb.y });
-        }
-        for (var bmb = 0; bmb < StrategicBomberSystem.bombs.length; bmb++) {
-          points.push({ x: StrategicBomberSystem.bombs[bmb].x, y: StrategicBomberSystem.bombs[bmb].y });
-        }
-        for (var dtn = 0; dtn < StrategicBomberSystem.detonations.length; dtn++) {
-          var dt = StrategicBomberSystem.detonations[dtn];
-          points.push({ x: dt.x, y: dt.y });
-          if (dt.type === "NUKE") {
-            points.push({ x: dt.x, y: dt.y - (dt.stemHeight || 100) });
-          }
-        }
-      }
+      // 4. Strategic Bomber & Active Bomb Detonations (removed in v3.0; bombers.js deleted)
+      // Camera focus points are now just active jets / missiles / bullets / flares / chaff / wreck.
 
       if (this.userOverrideTimer > 0 && !this.isAutoZoom) {
         // User manual zoom active: strictly anchor bottom to floorY so ground/sea never drops off screen

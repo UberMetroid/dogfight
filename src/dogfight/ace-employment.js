@@ -18,7 +18,7 @@
         id: "alpha",
         name: "BASE ALPHA (RWY 09L)",
         type: "MAIN_BASE",
-        team: "blue",
+        team: "west",
         startX: w * 0.03,
         endX: w * 0.13,
         surfaceY: mslY - 14,
@@ -28,7 +28,7 @@
         id: "carrier",
         name: "CVN-78 FLIGHT DECK",
         type: "CARRIER",
-        team: "blue",
+        team: "west",
         startX: w * 0.20,
         endX: w * 0.25,
         surfaceY: mslY - 4,
@@ -38,7 +38,7 @@
         id: "delta",
         name: "FARP DELTA (AUSTERE STRIP)",
         type: "AUSTERE_STRIP",
-        team: "red",
+        team: "east",
         startX: w * 0.87,
         endX: w * 0.97,
         surfaceY: mslY - 12,
@@ -99,7 +99,7 @@
   // 4. Command Entire Fleet of a Team to Rearm
   function orderFleetAceTouchAndGo(team) {
     if (typeof DF === "undefined") return;
-    var pool = (team === "red") ? DF.redPool : DF.bluePool;
+    var pool = (team === "east") ? DF.redPool : DF.bluePool;
     if (!pool) return;
     var count = 0;
     for (var i = 0; i < pool.length; i++) {
@@ -110,7 +110,7 @@
       }
     }
     if (typeof dfRadio === "function" && count > 0) {
-      dfRadio("TAC-NET: ALL " + (team === "red" ? "RED" : "BLUE") + " SORTIES ORDERED -> AGILE COMBAT EMPLOYMENT (ACE) REARM!");
+      dfRadio("TAC-NET: ALL " + (team === "east" ? "EAST" : "WEST") + " SORTIES ORDERED -> AGILE COMBAT EMPLOYMENT (ACE) REARM!");
     }
   }
 
@@ -133,7 +133,7 @@
     // PHASE A: GLIDESLOPE APPROACH (Descending towards runway threshold)
     // ------------------------------------------------------------------------
     if (jet.mode === "ACE_APPROACH") {
-      var isBlue = (jet.team === "blue");
+      var isWest = (jet.team === "west");
       var runwayCenterX = (zone.startX + zone.endX) * 0.5;
       var distToCenter = Math.abs(jet.x - runwayCenterX);
 
@@ -169,7 +169,7 @@
         jet.mode = "ACE_TOUCHDOWN";
         jet.aceRollTimer = 65; // ~1.1 seconds ground roll
         jet.y = rwyY - 1;
-        var rollHeading = isBlue ? Math.PI : 0.0;
+        var rollHeading = isWest ? Math.PI : 0.0;
         jet.targetAngle = rollHeading;
         jet.angle = rollHeading;
 
@@ -194,7 +194,7 @@
     if (jet.mode === "ACE_TOUCHDOWN") {
       jet.aceRollTimer--;
       jet.y = rwyY - 1;
-      var isBlue = (jet.team === "blue");
+      var isWest = (jet.team === "west");
       var isFacingRight = Math.cos(jet.angle) >= 0;
       jet.targetAngle = isFacingRight ? 0.0 : Math.PI;
       jet.speed = 1.0; // Steady hot-pit ground roll taxi speed
@@ -244,9 +244,9 @@
       jet.scrambleTimer--;
       jet.throttleSetting = 1.5;
       jet.afterburner = true;
-      var isBlue = (jet.team === "blue");
+      var isWest = (jet.team === "west");
       // Blue scrambles Eastbound (heading 0.0, climbing at -0.45), Red scrambles Westbound (heading Math.PI, climbing at -Math.PI + 0.45)
-      jet.targetAngle = isBlue ? -0.45 : (-Math.PI + 0.45);
+      jet.targetAngle = isWest ? -0.45 : (-Math.PI + 0.45);
       jet.angle = jet.targetAngle;
 
       if (jet.scrambleTimer <= 0) {
@@ -410,7 +410,7 @@
         ctx.fill();
 
         // Strip Name & ACE Designation
-        ctx.fillStyle = (z.team === "red") ? "rgba(248, 113, 113, 0.85)" : "rgba(56, 189, 248, 0.85)";
+        ctx.fillStyle = (z.team === "east") ? "rgba(248, 113, 113, 0.85)" : "rgba(56, 189, 248, 0.85)";
         ctx.font = "7.5px ui-monospace, monospace";
         ctx.fillText(z.name + " // ACE REARM", startX + 16, gy - 8);
       }
@@ -426,7 +426,7 @@
       zoneId: "alpha",
       name: "BASE ALPHA IADS",
       shortName: "BASE ALPHA CIWS",
-      team: "blue",
+      team: "west",
       relX: 0.135,
       surfaceOffsetY: -22,
       ciwsRange: 240,
@@ -445,7 +445,7 @@
       zoneId: "carrier",
       name: "CVN-78 PHALANX CIWS",
       shortName: "CVN-78 CIWS",
-      team: "blue",
+      team: "west",
       relX: 0.225,
       surfaceOffsetY: -4,
       ciwsRange: 220,
@@ -464,7 +464,7 @@
       zoneId: "delta",
       name: "FARP DELTA PANTSIR-S1",
       shortName: "FARP DELTA DEFENSE",
-      team: "red",
+      team: "east",
       relX: 0.865,
       surfaceOffsetY: -12,
       ciwsRange: 240,
@@ -510,62 +510,16 @@
       if (bat.muzzleFlashTimer > 0) bat.muzzleFlashTimer--;
       bat.radarAngle = (bat.radarAngle + 0.05) % (Math.PI * 2);
 
-      var isBlueBattery = (bat.team === "blue");
-      var hostilePool = isBlueBattery ? DF.redPool : DF.bluePool;
-      var hostileTeamCode = isBlueBattery ? 1 : 0;
+      var isWestBattery = (bat.team === "west");
+      var hostilePool = isWestBattery ? DF.redPool : DF.bluePool;
+      var hostileTeamCode = isWestBattery ? 1 : 0;
 
       // Check if battery's team is under post-bombing blackout
-      if (typeof StrategicBomberSystem !== "undefined" && StrategicBomberSystem.farpBlackout && StrategicBomberSystem.farpBlackout[bat.team] > 0) {
-        bat.isBlackout = true;
-        if (Math.random() < 0.20 && typeof globalVfxParticlePool !== "undefined" && globalVfxParticlePool) {
-          var spIdx = globalVfxParticlePool.alloc();
-          if (spIdx >= 0) {
-            var spo = spIdx * 8;
-            globalVfxParticlePool.buffer[spo] = bat.x + (Math.random() - 0.5) * 16;
-            globalVfxParticlePool.buffer[spo + 1] = bat.y - 4;
-            globalVfxParticlePool.buffer[spo + 2] = (Math.random() - 0.5) * 1.5;
-            globalVfxParticlePool.buffer[spo + 3] = -1.2 - Math.random() * 1.5;
-            globalVfxParticlePool.buffer[spo + 4] = 30;
-            globalVfxParticlePool.buffer[spo + 5] = 30;
-            globalVfxParticlePool.buffer[spo + 6] = 2.0;
-            globalVfxParticlePool.buffer[spo + 7] = 0; // Smoke
-          }
-        }
-        continue;
-      }
+      // (removed in v3.0; no bombers to cause blackout)
       bat.isBlackout = false;
 
       // Point Defense SAM fire against incoming hostile Strategic Bomber
-      if (typeof StrategicBomberSystem !== "undefined" && StrategicBomberSystem.activeBomber) {
-        var strB = StrategicBomberSystem.activeBomber;
-        if (strB.team !== bat.team && strB.state !== "SPLASHED") {
-          var dBomber = Math.hypot(strB.x - bat.x, strB.y - bat.y);
-          if (dBomber <= bat.samRange && bat.samCooldown <= 0) {
-            bat.samCooldown = 130;
-            bat.turretAngle = Math.atan2(strB.y - bat.y, strB.x - bat.x);
-            if (typeof window !== "undefined" && window.TacticalAudio && typeof window.TacticalAudio.playSamLaunch === "function") {
-              window.TacticalAudio.playSamLaunch();
-            }
-            if (DF.missilesPool) {
-              var sIdx = DF.missilesPool.alloc();
-              if (sIdx >= 0) {
-                var so = sIdx * 8;
-                DF.missilesPool.buffer[so] = bat.x;
-                DF.missilesPool.buffer[so + 1] = bat.y - 12;
-                DF.missilesPool.buffer[so + 2] = Math.cos(bat.turretAngle) * 7.5;
-                DF.missilesPool.buffer[so + 3] = Math.sin(bat.turretAngle) * 7.5;
-                DF.missilesPool.buffer[so + 4] = isBlueBattery ? 0 : 1;
-                DF.missilesPool.buffer[so + 5] = 4;
-                DF.missilesPool.buffer[so + 6] = 240;
-                DF.missilesPool.buffer[so + 7] = 0;
-              }
-            }
-            if (typeof dfRadio === "function" && Math.random() < 0.35) {
-              dfRadio(bat.shortName + ": SAM SALVO AWAY ON INGRESSING STRATEGIC BOMBER!");
-            }
-          }
-        }
-      }
+      // (removed in v3.0; bombers.js deleted)
 
       // ----------------------------------------------------------------------
       // POINT DEFENSE: Intercept incoming threat missiles heading for base/airplanes
@@ -665,7 +619,7 @@
               DF.bulletsPool.buffer[bo + 2] = Math.cos(fireBearing) * 16.0;
               DF.bulletsPool.buffer[bo + 3] = Math.sin(fireBearing) * 16.0;
               DF.bulletsPool.buffer[bo + 4] = 26;
-              DF.bulletsPool.buffer[bo + 5] = (isBlueBattery ? 100 : 200) + 99;
+              DF.bulletsPool.buffer[bo + 5] = (isWestBattery ? 100 : 200) + 99;
             }
           }
 
@@ -696,7 +650,7 @@
               DF.missilesPool.buffer[mo + 1] = bat.y - 6 + Math.sin(sAngle) * 16;
               DF.missilesPool.buffer[mo + 2] = Math.cos(sAngle) * smSpeed;
               DF.missilesPool.buffer[mo + 3] = Math.sin(sAngle) * smSpeed;
-              DF.missilesPool.buffer[mo + 4] = isBlueBattery ? 0 : 1;
+              DF.missilesPool.buffer[mo + 4] = isWestBattery ? 0 : 1;
               DF.missilesPool.buffer[mo + 5] = bestHostile.slotIdx || 0;
               DF.missilesPool.buffer[mo + 6] = 220;
               DF.missilesPool.buffer[mo + 7] = 4;
@@ -749,7 +703,7 @@
       var bat = bats[i];
       var bx = bat.x;
       var by = bat.y;
-      var isBlue = (bat.team === "blue");
+      var isWest = (bat.team === "west");
       var hasHostileNear = Boolean(bat.targetJet);
 
       ctx.save();
@@ -772,7 +726,7 @@
       // ----------------------------------------------------------------------
       // A. Tactical Air Defense Umbrella Arc (Shield Bubble above Strip)
       // ----------------------------------------------------------------------
-      var umbrellaColor = isBlue ? "rgba(56, 189, 248, " : "rgba(239, 68, 68, ";
+      var umbrellaColor = isWest ? "rgba(56, 189, 248, " : "rgba(239, 68, 68, ";
       var umbrellaAlpha = hasHostileNear ? 0.28 : 0.12;
       ctx.strokeStyle = umbrellaColor + umbrellaAlpha + ")";
       ctx.lineWidth = hasHostileNear ? 1.4 : 1.0;
@@ -804,19 +758,19 @@
       // B. Emplacement Ground Hardware (CIWS, Turret, Missile Rack, Radar)
       // ----------------------------------------------------------------------
       // 1. Concrete / Sandbag Pedestal
-      ctx.fillStyle = isBlue ? "#1e293b" : "#292524";
-      ctx.strokeStyle = isBlue ? "rgba(56, 189, 248, 0.6)" : "rgba(239, 68, 68, 0.6)";
+      ctx.fillStyle = isWest ? "#1e293b" : "#292524";
+      ctx.strokeStyle = isWest ? "rgba(56, 189, 248, 0.6)" : "rgba(239, 68, 68, 0.6)";
       ctx.lineWidth = 1;
       ctx.fillRect(bx - 10, by - 4, 20, 5);
       ctx.strokeRect(bx - 10, by - 4, 20, 5);
 
       // 2. SAM Missile Canister Launcher (tilted at 45 deg)
       ctx.fillStyle = "#334155";
-      ctx.strokeStyle = isBlue ? "#38bdf8" : "#ef4444";
+      ctx.strokeStyle = isWest ? "#38bdf8" : "#ef4444";
       ctx.lineWidth = 0.8;
       ctx.save();
-      ctx.translate(bx + (isBlue ? -6 : 6), by - 4);
-      var launcherAngle = isBlue ? -0.42 : -Math.PI + 0.42;
+      ctx.translate(bx + (isWest ? -6 : 6), by - 4);
+      var launcherAngle = isWest ? -0.42 : -Math.PI + 0.42;
       ctx.rotate(launcherAngle);
       ctx.fillRect(-2, -10, 8, 12);
       ctx.strokeRect(-2, -10, 8, 12);
@@ -871,9 +825,9 @@
 
       // 4. Rotating Search Radar Antenna
       ctx.save();
-      ctx.translate(bx + (isBlue ? 6 : -6), by - 6);
+      ctx.translate(bx + (isWest ? 6 : -6), by - 6);
       ctx.rotate(bat.radarAngle);
-      ctx.strokeStyle = isBlue ? "#38bdf8" : "#f87171";
+      ctx.strokeStyle = isWest ? "#38bdf8" : "#f87171";
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.arc(0, 0, 3, -0.6, 0.6);

@@ -6,7 +6,7 @@
 // Tactical Formation Station Coordinates for Wingman relative to Flight Lead (2D Side-View)
 function getWingmanStation(wingman, lead) {
   var gen = (wingman && wingman.gen) ? wingman.gen : 1;
-  var isBlue = (wingman && wingman.team === "blue");
+  var isWest = (wingman && wingman.team === "west");
 
   // Trail distance behind lead along flight path
   var trailDist, stepUp;

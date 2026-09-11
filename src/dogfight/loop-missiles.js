@@ -25,7 +25,7 @@ function dfStepMissiles() {
     if (tgtSlot === 99) {
       if (typeof StrategicBomberSystem !== "undefined" && StrategicBomberSystem.activeBomber) {
         var strB = StrategicBomberSystem.activeBomber;
-        var oppTeamName = (misOwnerTeam === 0 ? "red" : "blue");
+        var oppTeamName = (misOwnerTeam === 0 ? "east" : "west");
         if (strB.team === oppTeamName && strB.state !== "SPLASHED") {
           tgtJet = strB;
         }
@@ -178,7 +178,7 @@ function dfStepMissiles() {
     // Proximity Damage check against hostile Strategic Bomber
     if (!isDetonated && typeof StrategicBomberSystem !== "undefined" && StrategicBomberSystem.activeBomber) {
       var sBomb = StrategicBomberSystem.activeBomber;
-      var misHostileTeam = (misOwnerTeam === 0 ? "red" : "blue");
+      var misHostileTeam = (misOwnerTeam === 0 ? "east" : "west");
       if (sBomb.team === misHostileTeam && sBomb.state !== "SPLASHED") {
         var distSB = Math.hypot(sBomb.x - misX, sBomb.y - misY);
         if (distSB < 34 && misLife > 0) {
@@ -212,11 +212,12 @@ function dfStepMissiles() {
         dfRadio("TACTICAL WARNING: MISSILE DECOYED BY COUNTERMEASURES!");
       } else if (tgtJet) {
         if (tgtJet.gen === 7) {
+          // Gen 7 not in sim; dead-code branch
           tgtJet.shieldPulse = 1.0;
-          dfRadio((tgtJet.callsign || "SWARM") + ": QUANTUM SHIELD DEFLECTED MISSILE");
+          dfRadio((tgtJet.callsign || "TGT") + ": SHIELD DEFLECTED MISSILE");
         } else if (tgtJet.gen === 6 && tgtJet.laserCooldown <= 0) {
           tgtJet.laserCooldown = 35;
-          dfRadio((tgtJet.callsign || "GEN 6 NGAD") + ": LASER CIWS VAPORIZED THREAT MISSILE!");
+          dfRadio((tgtJet.callsign || "NGAD") + ": LASER CIWS VAPORIZED THREAT MISSILE!");
         } else {
           var mDamage = 75.0 + Math.random() * 10.0;
           var wName = "AIM_7";

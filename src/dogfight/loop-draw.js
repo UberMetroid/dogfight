@@ -11,7 +11,7 @@ function dfDrawAircraft(now, colors) {
     }
     if (!rJet.active) continue;
 
-    var rFaction = (rJet.team === "red" || rJet.isRed) ? FACTION_COLORS.red : FACTION_COLORS.blue;
+    var rFaction = (rJet.team === "east" || rJet.isEast) ? FACTION_COLORS.east : FACTION_COLORS.west;
 
     if (rJet.contrail) rJet.contrail.forEach(function (cx, cy, alpha, g, i, idx) {
       var co = idx * rJet.contrail.stride;

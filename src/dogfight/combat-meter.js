@@ -10,22 +10,20 @@
 
   var GEN_NAMES = {
     1: "F-86 SABRE",
-    2: "F-4 PHANTOM",
-    3: "F-14 TOMCAT",
-    4: "F-16 VIPER",
-    5: "F-22 RAPTOR",
-    6: "NGAD + CCA",
-    7: "QUANTUM SWARM"
+    2: "F-100 / F-104 / F-105",
+    3: "F-4 PHANTOM II",
+    4: "F-14 / F-15 / F-16 / F/A-18",
+    5: "F-22 RAPTOR / F-35",
+    6: "NGAD 6TH-GEN + CCA"
   };
 
   var RED_GEN_NAMES = {
-    1: "MiG-15 FAGOT",
-    2: "MiG-21 FISHBED",
-    3: "MiG-23 FLOGGER",
-    4: "Su-27 FLANKER",
+    1: "MiG-15 FAGOT / MiG-17",
+    2: "MiG-19 / MiG-21 / Su-7",
+    3: "MiG-21J / MiG-23 / MiG-25",
+    4: "Su-27 / MiG-29 / MiG-31",
     5: "Su-57 FELON",
-    6: "HOSTILE CCA",
-    7: "HOSTILE SWARM"
+    6: "Su-57M FELON-M"
   };
 
   var CombatMeter = {
@@ -79,7 +77,7 @@
           var genWeight = (1.0 + (j.gen || 4) * 0.75) * hpRatio;
           var psVal = (typeof j.ps === "number") ? j.ps : 120.0;
 
-          if (j.team === "blue") {
+          if (j.team === "west") {
             blueJets.push(j);
             blueTotalGenWeight += genWeight;
             blueTotalPs += psVal;

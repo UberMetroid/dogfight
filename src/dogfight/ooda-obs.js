@@ -68,7 +68,7 @@ function oodaObserveThreats(jet, opposingPool, missilesPool, width, height) {
 
   // 1. Scan Hostile Incoming Missiles
   if (missilesPool && missilesPool.activeCount > 0) {
-    var hostileTeam = (jet.team === "blue") ? 1 : 0;
+    var hostileTeam = (jet.team === "west") ? 1 : 0;
     for (var m = 0; m < missilesPool.activeCount; m++) {
       var mo = m * 8;
       if (missilesPool.buffer[mo + 4] === hostileTeam && missilesPool.buffer[mo + 6] > 0) {
@@ -187,8 +187,6 @@ function oodaOrientTactics(jet, obs, altFt, sCeiling) {
         ori.recommendedEvasion = "BREAK_MANUAL";
       } else if (jet.gen === 6) {
         ori.recommendedEvasion = "DEW_CIWS";
-      } else if (jet.gen === 7) {
-        ori.recommendedEvasion = "QUANTUM_SHIFT";
       } else {
         ori.recommendedEvasion = "BREAK_9G";
       }
@@ -208,8 +206,6 @@ function oodaOrientTactics(jet, obs, altFt, sCeiling) {
       ori.recommendedEvasion = "BREAK_MANUAL";
     } else if (jet.gen === 6) {
       ori.recommendedEvasion = "CCA_PINCER";
-    } else if (jet.gen === 7) {
-      ori.recommendedEvasion = "QUANTUM_SHIFT";
     } else {
       ori.recommendedEvasion = "BREAK_9G";
     }

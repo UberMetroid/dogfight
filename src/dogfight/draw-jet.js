@@ -7,8 +7,8 @@ function drawJetSilhouette(ctx, gen, isLead, colors, alpha, time, jet) {
   ctx.save();
   ctx.fillStyle = getAlphaColor("fg", alpha || 0.85);
   ctx.strokeStyle = getAlphaColor("fg", alpha || 0.85);
-  var isRed = Boolean(jet && (jet.team === "red" || jet.isRed));
-  var faction = isRed ? FACTION_COLORS.red : FACTION_COLORS.blue;
+  var isEast = Boolean(jet && (jet.team === "east" || jet.isEast));
+  var faction = isEast ? FACTION_COLORS.east : FACTION_COLORS.west;
   var fn = DRAW_JET[gen];
   if (fn) fn(ctx, jet, faction.primary, faction.accent, isLead, colors, alpha, time);
   else {

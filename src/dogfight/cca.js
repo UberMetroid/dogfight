@@ -19,7 +19,7 @@ function updateAndDrawCcaDrones(jet, isLead, colors) {
     return;
   }
 
-  var oppPool = (jet.team === "blue") ? DF.redPool : DF.bluePool;
+  var oppPool = (jet.team === "west") ? DF.redPool : DF.bluePool;
   var cosA = Math.cos(jet.angle);
   var sinA = Math.sin(jet.angle);
 
@@ -68,10 +68,10 @@ function updateAndDrawCcaDrones(jet, isLead, colors) {
   // ------------------------------------------------------------------------
   // 1. EXTENDED RADAR SENSOR MESH (Tactical MADL Data-Link & Forward Radar Arcs)
   // ------------------------------------------------------------------------
-  var isBlue = (jet.team === "blue");
-  var linkColor = isBlue ? "rgba(56, 189, 248, 0.40)" : "rgba(244, 63, 94, 0.40)";
-  var scanArcColor = isBlue ? "rgba(56, 189, 248, 0.25)" : "rgba(244, 63, 94, 0.25)";
-  var sweepBeamColor = isBlue ? "rgba(56, 189, 248, 0.55)" : "rgba(244, 63, 94, 0.55)";
+  var isWest = (jet.team === "west");
+  var linkColor = isWest ? "rgba(56, 189, 248, 0.40)" : "rgba(244, 63, 94, 0.40)";
+  var scanArcColor = isWest ? "rgba(56, 189, 248, 0.25)" : "rgba(244, 63, 94, 0.25)";
+  var sweepBeamColor = isWest ? "rgba(56, 189, 248, 0.55)" : "rgba(244, 63, 94, 0.55)";
 
   DF.ctx.save();
 
@@ -96,7 +96,7 @@ function updateAndDrawCcaDrones(jet, isLead, colors) {
   DF.ctx.fillRect(midX - 1.5, midY - 1.5, 3, 3);
 
   DF.ctx.font = "7.5px ui-monospace, SFMono-Regular, monospace";
-  DF.ctx.fillStyle = isBlue ? "rgba(56, 189, 248, 0.75)" : "rgba(244, 63, 94, 0.75)";
+  DF.ctx.fillStyle = isWest ? "rgba(56, 189, 248, 0.75)" : "rgba(244, 63, 94, 0.75)";
   DF.ctx.fillText("CCA RADAR MESH // RANGE EXTENDED", midX - 44, midY - 10);
 
   DF.ctx.restore();
@@ -246,7 +246,7 @@ function updateAndDrawCcaDrones(jet, isLead, colors) {
     }
 
     // Defensive CIWS Interception of Threat Missiles
-    var hostileType = isBlue ? 1 : 0;
+    var hostileType = isWest ? 1 : 0;
     for (var mi = 0; mi < DF.missilesPool.activeCount; mi++) {
       var mio = mi * 8;
       if (DF.missilesPool.buffer[mio + 4] === hostileType) {
@@ -324,7 +324,7 @@ function updateAndDrawCcaDrones(jet, isLead, colors) {
     DF.ctx.fill();
 
     // Wingtip sensor beacons
-    DF.ctx.fillStyle = isBlue ? "#38bdf8" : "#f43f5e";
+    DF.ctx.fillStyle = isWest ? "#38bdf8" : "#f43f5e";
     DF.ctx.fillRect(-5, -6, 2, 1);
     DF.ctx.fillRect(-5, 5, 2, 1);
 

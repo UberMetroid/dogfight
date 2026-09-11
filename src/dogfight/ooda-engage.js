@@ -10,17 +10,7 @@ function oodaDecideEngage(jet, obs, ori, targetEnemy, altFt, sCeiling, flaresPoo
   }
 
   // If intercepting hostile bomber to save base, vector directly toward bomber
-  if (jet.mode === "INTERCEPT_BOMBER") {
-    var strB = (typeof StrategicBomberSystem !== "undefined") ? StrategicBomberSystem.activeBomber : null;
-    if (strB && strB.state !== "SPLASHED" && strB.team !== jet.team) {
-      var dbx = strB.x - jet.x;
-      var dby = strB.y - jet.y;
-      jet.targetAngle = Math.atan2(dby, dbx);
-      jet.throttleSetting = 1.6;
-      jet.afterburner = true;
-      return;
-    }
-  }
+  // (bombers removed in v3.0; INTERCEPT_BOMBER mode is no longer set, kept as dead-code no-op)
   var isNearCeil = (altFt >= 95000 || (typeof jet.y === "number" && jet.y <= 36.0));
   if (targetEnemy && targetEnemy.active && !targetEnemy.isDying) {
     var dx = targetEnemy.x - jet.x;
@@ -153,7 +143,7 @@ function oodaDecideEngage(jet, obs, ori, targetEnemy, altFt, sCeiling, flaresPoo
     // Boundary-aware Combat Air Patrol: fighters patrol central ocean and stay outside hostile FARP weapon range
     var worldW = (typeof DF !== "undefined" && DF.worldWidth) ? DF.worldWidth : 3600;
     var baseHeading;
-    if (jet.team === "blue") {
+    if (jet.team === "west") {
       // Blue sweeps East up to 65% of world width, then turns back West to stay clear of Red FARP Delta
       if (jet.x > worldW * 0.65) {
         baseHeading = Math.PI;

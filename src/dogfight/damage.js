@@ -36,9 +36,9 @@ function applyAirframeDamage(targetJet, damageAmount, attacker, weaponName) {
       }
     }
     if (typeof DF !== "undefined") {
-      if (targetJet.team === "red") {
+      if (targetJet.team === "east") {
         DF.blueKills = (DF.blueKills || 0) + 1;
-      } else if (targetJet.team === "blue") {
+      } else if (targetJet.team === "west") {
         DF.redKills = (DF.redKills || 0) + 1;
       }
     }

@@ -66,7 +66,7 @@ function updateJetPhysics(jet, targetEnemy, incomingThreat, opposingPool, missil
     jet.afterburner = true;
 
     var mslY = (typeof getSeaLevelY === "function") ? getSeaLevelY(worldH) : Math.floor(worldH * 0.84);
-    var isBlueJet = (jet.team === "blue");
+    var isBlueJet = (jet.team === "west");
     var rwyY = isBlueJet ? (mslY - 14) : (mslY - 12);
 
     // Staggered pause on runway threshold
@@ -287,7 +287,7 @@ function updateJetPhysics(jet, targetEnemy, incomingThreat, opposingPool, missil
         // 4-Phase Boyd OODA State Machine Execution
         jet.oodaPhase = "OBSERVE";
         var mPool = missilesPoolRef || DF.missilesPool;
-        var oPool = opposingPool || (jet.team === "blue" ? DF.redPool : DF.bluePool);
+        var oPool = opposingPool || (jet.team === "west" ? DF.redPool : DF.bluePool);
         var obs = oodaObserveThreats(jet, oPool, mPool, worldW, worldH);
 
         jet.oodaPhase = "ORIENT";

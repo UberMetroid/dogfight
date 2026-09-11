@@ -3,129 +3,132 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Air, Sea & Sub-Surface Battlespace // Boyd OODA Simulation</title>
-  <meta name="description" content="Multi-domain warfighting simulation across 7 generations of combat aircraft, naval surface strike groups, and sub-surface bathymetry based on Col. John Boyd's Energy-Maneuverability Theory and OODA Loop.">
+  <title>Air & Sea Battlespace // West vs East // 6-Generation Fighter Dogfight</title>
+  <meta name="description" content="West vs East fighter jet dogfight simulation across 6 generations of combat aircraft, based on Col. John Boyd's Energy-Maneuverability Theory and OODA Loop. Realistic physics, radar, missiles, guns, weather, and day/night rotation.">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles/main.css?v=2.2">
+  <link rel="stylesheet" href="styles/main.css?v=3.0">
 
   <!-- Core Theme & Simulation Engine Scripts -->
-  <script defer src="src/theme/boot.js?v=2.2"></script>
-  <script defer src="src/theme/colors.js?v=2.2"></script>
-  <script defer src="src/life.js?v=2.2"></script>
-  <script defer src="src/dogfight/pools.js?v=2.2"></script>
-  <script defer src="src/dogfight/specs.js?v=2.2"></script>
-  <script defer src="src/dogfight/state.js?v=2.2"></script>
-  <script defer src="src/dogfight/alt.js?v=2.2"></script>
-  <script defer src="src/dogfight/ooda-obs.js?v=2.2"></script>
-  <script defer src="src/dogfight/ooda-engage.js?v=2.2"></script>
-  <script defer src="src/dogfight/ooda-decide.js?v=2.2"></script>
-  <script defer src="src/dogfight/vfx-spawn.js?v=2.2"></script>
-  <script defer src="src/dogfight/vfx-wreck.js?v=2.2"></script>
-  <script defer src="src/dogfight/vfx-part.js?v=2.2"></script>
-  <script defer src="src/dogfight/damage.js?v=2.2"></script>
-  <script defer src="src/dogfight/draw-health.js?v=2.2"></script>
-  <script defer src="src/dogfight/draw-jet.js?v=2.2"></script>
-  <script defer src="src/dogfight/draw-jet-low.js?v=2.2"></script>
-  <script defer src="src/dogfight/draw-jet-high.js?v=2.2"></script>
-  <script defer src="src/dogfight/jets-on.js?v=2.2"></script>
-  <script defer src="src/dogfight/create.js?v=2.2"></script>
-  <script defer src="src/dogfight/sync.js?v=2.2"></script>
-  <script defer src="src/dogfight/physics-turn.js?v=2.2"></script>
-  <script defer src="src/dogfight/physics-swarm.js?v=2.2"></script>
-  <script defer src="src/dogfight/ace-employment.js?v=2.2"></script>
-  <script defer src="src/dogfight/physics-b.js?v=2.2"></script>
-  <script defer src="src/dogfight/physics-a.js?v=2.2"></script>
-  <script defer src="src/dogfight/cca.js?v=2.2"></script>
-  <script defer src="src/dogfight/tactics.js?v=2.2"></script>
-  <script defer src="src/dogfight/weapons-lo.js?v=2.2"></script>
-  <script defer src="src/dogfight/weapons-hi.js?v=2.2"></script>
-  <script defer src="src/dogfight/bombers.js?v=2.2"></script>
-  <script defer src="src/dogfight/campaign.js?v=2.2"></script>
-  <script defer src="src/dogfight/loop-sim.js?v=2.2"></script>
-  <script defer src="src/dogfight/loop-draw.js?v=2.2"></script>
-  <script defer src="src/dogfight/loop-bullets.js?v=2.2"></script>
-  <script defer src="src/dogfight/loop-missiles.js?v=2.2"></script>
-  <script defer src="src/dogfight/loop-fx.js?v=2.2"></script>
-  <script defer src="src/dogfight/loop-proj.js?v=2.2"></script>
-  <script defer src="src/dogfight/landscape.js?v=2.2"></script>
-  <script defer src="src/dogfight/audio.js?v=2.2"></script>
-  <script defer src="src/dogfight/camera.js?v=2.2"></script>
-  <script defer src="src/dogfight/combat-meter.js?v=2.2"></script>
-  <script defer src="src/dogfight/interactive.js?v=2.2"></script>
-  <script defer src="src/dogfight/loop.js?v=2.2"></script>
-  <script defer src="src/dogfight/init.js?v=2.2"></script>
-  <script defer src="src/sky/starfield.js?v=2.2"></script>
-  <script defer src="src/theme/cycle.js?v=2.2"></script>
+  <script defer src="src/theme/boot.js?v=3.0"></script>
+  <script defer src="src/theme/colors.js?v=3.0"></script>
+  <script defer src="src/life.js?v=3.0"></script>
+  <script defer src="src/dogfight/pools.js?v=3.0"></script>
+  <script defer src="src/dogfight/specs.js?v=3.0"></script>
+  <script defer src="src/dogfight/state.js?v=3.0"></script>
+  <script defer src="src/dogfight/alt.js?v=3.0"></script>
+  <script defer src="src/dogfight/ooda-obs.js?v=3.0"></script>
+  <script defer src="src/dogfight/ooda-engage.js?v=3.0"></script>
+  <script defer src="src/dogfight/ooda-decide.js?v=3.0"></script>
+  <script defer src="src/dogfight/vfx-spawn.js?v=3.0"></script>
+  <script defer src="src/dogfight/vfx-wreck.js?v=3.0"></script>
+  <script defer src="src/dogfight/vfx-part.js?v=3.0"></script>
+  <script defer src="src/dogfight/damage.js?v=3.0"></script>
+  <script defer src="src/dogfight/draw-health.js?v=3.0"></script>
+  <script defer src="src/dogfight/draw-jet.js?v=3.0"></script>
+  <script defer src="src/dogfight/draw-jet-low.js?v=3.0"></script>
+  <script defer src="src/dogfight/draw-jet-high.js?v=3.0"></script>
+  <script defer src="src/dogfight/jets-on.js?v=3.0"></script>
+  <script defer src="src/dogfight/create.js?v=3.0"></script>
+  <script defer src="src/dogfight/sync.js?v=3.0"></script>
+  <script defer src="src/dogfight/physics-turn.js?v=3.0"></script>
+  <script defer src="src/dogfight/ace-employment.js?v=3.0"></script>
+  <script defer src="src/dogfight/physics-b.js?v=3.0"></script>
+  <script defer src="src/dogfight/physics-a.js?v=3.0"></script>
+  <script defer src="src/dogfight/cca.js?v=3.0"></script>
+  <script defer src="src/dogfight/tactics.js?v=3.0"></script>
+  <script defer src="src/dogfight/weapons-lo.js?v=3.0"></script>
+  <script defer src="src/dogfight/weapons-hi.js?v=3.0"></script>
+  <script defer src="src/dogfight/campaign.js?v=3.0"></script>
+  <script defer src="src/dogfight/daynight.js?v=3.0"></script>
+  <script defer src="src/dogfight/weather.js?v=3.0"></script>
+  <script defer src="src/dogfight/landscape.js?v=3.0"></script>
+  <script defer src="src/dogfight/audio.js?v=3.0"></script>
+  <script defer src="src/dogfight/camera.js?v=3.0"></script>
+  <script defer src="src/dogfight/combat-meter.js?v=3.0"></script>
+  <script defer src="src/dogfight/interactive.js?v=3.0"></script>
+  <script defer src="src/dogfight/loop.js?v=3.0"></script>
+  <script defer src="src/dogfight/loop-draw.js?v=3.0"></script>
+  <script defer src="src/dogfight/loop-bullets.js?v=3.0"></script>
+  <script defer src="src/dogfight/loop-missiles.js?v=3.0"></script>
+  <script defer src="src/dogfight/loop-fx.js?v=3.0"></script>
+  <script defer src="src/dogfight/loop-proj.js?v=3.0"></script>
+  <script defer src="src/dogfight/init.js?v=3.0"></script>
+  <script defer src="src/sky/starfield.js?v=3.0"></script>
+  <script defer src="src/theme/cycle.js?v=3.0"></script>
 </head>
 <body>
   <!-- Simulation Canvas -->
   <canvas id="dogfight-canvas"></canvas>
 
-  <!-- Tactical HUD Overlay (Blue and Red Force Boxes with Center Campaign Era Badge) -->
+  <!-- Tactical HUD Overlay (West and East Force Boxes with Center Campaign Era Badge) -->
   <div class="hud-overlay">
     <header class="hud-header">
-      <!-- Blue Allied Force Box (Left) -->
-      <div class="hud-force-box force-blue hud-interactive" id="force-blue">
+      <!-- West Allied Force Box (Left) -->
+      <div class="hud-force-box force-west hud-interactive" id="force-west">
         <div class="force-header">
           <div class="force-title-group">
             <div class="title-left">
-              <span class="team-beacon beacon-blue"></span>
-              <span class="force-title">BLUE ALLIED FORCE</span>
+              <span class="team-beacon beacon-west"></span>
+              <span class="force-title">WEST ALLIED FORCE</span>
             </div>
-            <span class="force-element-badge badge-blue" id="stat-blue-element">SABRE 1-1 & 1-2</span>
+            <span class="force-element-badge badge-west" id="stat-west-element">SABRE 1-1 & 1-2</span>
           </div>
           <div class="force-stats">
-            <span class="stat-item"><span class="stat-lbl">SORTIES:</span> <span class="stat-val stat-val-cyan" id="stat-blue-sorties">2 ACTIVE</span></span>
-            <span class="stat-item"><span class="stat-lbl">FUEL:</span> <span class="stat-val stat-val-cyan" id="stat-blue-fuel">100%</span></span>
-            <span class="stat-item"><span class="stat-lbl">KILLS:</span> <span class="stat-val stat-val-cyan" id="stat-blue-kills">0 SPLASHES</span></span>
-            <span class="stat-item"><span class="stat-lbl">ACES:</span> <span class="stat-val stat-val-gold" id="stat-blue-aces">0 ACES</span></span>
+            <span class="stat-item"><span class="stat-lbl">SORTIES:</span> <span class="stat-val stat-val-cyan" id="stat-west-sorties">2 ACTIVE</span></span>
+            <span class="stat-item"><span class="stat-lbl">FUEL:</span> <span class="stat-val stat-val-cyan" id="stat-west-fuel">100%</span></span>
+            <span class="stat-item"><span class="stat-lbl">KILLS:</span> <span class="stat-val stat-val-cyan" id="stat-west-kills">0 SPLASHES</span></span>
+            <span class="stat-item"><span class="stat-lbl">ACES:</span> <span class="stat-val stat-val-gold" id="stat-west-aces">0 ACES</span></span>
           </div>
         </div>
         <div class="force-controls">
-          <div class="gen-bar gen-bar-blue" id="gen-bar-blue">
-            <button type="button" class="gen-btn gen-btn-blue" data-team="blue" data-gen="1" title="Blue Gen 1 (F-86 Sabre)"><span class="g-num">1</span><span class="g-name">SABRE</span></button>
-            <button type="button" class="gen-btn gen-btn-blue" data-team="blue" data-gen="2" title="Blue Gen 2 (F-4 Phantom)"><span class="g-num">2</span><span class="g-name">PHANTOM</span></button>
-            <button type="button" class="gen-btn gen-btn-blue" data-team="blue" data-gen="3" title="Blue Gen 3 (F-14 Tomcat)"><span class="g-num">3</span><span class="g-name">TOMCAT</span></button>
-            <button type="button" class="gen-btn gen-btn-blue active" data-team="blue" data-gen="4" title="Blue Gen 4 (F-16 Viper)"><span class="g-num">4</span><span class="g-name">VIPER</span></button>
-            <button type="button" class="gen-btn gen-btn-blue" data-team="blue" data-gen="5" title="Blue Gen 5 (F-22 Raptor)"><span class="g-num">5</span><span class="g-name">RAPTOR</span></button>
-            <button type="button" class="gen-btn gen-btn-blue" data-team="blue" data-gen="6" title="Blue Gen 6 (NGAD + CCA)"><span class="g-num">6</span><span class="g-name">NGAD</span></button>
-            <button type="button" class="gen-btn gen-btn-blue" data-team="blue" data-gen="7" title="Blue Gen 7 (Quantum Swarm)"><span class="g-num">7</span><span class="g-name">SWARM</span></button>
+          <div class="gen-bar gen-bar-west" id="gen-bar-west">
+            <button type="button" class="gen-btn gen-btn-west" data-team="west" data-gen="1" title="West Gen 1 (F-86 Sabre)"><span class="g-num">1</span><span class="g-name">SABRE</span></button>
+            <button type="button" class="gen-btn gen-btn-west" data-team="west" data-gen="2" title="West Gen 2 (F-4 Phantom / F-104)"><span class="g-num">2</span><span class="g-name">PHANTOM</span></button>
+            <button type="button" class="gen-btn gen-btn-west" data-team="west" data-gen="3" title="West Gen 3 (F-4 Phantom II)"><span class="g-num">3</span><span class="g-name">PHANTOM</span></button>
+            <button type="button" class="gen-btn gen-btn-west active" data-team="west" data-gen="4" title="West Gen 4 (F-14 / F-15 / F-16 / F/A-18)"><span class="g-num">4</span><span class="g-name">VIPER</span></button>
+            <button type="button" class="gen-btn gen-btn-west" data-team="west" data-gen="5" title="West Gen 5 (F-22 Raptor / F-35)"><span class="g-num">5</span><span class="g-name">RAPTOR</span></button>
+            <button type="button" class="gen-btn gen-btn-west" data-team="west" data-gen="6" title="West Gen 6 (NGAD)"><span class="g-num">6</span><span class="g-name">NGAD</span></button>
           </div>
         </div>
       </div>
 
-      <!-- Red Opposing Force Box (Right) -->
-      <div class="hud-force-box force-red hud-interactive" id="force-red">
+      <!-- East Opposing Force Box (Right) -->
+      <div class="hud-force-box force-east hud-interactive" id="force-east">
         <div class="force-header">
           <div class="force-title-group">
             <div class="title-left">
-              <span class="team-beacon beacon-red"></span>
-              <span class="force-title">RED OPPOSING FORCE</span>
+              <span class="team-beacon beacon-east"></span>
+              <span class="force-title">EAST OPPOSING FORCE</span>
             </div>
-            <span class="force-element-badge badge-red" id="stat-red-element">MiG-15 1-1 & 1-2</span>
+            <span class="force-element-badge badge-east" id="stat-east-element">MiG-15 1-1 & 1-2</span>
           </div>
           <div class="force-stats">
-            <span class="stat-item"><span class="stat-lbl">BANDITS:</span> <span class="stat-val stat-val-red" id="stat-red-sorties">2 ACTIVE</span></span>
-            <span class="stat-item"><span class="stat-lbl">FUEL:</span> <span class="stat-val stat-val-red" id="stat-red-fuel">100%</span></span>
-            <span class="stat-item"><span class="stat-lbl">KILLS:</span> <span class="stat-val stat-val-red" id="stat-red-kills">0 SPLASHES</span></span>
-            <span class="stat-item"><span class="stat-lbl">ACES:</span> <span class="stat-val stat-val-gold" id="stat-red-aces">0 ACES</span></span>
+            <span class="stat-item"><span class="stat-lbl">BANDITS:</span> <span class="stat-val stat-val-red" id="stat-east-sorties">2 ACTIVE</span></span>
+            <span class="stat-item"><span class="stat-lbl">FUEL:</span> <span class="stat-val stat-val-red" id="stat-east-fuel">100%</span></span>
+            <span class="stat-item"><span class="stat-lbl">KILLS:</span> <span class="stat-val stat-val-red" id="stat-east-kills">0 SPLASHES</span></span>
+            <span class="stat-item"><span class="stat-lbl">ACES:</span> <span class="stat-val stat-val-gold" id="stat-east-aces">0 ACES</span></span>
           </div>
         </div>
         <div class="force-controls">
-          <div class="gen-bar gen-bar-red" id="gen-bar-red">
-            <button type="button" class="gen-btn gen-btn-red" data-team="red" data-gen="1" title="Red Gen 1 (MiG-15 Fagot)"><span class="g-num">1</span><span class="g-name">MiG-15</span></button>
-            <button type="button" class="gen-btn gen-btn-red" data-team="red" data-gen="2" title="Red Gen 2 (MiG-21 Fishbed)"><span class="g-num">2</span><span class="g-name">MiG-21</span></button>
-            <button type="button" class="gen-btn gen-btn-red" data-team="red" data-gen="3" title="Red Gen 3 (MiG-23)"><span class="g-num">3</span><span class="g-name">MiG-23</span></button>
-            <button type="button" class="gen-btn gen-btn-red active" data-team="red" data-gen="4" title="Red Gen 4 (Su-27 Flanker)"><span class="g-num">4</span><span class="g-name">FLANKER</span></button>
-            <button type="button" class="gen-btn gen-btn-red" data-team="red" data-gen="5" title="Red Gen 5 (Su-57 Felon)"><span class="g-num">5</span><span class="g-name">FELON</span></button>
-            <button type="button" class="gen-btn gen-btn-red" data-team="red" data-gen="6" title="Red Gen 6 (Hostile CCA)"><span class="g-num">6</span><span class="g-name">CCA RED</span></button>
-            <button type="button" class="gen-btn gen-btn-red" data-team="red" data-gen="7" title="Red Gen 7 (Hostile Swarm)"><span class="g-num">7</span><span class="g-name">SWARM</span></button>
+          <div class="gen-bar gen-bar-east" id="gen-bar-east">
+            <button type="button" class="gen-btn gen-btn-east" data-team="east" data-gen="1" title="East Gen 1 (MiG-15 / MiG-17)"><span class="g-num">1</span><span class="g-name">MiG-15</span></button>
+            <button type="button" class="gen-btn gen-btn-east" data-team="east" data-gen="2" title="East Gen 2 (MiG-19 / MiG-21 / Su-7)"><span class="g-num">2</span><span class="g-name">MiG-21</span></button>
+            <button type="button" class="gen-btn gen-btn-east" data-team="east" data-gen="3" title="East Gen 3 (MiG-21 / MiG-23 / MiG-25)"><span class="g-num">3</span><span class="g-name">MiG-23</span></button>
+            <button type="button" class="gen-btn gen-btn-east active" data-team="east" data-gen="4" title="East Gen 4 (Su-27 / MiG-29 / MiG-31)"><span class="g-num">4</span><span class="g-name">FLANKER</span></button>
+            <button type="button" class="gen-btn gen-btn-east" data-team="east" data-gen="5" title="East Gen 5 (Su-57 Felon)"><span class="g-num">5</span><span class="g-name">FELON</span></button>
+            <button type="button" class="gen-btn gen-btn-east" data-team="east" data-gen="6" title="East Gen 6 (Su-57M)"><span class="g-num">6</span><span class="g-name">FELON-M</span></button>
           </div>
         </div>
       </div>
     </header>
 
-
+    <!-- Tactical time / weather controls (lower-left) -->
+    <div class="wx-controls">
+      <button type="button" id="daynight-btn" class="wx-btn" title="Advance time 1 hour (manual)">--:-- DAY</button>
+      <span id="daynight-readout" class="wx-readout">TIME --:-- DAY</span>
+      <button type="button" id="weather-btn" class="wx-btn" title="Cycle weather state (manual)">☀ CLEAR</button>
+      <span id="weather-readout" class="wx-readout">☀ CLEAR // NEXT: 120s</span>
+    </div>
   </div>
 
   <!-- Tactical Application Lifecycle Logic -->

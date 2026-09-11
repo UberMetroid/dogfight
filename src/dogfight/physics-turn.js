@@ -30,7 +30,7 @@ function updateJetPhysicsTurn(jet, targetEnemy, spec, isF16, mass, densityRatio,
   } else if (jet.gen === 6) {
     maxTurnRate = 0.330; // NGAD autonomous AI
   } else if (jet.gen === 7) {
-    maxTurnRate = 0.360; // Gen 7 decentralized autonomous swarm
+    maxTurnRate = 0.360; // Distributed-Flight AI hint (reserved; not Gen 7)
   }
 
   if (jet.speed < DF.V_CORNER) {

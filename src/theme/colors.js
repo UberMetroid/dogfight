@@ -53,7 +53,7 @@ class ThemeAlphaLUT {
   }
 }
 
-const FACTION_COLORS = {
+var FACTION_COLORS = {
   blue: {
     primary: "#00b4d8",
     accent: "#38bdf8",
@@ -71,6 +71,10 @@ const FACTION_COLORS = {
     exhaustAB: "#f43f5e"
   }
 };
+
+// West/East aliases (canonical names for the rebuild). Code may use either.
+FACTION_COLORS.west = FACTION_COLORS.blue;
+FACTION_COLORS.east = FACTION_COLORS.red;
 
 const NINE_THEME_DEFINITIONS = {
   night: { bg: "#000000", fg: "#e8e8e8", muted: "#9a9a9a", panel: "#141414", border: "rgba(232,232,232,0.22)", accent: "#e8e8e8", gold: "#ffd166", red: "#ff6b6b", blue: "#7dcfff" },

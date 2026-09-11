@@ -1580,3 +1580,42 @@ html, body {
   }
 
 }
+
+/* === v3.0: West vs East / Weather / Day-Night controls === */
+.wx-controls {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(8, 12, 24, 0.78);
+  border: 1px solid rgba(120, 180, 255, 0.32);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-family: ui-monospace, "JetBrains Mono", "Fira Code", "Consolas", monospace;
+  color: #cbd5e1;
+  pointer-events: auto;
+  user-select: none;
+}
+.wx-btn {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(120, 180, 255, 0.40);
+  color: #e2e8f0;
+  font-family: inherit;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  min-width: 168px;
+  text-align: left;
+}
+.wx-btn:hover { background: rgba(30, 41, 59, 0.95); border-color: rgba(120, 180, 255, 0.65); }
+.wx-btn:active { transform: translateY(1px); }
+.wx-readout {
+  font-size: 0.62rem;
+  color: #94a3b8;
+  letter-spacing: 0.05em;
+}

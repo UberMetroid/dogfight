@@ -139,12 +139,6 @@ function oodaDecideAction(jet, obs, ori, targetEnemy, altFt, sCeiling, flaresPoo
       jet.targetAngle = jet.angle + 0.35;
       jet.throttleSetting = 1.3;
       jet.afterburner = true;
-    } else if (ori.recommendedEvasion === "QUANTUM_SHIFT") {
-      var qShiftSign = (Math.random() > 0.5 ? 1 : -1);
-      jet.targetAngle = jet.angle + Math.PI * 0.55 * qShiftSign;
-      jet.shieldPulse = 1.0;
-      jet.throttleSetting = 1.5;
-      jet.afterburner = true;
     }
   } else if ((jet.mode === "COVER" || jet.mode === "PINCER") && typeof jet.modeTimer === "number" && jet.modeTimer > 0) {
     jet.isTailChasing = false;

@@ -37,7 +37,7 @@ function drawInWorldHealthBar(ctx, jet, colors, frameCount) {
 
   var barColor;
   if (hp > 60.0) {
-    barColor = (jet.team === "blue" || jet.isHero || jet.isBlue) ? ((colors && colors.blue) || "#7dcfff") : ((colors && colors.red) || "#ff6b6b");
+    barColor = (jet.team === "west" || jet.isHero || jet.isWest) ? ((colors && colors.blue) || "#7dcfff") : ((colors && colors.red) || "#ff6b6b");
   } else if (hp >= 25.0) {
     barColor = (colors && colors.gold) || "#ffd166";
   } else {
@@ -76,8 +76,8 @@ function drawThrustScaledExhaust(ctx, jet, colors, now) {
   if (!isFinite(flameW) || flameW <= 0) flameW = 3;
   var halfW = flameW * 0.5;
 
-  var isRed = Boolean(jet.team === "red" || jet.isRed);
-  var faction = isRed ? FACTION_COLORS.red : FACTION_COLORS.blue;
+  var isEast = Boolean(jet.team === "east" || jet.isEast);
+  var faction = isEast ? FACTION_COLORS.east : FACTION_COLORS.west;
 
   ctx.save();
 
@@ -147,10 +147,10 @@ function drawInWorldTacticalStatus(ctx, jet, colors, frameCount) {
   var jx = Math.floor(jet.x);
   var jy = Math.floor(jet.y);
   var isDamaged = (typeof jet.hp === "number" && jet.hp < 99.9 && jet.hp > 0.0);
-  var isBlue = (jet.team === "blue" || jet.isHero || jet.isBlue);
-  var teamColor = isBlue ? "rgba(56, 189, 248, 0.95)" : "rgba(244, 63, 94, 0.95)";
+  var isWest = (jet.team === "west" || jet.isHero || jet.isWest);
+  var teamColor = isWest ? "rgba(56, 189, 248, 0.95)" : "rgba(244, 63, 94, 0.95)";
   var roleTag = jet.isLead ? "LEAD" : "WING";
-  var callsignText = (jet.callsign ? jet.callsign : (isBlue ? "BLUE" : "RED")) + " [" + roleTag + "]";
+  var callsignText = (jet.callsign ? jet.callsign : (isWest ? "BLUE" : "RED")) + " [" + roleTag + "]";
 
   // 1. Aircraft Callsign & Tactical Role Badge
   ctx.save();
@@ -178,11 +178,11 @@ function drawInWorldTacticalStatus(ctx, jet, colors, frameCount) {
     }
   } else if (jet.mode === "FORMATION") {
     ctx.font = "bold 6.5px monospace";
-    ctx.fillStyle = isBlue ? "#7dd3fc" : "#fca5a5";
+    ctx.fillStyle = isWest ? "#7dd3fc" : "#fca5a5";
     ctx.fillText("FORMATION // TWO", jx, jy + (isDamaged ? -34 : -26));
   } else if (!jet.isLead && jet.mode === "PURSUIT") {
     ctx.font = "bold 6.5px monospace";
-    ctx.fillStyle = isBlue ? "#38bdf8" : "#f43f5e";
+    ctx.fillStyle = isWest ? "#38bdf8" : "#f43f5e";
     ctx.fillText("OFFENSIVE // TWO", jx, jy + (isDamaged ? -34 : -26));
   } else if (jet.mode === "COVER") {
     ctx.font = "bold 6.5px monospace";
@@ -230,7 +230,7 @@ function drawInWorldTacticalStatus(ctx, jet, colors, frameCount) {
       var startPipX = jx - Math.floor(totalPipW / 2);
       var pipY = isDamaged ? (jy - 14) : (jy + 14);
 
-      var teamCol = (jet.team === "blue" || jet.isHero) ? "#38bdf8" : "#f43f5e";
+      var teamCol = (jet.team === "west" || jet.isHero) ? "#38bdf8" : "#f43f5e";
 
       for (var p = 0; p < cap; p++) {
         var px = startPipX + p * (pipW + pipGap);

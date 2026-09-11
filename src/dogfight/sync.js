@@ -1,20 +1,30 @@
-// # Sync fleet
+// # Sync fleet — West vs East, 6 generations
 //
-// Logline: Map active gens onto blue/red pools.
+// Logline: 12-slot per-side pool. For each active gen, spawn one jet per jet in the gen's list.
+//          Old "west"/"east" mask names still accepted as a fallback for older callers.
 //
+var POOL_SIZE_PER_SIDE = 12;
+
 var globalDogfightJetsState = {
+  westPool: [],
+  eastPool: [],
+  allJets: [],
+  // Back-compat aliases (some legacy code still reads .bluePool / .redPool)
   bluePool: [],
-  redPool: [],
-  allJets: []
+  redPool: []
 };
 
-for (var dbi = 0; dbi < 7; dbi++) {
-  var dbGen = dbi + 1;
-  globalDogfightJetsState.bluePool.push(createJet(800, getYFromAltitude(RESPAWN_CEILINGS[dbGen] || 52000, 1200), 0, dbGen, dbi, "blue"));
-  globalDogfightJetsState.redPool.push(createJet(2800, getYFromAltitude(RESPAWN_CEILINGS[dbGen] || 52000, 1200), Math.PI, dbGen, dbi, "red"));
+// Initialize pool slots with placeholder jets (gen 4 default, overridden at sync time).
+for (var dbi = 0; dbi < POOL_SIZE_PER_SIDE; dbi++) {
+  globalDogfightJetsState.westPool.push(createJet(800, getYFromAltitude(RESPAWN_CEILINGS[4] || 52000, 1200), 0, 4, dbi, "west"));
+  globalDogfightJetsState.eastPool.push(createJet(2800, getYFromAltitude(RESPAWN_CEILINGS[4] || 52000, 1200), Math.PI, 4, dbi, "east"));
 }
-for (var dai = 0; dai < 7; dai++) globalDogfightJetsState.allJets.push(globalDogfightJetsState.bluePool[dai]);
-for (var dri = 0; dri < 7; dri++) globalDogfightJetsState.allJets.push(globalDogfightJetsState.redPool[dri]);
+for (var dai = 0; dai < POOL_SIZE_PER_SIDE; dai++) globalDogfightJetsState.allJets.push(globalDogfightJetsState.westPool[dai]);
+for (var dri = 0; dri < POOL_SIZE_PER_SIDE; dri++) globalDogfightJetsState.allJets.push(globalDogfightJetsState.eastPool[dri]);
+
+// Back-compat aliases
+globalDogfightJetsState.bluePool = globalDogfightJetsState.westPool;
+globalDogfightJetsState.redPool  = globalDogfightJetsState.eastPool;
 
 if (typeof global !== "undefined") {
   global.globalDogfightJets = globalDogfightJetsState;
@@ -23,68 +33,74 @@ if (typeof window !== "undefined") {
   window.globalDogfightJets = globalDogfightJetsState;
 }
 
-function syncFleetToActiveGenerations(blueMask, redMask, canvasW, canvasH) {
-  var bMask, rMask, w, h;
+// Build the active-gen spawn list for a given mask and team.
+// Returns array of gen numbers; if the resulting list would overflow the pool,
+// we cap to POOL_SIZE_PER_SIDE by trimming the highest-gen entries.
+function buildActiveGenList(mask, side) {
+  var list = [];
+  for (var g = 1; g <= 6; g++) {
+    if (mask[g]) {
+      var teamList = (typeof AIRCRAFT_SPECS !== "undefined" && AIRCRAFT_SPECS[g] && AIRCRAFT_SPECS[g][side]) ? AIRCRAFT_SPECS[g][side] : null;
+      var n = teamList ? teamList.length : 1;
+      // Each gen contributes `n` jets to the pool.
+      for (var k = 0; k < n; k++) list.push(g);
+    }
+  }
+  // Cap to pool size: prefer lowest gen (typically more iconic / historically significant).
+  if (list.length > POOL_SIZE_PER_SIDE) list = list.slice(0, POOL_SIZE_PER_SIDE);
+  return list;
+}
 
+function syncFleetToActiveGenerations(maskA, maskB, canvasW, canvasH) {
+  // Handle call signatures: (west, east, w, h) OR (mask, w, h) OR (west, east)
+  var wMask, eMask, w, h;
   var defaultW = (typeof DF !== "undefined" && DF.worldWidth) ? DF.worldWidth : 3600;
   var defaultH = (typeof DF !== "undefined" && DF.worldHeight) ? DF.worldHeight : 1200;
 
-  // Handle call signatures: (blueMask, redMask, w, h) vs (mask, w, h)
-  if (typeof redMask === "object" && redMask !== null) {
-    bMask = blueMask || (typeof activeGensBlue !== "undefined" ? activeGensBlue : {});
-    rMask = redMask || (typeof activeGensRed !== "undefined" ? activeGensRed : {});
+  // Back-compat: allow "west"/"east" mask names
+  var aNorm = maskA;
+  var bNorm = maskB;
+  if (aNorm && aNorm[1] !== undefined && aNorm[6] !== undefined && (aNorm[7] !== undefined)) {
+    // old shape (1..7) -> drop the 7
+    aNorm = {}; for (var k = 1; k <= 6; k++) aNorm[k] = maskA[k];
+  }
+  if (bNorm && bNorm[1] !== undefined && bNorm[6] !== undefined && (bNorm[7] !== undefined)) {
+    bNorm = {}; for (var k2 = 1; k2 <= 6; k2++) bNorm[k2] = maskB[k2];
+  }
+
+  if (typeof maskB === "object" && maskB !== null) {
+    wMask = aNorm || (typeof activeGensWest !== "undefined" ? activeGensWest : {});
+    eMask = bNorm || (typeof activeGensEast !== "undefined" ? activeGensEast : {});
     w = (typeof canvasW === "number" && canvasW > 0) ? canvasW : defaultW;
     h = (typeof canvasH === "number" && canvasH > 0) ? canvasH : defaultH;
   } else {
-    bMask = blueMask || (typeof activeGensBlue !== "undefined" ? activeGensBlue : {});
-    rMask = blueMask || (typeof activeGensRed !== "undefined" ? activeGensRed : {});
-    w = (typeof redMask === "number" && redMask > 0) ? redMask : defaultW;
+    wMask = aNorm || (typeof activeGensWest !== "undefined" ? activeGensWest : {});
+    eMask = aNorm || (typeof activeGensEast !== "undefined" ? activeGensEast : {});
+    w = (typeof maskB === "number" && maskB > 0) ? maskB : defaultW;
     h = (typeof canvasW === "number" && canvasW > 0) ? canvasW : defaultH;
   }
 
-  // Update global masks if defined
-  if (typeof activeGensBlue !== "undefined" && typeof activeGensRed !== "undefined") {
-    for (var ag = 1; ag <= 7; ag++) {
-      if (typeof bMask[ag] !== "undefined") activeGensBlue[ag] = Boolean(bMask[ag]);
-      if (typeof rMask[ag] !== "undefined") activeGensRed[ag] = Boolean(rMask[ag]);
+  // Update global masks
+  if (typeof activeGensWest !== "undefined" && typeof activeGensEast !== "undefined") {
+    for (var ag = 1; ag <= 6; ag++) {
+      if (typeof wMask[ag] !== "undefined") activeGensWest[ag] = Boolean(wMask[ag]);
+      if (typeof eMask[ag] !== "undefined") activeGensEast[ag] = Boolean(eMask[ag]);
     }
     if (typeof syncMergedActiveGens === "function") syncMergedActiveGens();
     if (typeof saveActiveGens === "function") saveActiveGens();
     if (typeof updateGenSelectorUI === "function") updateGenSelectorUI();
   }
 
-  var bPool = globalDogfightJetsState.bluePool;
-  var rPool = globalDogfightJetsState.redPool;
+  var wPool = globalDogfightJetsState.westPool;
+  var ePool = globalDogfightJetsState.eastPool;
   var aJets = globalDogfightJetsState.allJets;
 
-  var bGens = [];
-  var rGens = [];
-  for (var g = 1; g <= 7; g++) {
-    if (bMask[g]) bGens.push(g);
-    if (rMask[g]) rGens.push(g);
-  }
+  var westActiveList = buildActiveGenList(wMask, "west");
+  var eastActiveList = buildActiveGenList(eMask, "east");
+  var nWest = westActiveList.length;
+  var nEast = eastActiveList.length;
 
-  var blueActiveList = [];
-  var redActiveList = [];
-  // Deploy 2-ship tactical element (Lead + Wingman) per active generation
-  var bShipsPerGen = (bGens.length <= 3) ? 2 : 1;
-  var rShipsPerGen = (rGens.length <= 3) ? 2 : 1;
-
-  for (var bgi = 0; bgi < bGens.length; bgi++) {
-    for (var s = 0; s < bShipsPerGen && blueActiveList.length < bPool.length; s++) {
-      blueActiveList.push(bGens[bgi]);
-    }
-  }
-  for (var rgi = 0; rgi < rGens.length; rgi++) {
-    for (var s2 = 0; s2 < rShipsPerGen && redActiveList.length < rPool.length; s2++) {
-      redActiveList.push(rGens[rgi]);
-    }
-  }
-
-  var nBlue = blueActiveList.length;
-  var nRed = redActiveList.length;
-
-  if (nBlue === 0 && nRed === 0) {
+  if (nWest === 0 && nEast === 0) {
     for (var i = 0; i < aJets.length; i++) {
       aJets[i].active = false;
       aJets[i].targetJet = null;
@@ -93,199 +109,197 @@ function syncFleetToActiveGenerations(blueMask, redMask, canvasW, canvasH) {
     return;
   }
 
-  // Sync Blue Pool
-  for (var bIdx = 0; bIdx < nBlue; bIdx++) {
-    var bg = blueActiveList[bIdx];
-    var specB = (typeof AIRCRAFT_SPECS !== "undefined" && AIRCRAFT_SPECS[bg]) ? AIRCRAFT_SPECS[bg] : { baseSpeed: 4.8 };
-    var bAltY = getYFromAltitude(RESPAWN_CEILINGS[bg] || 52000, h);
+  // Reset all jets first (so unused slots are clean).
+  for (var rj = 0; rj < aJets.length; rj++) {
+    aJets[rj].active = false;
+    aJets[rj].targetJet = null;
+    aJets[rj].wingmanJet = null;
+    aJets[rj].isDying = false;
+  }
 
-    var bJet = bPool[bIdx];
-    bJet.gen = bg;
-    bJet.team = "blue";
-    bJet.active = true;
-    bJet.isDying = false;
-    bJet.deathTimer = 0;
-    bJet.fadeAlpha = 1.0;
-    bJet.hp = 100.0;
-    bJet.maxHp = 100.0;
-    bJet.damageState = "NOMINAL";
-    bJet.lastDamagedBy = "";
-    bJet.damageSmokeTimer = 0;
-    bJet.damageSparksTimer = 0;
+  // Sync West Pool
+  for (var wIdx = 0; wIdx < nWest; wIdx++) {
+    var wg = westActiveList[wIdx];
+    var specW = (typeof AIRCRAFT_SPECS !== "undefined" && AIRCRAFT_SPECS[wg] && AIRCRAFT_SPECS[wg].west) ? pickJetSpec(wg, "west", wIdx) : { baseSpeed: 4.8 };
+    var wAltY = getYFromAltitude(RESPAWN_CEILINGS[wg] || 52000, h);
+    var wJet = wPool[wIdx];
+
+    wJet.gen = wg;
+    wJet.team = "west";
+    wJet.active = true;
+    wJet.isDying = false;
+    wJet.deathTimer = 0;
+    wJet.fadeAlpha = 1.0;
+    wJet.hp = 100.0;
+    wJet.maxHp = 100.0;
+    wJet.damageState = "NOMINAL";
+    wJet.lastDamagedBy = "";
+    wJet.damageSmokeTimer = 0;
+    wJet.damageSparksTimer = 0;
     var mslY = (typeof getSeaLevelY === "function") ? getSeaLevelY(h) : Math.floor(h * 0.84);
     var rwyY = mslY - 14;
-    // Staggered tactical runway positions for Lead & Wingman
-    bJet.x = w * 0.04 + ((bIdx % 2 === 0) ? 36 : 10);
-    bJet.y = rwyY - 1;
-    bJet.angle = 0.0;
-    bJet.targetAngle = 0.0;
-    bJet.speed = 1.8;
-    bJet.baseSpeed = specB.baseSpeed || 4.8;
-    bJet.prevSpeed = bJet.speed;
-    bJet.ps = 0;
-    bJet.turnRate = 0;
-    bJet.gForce = 1.0;
-    bJet.isStalled = false;
-    bJet.mode = "TAKEOFF";
-    bJet.takeoffRoll = -(bIdx % 2) * 12;
-    bJet.modeTimer = 30;
-    bJet.afterburner = true;
-    bJet.throttleSetting = 1.5;
-    bJet.targetJet = null;
-    bJet.isLead = (bIdx % 2 === 0);
-    bJet.isHero = (bIdx === 0);
-    bJet.rcs = specB.rcsClean || specB.rcs || 1.0;
-    bJet.bayDoorTimer = 0;
-    bJet.flareCooldown = 0;
-    bJet.chaffCooldown = 0;
-    bJet.gunCooldown = 0;
-    bJet.missileCooldown = bg === 1 ? 999999 : (10 + Math.floor(Math.random() * 11));
-    bJet.missileCapacity = (specB && typeof specB.missileCapacity === "number") ? specB.missileCapacity : (bg === 1 || bg === 7 ? 0 : 6);
-    bJet.missilesRemaining = bJet.missileCapacity;
-    bJet.isWinchester = (bJet.missilesRemaining === 0 && bg < 7);
-    bJet.fuelMax = 100.0;
-    bJet.fuel = 100.0;
-    bJet.isBingoFuel = false;
-    bJet.kills = 0;
-    bJet.isAce = false;
-    bJet.turnAgilityBonus = 1.0;
-    bJet.laserCooldown = 0;
-    bJet.triLaserCooldown = 0;
-    bJet.superLaserCooldown = bg === 7 ? (60 + Math.floor(Math.random() * 60)) : 0;
-    bJet.superLaserPulse = 0;
-    bJet.ccaDeployed = (bg === 6);
-    if (bg === 6) {
-      if (!bJet.cca1) bJet.cca1 = { x: bJet.x, y: bJet.y, angle: bJet.angle, speed: bJet.speed, active: true, laserCooldown: 0 };
-      if (!bJet.cca2) bJet.cca2 = { x: bJet.x, y: bJet.y, angle: bJet.angle, speed: bJet.speed, active: true, laserCooldown: 0 };
-      bJet.cca1.active = true;
-      bJet.cca2.active = true;
-      bJet.cca1.x = bJet.x + Math.cos(bJet.angle) * 55 - Math.sin(bJet.angle) * 65;
-      bJet.cca1.y = bJet.y + Math.sin(bJet.angle) * 55 + Math.cos(bJet.angle) * 65;
-      bJet.cca1.angle = bJet.angle;
-      bJet.cca1.speed = bJet.speed;
-      bJet.cca2.x = bJet.x + Math.cos(bJet.angle) * 55 + Math.sin(bJet.angle) * 65;
-      bJet.cca2.y = bJet.y + Math.sin(bJet.angle) * 55 - Math.cos(bJet.angle) * 65;
-      bJet.cca2.angle = bJet.angle;
-      bJet.cca2.speed = bJet.speed;
+    wJet.x = w * 0.04 + ((wIdx % 2 === 0) ? 36 : 10);
+    wJet.y = rwyY - 1;
+    wJet.angle = 0.0;
+    wJet.targetAngle = 0.0;
+    wJet.speed = 1.8;
+    wJet.baseSpeed = specW.baseSpeed || 4.8;
+    wJet.prevSpeed = wJet.speed;
+    wJet.ps = 0;
+    wJet.turnRate = 0;
+    wJet.gForce = 1.0;
+    wJet.isStalled = false;
+    wJet.mode = "TAKEOFF";
+    wJet.takeoffRoll = -(wIdx % 2) * 12;
+    wJet.modeTimer = 30;
+    wJet.afterburner = true;
+    wJet.throttleSetting = 1.5;
+    wJet.targetJet = null;
+    wJet.isLead = (wIdx % 2 === 0);
+    wJet.isHero = (wIdx === 0);
+    wJet.rcs = specW.rcsClean || specW.rcs || 1.0;
+    wJet.bayDoorTimer = 0;
+    wJet.flareCooldown = 0;
+    wJet.chaffCooldown = 0;
+    wJet.gunCooldown = 0;
+    wJet.missileCooldown = wg === 1 ? 999999 : (10 + Math.floor(Math.random() * 11));
+    wJet.missileCapacity = (specW && typeof specW.missileCapacity === "number") ? specW.missileCapacity : 0;
+    wJet.missilesRemaining = wJet.missileCapacity;
+    wJet.isWinchester = (wJet.missilesRemaining === 0);
+    wJet.fuelMax = 100.0;
+    wJet.fuel = 100.0;
+    wJet.isBingoFuel = false;
+    wJet.kills = 0;
+    wJet.isAce = false;
+    wJet.turnAgilityBonus = 1.0;
+    wJet.laserCooldown = 0;
+    wJet.triLaserCooldown = 0;
+    wJet.superLaserCooldown = 0;
+    wJet.superLaserPulse = 0;
+    // CCA loyal wingman drones (Gen 6 West = NGAD)
+    wJet.ccaDeployed = (wg === 6);
+    if (wg === 6) {
+      if (!wJet.cca1) wJet.cca1 = { x: wJet.x, y: wJet.y, angle: wJet.angle, speed: wJet.speed, active: true, laserCooldown: 0 };
+      if (!wJet.cca2) wJet.cca2 = { x: wJet.x, y: wJet.y, angle: wJet.angle, speed: wJet.speed, active: true, laserCooldown: 0 };
+      wJet.cca1.active = true;
+      wJet.cca2.active = true;
+      wJet.cca1.x = wJet.x + Math.cos(wJet.angle) * 55 - Math.sin(wJet.angle) * 65;
+      wJet.cca1.y = wJet.y + Math.sin(wJet.angle) * 55 + Math.cos(wJet.angle) * 65;
+      wJet.cca1.angle = wJet.angle;
+      wJet.cca1.speed = wJet.speed;
+      wJet.cca2.x = wJet.x + Math.cos(wJet.angle) * 55 + Math.sin(wJet.angle) * 65;
+      wJet.cca2.y = wJet.y + Math.sin(wJet.angle) * 55 - Math.cos(wJet.angle) * 65;
+      wJet.cca2.angle = wJet.angle;
+      wJet.cca2.speed = wJet.speed;
     } else {
-      if (bJet.cca1) bJet.cca1.active = false;
-      if (bJet.cca2) bJet.cca2.active = false;
+      if (wJet.cca1) wJet.cca1.active = false;
+      if (wJet.cca2) wJet.cca2.active = false;
     }
-    setupJetCallsignAndVariant(bJet, bg, "blue", bIdx);
-    if (bJet.contrail) bJet.contrail.clear();
-    if (bJet.wingVapor) bJet.wingVapor.clear();
-  }
-  for (var bRem = nBlue; bRem < 7; bRem++) {
-    bPool[bRem].active = false;
-    bPool[bRem].targetJet = null;
-    bPool[bRem].wingmanJet = null;
+    setupJetCallsignAndVariant(wJet, wg, "west", wIdx);
+    if (wJet.contrail) wJet.contrail.clear();
+    if (wJet.wingVapor) wJet.wingVapor.clear();
   }
 
-  // Sync Red Pool
-  for (var rIdx = 0; rIdx < nRed; rIdx++) {
-    var rg = redActiveList[rIdx];
-    var specR = (typeof AIRCRAFT_SPECS !== "undefined" && AIRCRAFT_SPECS[rg]) ? AIRCRAFT_SPECS[rg] : { baseSpeed: 4.8 };
-    var rAltY = getYFromAltitude(RESPAWN_CEILINGS[rg] || 52000, h);
+  // Sync East Pool
+  for (var eIdx = 0; eIdx < nEast; eIdx++) {
+    var eg = eastActiveList[eIdx];
+    var specE = (typeof AIRCRAFT_SPECS !== "undefined" && AIRCRAFT_SPECS[eg] && AIRCRAFT_SPECS[eg].east) ? pickJetSpec(eg, "east", eIdx) : { baseSpeed: 4.8 };
+    var eAltY = getYFromAltitude(RESPAWN_CEILINGS[eg] || 52000, h);
+    var eJet = ePool[eIdx];
 
-    var rJet = rPool[rIdx];
-    rJet.gen = rg;
-    rJet.team = "red";
-    rJet.active = true;
-    rJet.isDying = false;
-    rJet.deathTimer = 0;
-    rJet.fadeAlpha = 1.0;
-    rJet.hp = 100.0;
-    rJet.maxHp = 100.0;
-    rJet.damageState = "NOMINAL";
-    rJet.lastDamagedBy = "";
-    rJet.damageSmokeTimer = 0;
-    rJet.damageSparksTimer = 0;
-    var mslY = (typeof getSeaLevelY === "function") ? getSeaLevelY(h) : Math.floor(h * 0.84);
-    var rwyY = mslY - 12;
-    // Staggered tactical runway positions for Red Lead & Wingman
-    rJet.x = w * 0.96 - ((rIdx % 2 === 0) ? 36 : 10);
-    rJet.y = rwyY - 1;
-    rJet.angle = Math.PI;
-    rJet.targetAngle = Math.PI;
-    rJet.speed = 1.8;
-    rJet.baseSpeed = specR.baseSpeed || 4.8;
-    rJet.prevSpeed = rJet.speed;
-    rJet.ps = 0;
-    rJet.turnRate = 0;
-    rJet.gForce = 1.0;
-    rJet.isStalled = false;
-    rJet.mode = "TAKEOFF";
-    rJet.takeoffRoll = -(rIdx % 2) * 12;
-    rJet.modeTimer = 30;
-    rJet.afterburner = true;
-    rJet.throttleSetting = 1.5;
-    rJet.targetJet = null;
-    rJet.isLead = (rIdx % 2 === 0);
-    rJet.isHero = false;
-    rJet.rcs = specR.rcsClean || specR.rcs || 1.0;
-    rJet.bayDoorTimer = 0;
-    rJet.flareCooldown = 0;
-    rJet.chaffCooldown = 0;
-    rJet.gunCooldown = 0;
-    rJet.missileCooldown = rg === 1 ? 999999 : (10 + Math.floor(Math.random() * 11));
-    rJet.missileCapacity = (specR && typeof specR.missileCapacity === "number") ? specR.missileCapacity : (rg === 1 || rg === 7 ? 0 : 6);
-    rJet.missilesRemaining = rJet.missileCapacity;
-    rJet.isWinchester = (rJet.missilesRemaining === 0 && rg < 7);
-    rJet.fuelMax = 100.0;
-    rJet.fuel = 100.0;
-    rJet.isBingoFuel = false;
-    rJet.kills = 0;
-    rJet.isAce = false;
-    rJet.turnAgilityBonus = 1.0;
-    rJet.laserCooldown = 0;
-    rJet.triLaserCooldown = 0;
-    rJet.superLaserCooldown = rg === 7 ? (60 + Math.floor(Math.random() * 60)) : 0;
-    rJet.superLaserPulse = 0;
-    rJet.ccaDeployed = (rg === 6);
-    if (rg === 6) {
-      if (!rJet.cca1) rJet.cca1 = { x: rJet.x, y: rJet.y, angle: rJet.angle, speed: rJet.speed, active: true, laserCooldown: 0 };
-      if (!rJet.cca2) rJet.cca2 = { x: rJet.x, y: rJet.y, angle: rJet.angle, speed: rJet.speed, active: true, laserCooldown: 0 };
-      rJet.cca1.active = true;
-      rJet.cca2.active = true;
-      rJet.cca1.x = rJet.x + Math.cos(rJet.angle) * 55 - Math.sin(rJet.angle) * 65;
-      rJet.cca1.y = rJet.y + Math.sin(rJet.angle) * 55 + Math.cos(rJet.angle) * 65;
-      rJet.cca1.angle = rJet.angle;
-      rJet.cca1.speed = rJet.speed;
-      rJet.cca2.x = rJet.x + Math.cos(rJet.angle) * 55 + Math.sin(rJet.angle) * 65;
-      rJet.cca2.y = rJet.y + Math.sin(rJet.angle) * 55 - Math.cos(rJet.angle) * 65;
-      rJet.cca2.angle = rJet.angle;
-      rJet.cca2.speed = rJet.speed;
+    eJet.gen = eg;
+    eJet.team = "east";
+    eJet.active = true;
+    eJet.isDying = false;
+    eJet.deathTimer = 0;
+    eJet.fadeAlpha = 1.0;
+    eJet.hp = 100.0;
+    eJet.maxHp = 100.0;
+    eJet.damageState = "NOMINAL";
+    eJet.lastDamagedBy = "";
+    eJet.damageSmokeTimer = 0;
+    eJet.damageSparksTimer = 0;
+    var emslY = (typeof getSeaLevelY === "function") ? getSeaLevelY(h) : Math.floor(h * 0.84);
+    var erwyY = emslY - 12;
+    eJet.x = w * 0.96 - ((eIdx % 2 === 0) ? 36 : 10);
+    eJet.y = erwyY - 1;
+    eJet.angle = Math.PI;
+    eJet.targetAngle = Math.PI;
+    eJet.speed = 1.8;
+    eJet.baseSpeed = specE.baseSpeed || 4.8;
+    eJet.prevSpeed = eJet.speed;
+    eJet.ps = 0;
+    eJet.turnRate = 0;
+    eJet.gForce = 1.0;
+    eJet.isStalled = false;
+    eJet.mode = "TAKEOFF";
+    eJet.takeoffRoll = -(eIdx % 2) * 12;
+    eJet.modeTimer = 30;
+    eJet.afterburner = true;
+    eJet.throttleSetting = 1.5;
+    eJet.targetJet = null;
+    eJet.isLead = (eIdx % 2 === 0);
+    eJet.isHero = false;
+    eJet.rcs = specE.rcsClean || specE.rcs || 1.0;
+    eJet.bayDoorTimer = 0;
+    eJet.flareCooldown = 0;
+    eJet.chaffCooldown = 0;
+    eJet.gunCooldown = 0;
+    eJet.missileCooldown = eg === 1 ? 999999 : (10 + Math.floor(Math.random() * 11));
+    eJet.missileCapacity = (specE && typeof specE.missileCapacity === "number") ? specE.missileCapacity : 0;
+    eJet.missilesRemaining = eJet.missileCapacity;
+    eJet.isWinchester = (eJet.missilesRemaining === 0);
+    eJet.fuelMax = 100.0;
+    eJet.fuel = 100.0;
+    eJet.isBingoFuel = false;
+    eJet.kills = 0;
+    eJet.isAce = false;
+    eJet.turnAgilityBonus = 1.0;
+    eJet.laserCooldown = 0;
+    eJet.triLaserCooldown = 0;
+    eJet.superLaserCooldown = 0;
+    eJet.superLaserPulse = 0;
+    // CCA loyal wingman drones (Gen 6 East = Su-57M)
+    eJet.ccaDeployed = (eg === 6);
+    if (eg === 6) {
+      if (!eJet.cca1) eJet.cca1 = { x: eJet.x, y: eJet.y, angle: eJet.angle, speed: eJet.speed, active: true, laserCooldown: 0 };
+      if (!eJet.cca2) eJet.cca2 = { x: eJet.x, y: eJet.y, angle: eJet.angle, speed: eJet.speed, active: true, laserCooldown: 0 };
+      eJet.cca1.active = true;
+      eJet.cca2.active = true;
+      eJet.cca1.x = eJet.x + Math.cos(eJet.angle) * 55 - Math.sin(eJet.angle) * 65;
+      eJet.cca1.y = eJet.y + Math.sin(eJet.angle) * 55 + Math.cos(eJet.angle) * 65;
+      eJet.cca1.angle = eJet.angle;
+      eJet.cca1.speed = eJet.speed;
+      eJet.cca2.x = eJet.x + Math.cos(eJet.angle) * 55 + Math.sin(eJet.angle) * 65;
+      eJet.cca2.y = eJet.y + Math.sin(eJet.angle) * 55 - Math.cos(eJet.angle) * 65;
+      eJet.cca2.angle = eJet.angle;
+      eJet.cca2.speed = eJet.speed;
     } else {
-      if (rJet.cca1) rJet.cca1.active = false;
-      if (rJet.cca2) rJet.cca2.active = false;
+      if (eJet.cca1) eJet.cca1.active = false;
+      if (eJet.cca2) eJet.cca2.active = false;
     }
-    setupJetCallsignAndVariant(rJet, rg, "red", rIdx);
-    if (rJet.contrail) rJet.contrail.clear();
-    if (rJet.wingVapor) rJet.wingVapor.clear();
-  }
-  for (var rRem = nRed; rRem < 7; rRem++) {
-    rPool[rRem].active = false;
-    rPool[rRem].targetJet = null;
-    rPool[rRem].wingmanJet = null;
+    setupJetCallsignAndVariant(eJet, eg, "east", eIdx);
+    if (eJet.contrail) eJet.contrail.clear();
+    if (eJet.wingVapor) eJet.wingVapor.clear();
   }
 
   // Cross-team target pairing
-  if (nBlue > 0 && nRed > 0) {
-    for (var bi = 0; bi < nBlue; bi++) {
-      bPool[bi].targetJet = rPool[bi % nRed];
+  if (nWest > 0 && nEast > 0) {
+    for (var wi = 0; wi < nWest; wi++) {
+      wPool[wi].targetJet = ePool[wi % nEast];
     }
-    for (var ri = 0; ri < nRed; ri++) {
-      rPool[ri].targetJet = bPool[ri % nBlue];
+    for (var ei = 0; ei < nEast; ei++) {
+      ePool[ei].targetJet = wPool[ei % nWest];
     }
   }
 
-  // Assign wingman links
-  for (var bwi = 0; bwi < nBlue; bwi++) {
-    var bPartner = (nBlue > 1) ? ((bwi % 2 === 0) ? (bwi + 1 < nBlue ? bwi + 1 : bwi) : bwi - 1) : bwi;
-    bPool[bwi].wingmanJet = bPool[bPartner];
+  // Assign wingman links (pairs: 0<->1, 2<->3, ...)
+  for (var wwi = 0; wwi < nWest; wwi++) {
+    var wPartner = (nWest > 1) ? ((wwi % 2 === 0) ? (wwi + 1 < nWest ? wwi + 1 : wwi) : wwi - 1) : wwi;
+    wPool[wwi].wingmanJet = wPool[wPartner];
   }
-  for (var rwi = 0; rwi < nRed; rwi++) {
-    var rPartner = (nRed > 1) ? ((rwi % 2 === 0) ? (rwi + 1 < nRed ? rwi + 1 : rwi) : rwi - 1) : rwi;
-    rPool[rwi].wingmanJet = rPool[rPartner];
+  for (var ewi = 0; ewi < nEast; ewi++) {
+    var ePartner = (nEast > 1) ? ((ewi % 2 === 0) ? (ewi + 1 < nEast ? ewi + 1 : ewi) : ewi - 1) : ewi;
+    ePool[ewi].wingmanJet = ePool[ePartner];
   }
 }
