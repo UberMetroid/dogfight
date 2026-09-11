@@ -127,6 +127,21 @@ function updateDogfight(now) {
     }
 
     globalHudFrameCount = (globalHudFrameCount + 1) | 0;
+
+    // Update small camera debug readout (cam x / y / scale / active jet count)
+    var camDbg = document.getElementById("cam-debug");
+    if (camDbg && DF.camera) {
+      var activeCount = 0;
+      if (DF.allJets) {
+        for (var cdi = 0; cdi < DF.allJets.length; cdi++) {
+          if (DF.allJets[cdi].active && !DF.allJets[cdi].isDying) activeCount++;
+        }
+      }
+      camDbg.textContent = "cam x=" + Math.round(DF.camera.x) +
+        " y=" + Math.round(DF.camera.y) +
+        " scale=" + DF.camera.scale.toFixed(2) +
+        " jets=" + activeCount;
+    }
   } catch (err) {
     if (typeof console !== "undefined" && console.error) {
       console.error("dogfight frame", err);

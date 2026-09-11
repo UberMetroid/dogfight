@@ -12,17 +12,24 @@
   DF.worldHeight = 1200;
 
   DF.camera = {
-    x: 1800,
-    y: 550,
-    scale: 0.75,
-    targetX: 1800,
-    targetY: 550,
-    targetScale: 0.75,
-    minScale: 0.28,  // Zoom out to view entire theater (up to 100k ft near-space and wide BVR arena)
+    x: 180,          // west airbase x (where jets spawn)
+    y: 700,          // mid-screen at the new scale, runway visible in lower third
+    scale: 0.95,     // close enough that jets are 15-20px on screen
+    targetX: 180,
+    targetY: 700,
+    targetScale: 0.95,
+    minScale: 0.32,  // bumped from 0.28; never zoom out past 0.32
     maxScale: 1.25,  // Zoom in for merged dogfight
     lerpRate: 0.055, // Smooth camera tracking rate
     isAutoZoom: true,
     userOverrideTimer: 0,
+    // Warmup: hold the initial framing for the first 90 frames (~1.5s at 60fps)
+    // so the user can see jets taking off before the camera decides to follow them.
+    warmupFrames: 90,
+    // Hard cap on the framing box width so the camera never zooms out to fit the
+    // entire 3600-wide world. If jets span more than this, the camera frames the
+    // closer cluster and ignores the far one (jets fly back into frame on their own).
+    maxFrameWidth: 1800,
 
     bounds: { minX: 0, maxX: 3600, minY: 0, maxY: 1200 },
 
@@ -59,6 +66,9 @@
         this.userOverrideTimer--;
       }
 
+      // Decrement warmup counter (one-shot; never re-fires after it hits 0)
+      if (this.warmupFrames && this.warmupFrames > 0) this.warmupFrames--;
+
       // Collect all tactical points of interest: active aircraft, missiles, bullets
       var points = [];
 
@@ -79,8 +89,13 @@
                 if (j.cca1 && j.cca1.active) points.push({ x: j.cca1.x, y: j.cca1.y });
                 if (j.cca2 && j.cca2.active) points.push({ x: j.cca2.x, y: j.cca2.y });
               }
+              // Gen 7 SWARM: include 3 drones per swarm in camera framing
+              if (j.gen === 7) {
+                if (j.drone1) points.push({ x: j.drone1.x, y: j.drone1.y });
+                if (j.drone2) points.push({ x: j.drone2.x, y: j.drone2.y });
+                if (j.drone3) points.push({ x: j.drone3.x, y: j.drone3.y });
+              }
             } else if ((j.deathTimer || 0) < 25) {
-              // Frame dying aircraft briefly during splash/impact explosion
               points.push({ x: j.x, y: j.y });
             }
           }
@@ -108,11 +123,19 @@
         }
       }
 
-      // 4. Strategic Bomber & Active Bomb Detonations (removed in v3.0; bombers.js deleted)
-      // Camera focus points are now just active jets / missiles / bullets / flares / chaff / wreck.
-
       if (this.userOverrideTimer > 0 && !this.isAutoZoom) {
-        // User manual zoom active: strictly anchor bottom to floorY so ground/sea never drops off screen
+        this.scale += (this.targetScale - this.scale) * this.lerpRate;
+        this.x += (this.targetX - this.x) * this.lerpRate;
+        this.y = floorY - (viewportH * 0.5) / this.scale;
+        return;
+      }
+
+      // WARMUP: during the first ~1.5s, hold the camera at its initial scale
+      // so the user sees the west airbase clearly. Skip auto-zoom entirely.
+      if ((this.warmupFrames || 0) > 0 && points.length === 0) {
+        this.targetX = 180;
+        this.targetY = 700;
+        this.targetScale = 0.95;
         this.scale += (this.targetScale - this.scale) * this.lerpRate;
         this.x += (this.targetX - this.x) * this.lerpRate;
         this.y = floorY - (viewportH * 0.5) / this.scale;
@@ -120,41 +143,54 @@
       }
 
       if (points.length === 0) {
-        this.targetX = (DF.worldWidth || 3600) * 0.5;
-        this.targetScale = 0.70;
-        this.targetY = floorY - (viewportH * 0.5) / this.targetScale;
+        // No active jets — slowly return to initial framing on the west airbase.
+        this.targetX = 180;
+        this.targetY = 700;
+        this.targetScale = 0.95;
       } else {
-        var minX = Infinity, maxX = -Infinity;
+        // Percentile-based framing: sort X values, ignore the extremes
+        // (10th..90th percentile when there are 8+ points). This prevents
+        // jets at the world edges (x=180 and x=3456) from forcing the
+        // camera to fit the entire 3600-wide world.
+        var xs = [];
+        for (var pi = 0; pi < points.length; pi++) xs.push(points[pi].x);
+        xs.sort(function (a, b) { return a - b; });
+        var n = xs.length;
+        var minX = n > 0 ? xs[0] : 0;
+        var maxX = n > 0 ? xs[n - 1] : 0;
+        if (n >= 8) {
+          var lo = xs[Math.floor(n * 0.10)];
+          var hi = xs[Math.floor(n * 0.90)];
+          minX = lo;
+          maxX = hi;
+        }
         var minY = Infinity, maxY = -Infinity;
-
-        for (var p = 0; p < points.length; p++) {
-          var pt = points[p];
-          if (pt.x < minX) minX = pt.x;
-          if (pt.x > maxX) maxX = pt.x;
-          if (pt.y < minY) minY = pt.y;
-          if (pt.y > maxY) maxY = pt.y;
+        for (var py = 0; py < points.length; py++) {
+          if (points[py].y < minY) minY = points[py].y;
+          if (points[py].y > maxY) maxY = points[py].y;
         }
 
-        // Vertical: Expand UP into sky/space so highest object is safely below the top header
-        var topMargin = Math.max(90, viewportH * 0.11);
+        // Vertical: keep ground at bottom, but allow sky to occupy more screen
+        var topMargin = Math.max(80, viewportH * 0.10);
         var targetMinY = Math.max(10, minY - 60);
         var verticalSpan = Math.max(280, floorY - targetMinY);
         var requiredScaleY = (viewportH - topMargin) / verticalSpan;
 
-        // Horizontal: Expand LEFT and RIGHT to frame all combatants with generous margins
+        // Horizontal: tight cap on the box width so camera never fits the whole world
         var spanX = maxX - minX;
-        var padX = Math.max(180, spanX * 0.18);
-        var boxW = Math.max(920, spanX + padX * 2);
+        var padX = Math.max(140, spanX * 0.15);
+        var rawBoxW = spanX + padX * 2;
+        var maxFW = this.maxFrameWidth || 1800;
+        var boxW = Math.max(800, Math.min(maxFW, rawBoxW));
         var requiredScaleX = viewportW / boxW;
 
-        // Scale is constrained by both vertical ceiling and horizontal arena span
         var desiredScale = Math.min(requiredScaleX, requiredScaleY);
         this.targetScale = Math.max(this.minScale, Math.min(this.maxScale, desiredScale));
 
-        // Center camera horizontally on the action
+        // Center on the percentile midpoint of the action
         this.targetX = (minX + maxX) * 0.5;
 
-        // Target Y strictly anchors the ground/sea bottom to viewport bottom (no downward expansion)
+        // Y anchor: bottom-anchored so the ground is always visible
         this.targetY = floorY - (viewportH * 0.5) / this.targetScale;
 
         this.bounds.minX = minX;
@@ -167,8 +203,7 @@
       this.scale += (this.targetScale - this.scale) * this.lerpRate;
       this.x += (this.targetX - this.x) * this.lerpRate;
 
-      // Absolute invariant: strictly anchor the bottom of the screen to the floor/sea bed at current scale.
-      // Ground and sea ALWAYS stay on screen, expanding UP when zooming out, never downwards.
+      // Absolute invariant: strictly anchor the bottom of the screen to the floor/sea bed.
       this.y = floorY - (viewportH * 0.5) / this.scale;
     },
 
